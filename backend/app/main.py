@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+
+from app.api.auth import router as auth_router
 from app.database.supabase import supabase
 
 app = FastAPI(
@@ -6,6 +8,9 @@ app = FastAPI(
     description="AI-Based Interview Preparation Platform",
     version="1.0.0"
 )
+
+
+app.include_router(auth_router)
 
 
 @app.get("/")
@@ -17,25 +22,25 @@ def root():
 
 @app.get("/health")
 def health():
-    return {
-        "status": "success",
-        "database": "Supabase Connected"
-    }
 
+    try:
+        response = (
+            supabase
+            .table("subjects")
+            .select("*")
+            .limit(5)
+            .execute()
+        )
 
-@app.get("/test-db")
-def test_db():
-    response = (
-        supabase
-        .table("subjects")
-        .select("*")
-        .limit(5)
-        .execute()
-    )
+        return {
+            "status": "success",
+            "message": "Supabase connection successful",
+            "count": len(response.data),
+            "data": response.data
+        }
 
-    return {
-        "status": "success",
-        "message": "Supabase connection successful",
-        "count": len(response.data),
-        "data": response.data
-    }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
