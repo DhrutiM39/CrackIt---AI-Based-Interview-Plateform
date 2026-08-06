@@ -1298,4 +1298,4 @@ $$;
 
 -- 3. Create a GIN index on public.linkedin_analysis profile_data JSONB column
 CREATE INDEX IF NOT EXISTS idx_linkedin_analysis_profile_data_gin 
-ON public.linkedin_analysis USING gin (profile_data);
+ON public.linkedin_analysis USING gin (profile_data);
