@@ -15,5 +15,5 @@ def signup(user: SignupRequest):
 
 
 @router.post("/login")
-def login(user: LoginRequest):
+def login(user: LoginRequest): 
     return AuthService.login(user)
