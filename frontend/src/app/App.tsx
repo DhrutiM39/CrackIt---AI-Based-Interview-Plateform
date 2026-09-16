@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "./AuthContext";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import {
   Brain, ChevronRight, Check, ArrowRight, Menu, Bell, Search,
   Mic, Target, TrendingUp, Award, Sparkles, BookOpen, Code2,
@@ -12,7 +15,7 @@ import {
   GitBranch, Package, Terminal, TrendingDown,
   Filter, Camera, Mail, Trash2, Pencil, Link, Palette, Moon,
   BellOff, SlidersHorizontal, MessageSquare, ExternalLink,
-  UserCheck, Bookmark, CheckSquare,
+  UserCheck, Bookmark, CheckSquare, Loader2, Lock,
 } from "lucide-react";
 
 const Rocket = Zap;
@@ -22,6 +25,7 @@ import {
   ResponsiveContainer, Cell, LineChart, Line, AreaChart, Area,
   PieChart as RePieChart, Pie,
 } from "recharts";
+import { subjectsApi, domainsApi, aiPrepApi, resumeApi } from "../lib/api";
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const C = {
@@ -86,6 +90,7 @@ const NAV2 = [
 ];
 
 function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: string; onNav: (id: string) => void; onToggle: () => void }) {
+  const { user } = useAuth();
   return (
     <aside className="flex flex-col h-full transition-all duration-300 flex-shrink-0"
       style={{ width: col ? 64 : 240, background: C.card, borderRight: `1px solid ${C.border}` }}>
@@ -131,12 +136,14 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
             </button>
           );
         })}
-        {!col && (
+        {!col && user && (
           <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-xl" style={{ background: C.surface }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: C.grad }}>DS</div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: C.grad }}>
+              {user.full_name?.charAt(0).toUpperCase() || "U"}
+            </div>
             <div className="flex-1 overflow-hidden">
-              <div className="text-xs font-semibold text-white truncate">Dhruti Shah</div>
-              <div className="text-xs truncate" style={{ color: C.muted }}>Pro Plan</div>
+              <div className="text-xs font-semibold text-white truncate">{user.full_name}</div>
+              <div className="text-xs truncate" style={{ color: C.muted }}>{user.target_job_role || "Student"}</div>
             </div>
             <div className="w-2 h-2 rounded-full" style={{ background: C.green }} />
           </div>
@@ -149,6 +156,8 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
 // ─── Topbar ───────────────────────────────────────────────────────────────────
 function Topbar({ onToggle }: { onToggle: () => void }) {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
   return (
     <header className="flex items-center gap-4 px-6 py-3.5 flex-shrink-0"
       style={{ background: "rgba(17,24,39,.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, zIndex: 20 }}>
@@ -164,7 +173,7 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
           style={{ background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.3)" }}>
           <Flame size={14} style={{ color: C.amber }} />
-          <span className="text-xs font-bold" style={{ color: C.amber }}>14 day streak</span>
+          <span className="text-xs font-bold" style={{ color: C.amber }}>{user?.streak_count || 0} day streak</span>
         </div>
         <div className="relative">
           <button onClick={() => setOpen(!open)} className="relative w-9 h-9 rounded-xl flex items-center justify-center"
@@ -187,11 +196,22 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer"
-          style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: C.grad }}>DS</div>
-          <span className="hidden sm:block text-sm font-medium text-white">Dhruti</span>
-          <ChevronDown size={14} style={{ color: C.muted }} />
+        <div className="relative">
+          <div onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer"
+            style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: C.grad }}>
+              {user?.full_name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <span className="hidden sm:block text-sm font-medium text-white">{user?.full_name?.split(" ")[0] || "User"}</span>
+            <ChevronDown size={14} style={{ color: C.muted }} />
+          </div>
+          {profileOpen && (
+            <div className="absolute right-0 top-12 w-48 rounded-xl p-2 z-50" style={{ background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 10px 40px rgba(0,0,0,.5)" }}>
+              <button onClick={() => { setProfileOpen(false); logout(); }} className="w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2">
+                <Lock size={14} /> Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
@@ -315,15 +335,32 @@ function SubjectCard({ s, onSelect, selected }: { s: typeof SUBJECTS[0]; onSelec
 }
 
 function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
-  const topics = [
-    { name: "Arrays & Strings", done: true, q: 24 },
-    { name: "Linked Lists", done: true, q: 18 },
-    { name: "Binary Trees", done: true, q: 21 },
+  const [topics, setTopics] = useState([
+    { name: "Arrays & Strings", done: true, q: 24, current: false },
+    { name: "Linked Lists", done: true, q: 18, current: false },
+    { name: "Binary Trees", done: true, q: 21, current: false },
     { name: "Binary Search Trees", done: false, q: 15, current: true },
-    { name: "Heaps & Priority Queues", done: false, q: 12 },
-    { name: "Graphs (BFS/DFS)", done: false, q: 20 },
-    { name: "Dynamic Programming", done: false, q: 28 },
-  ];
+    { name: "Heaps & Priority Queues", done: false, q: 12, current: false },
+    { name: "Graphs (BFS/DFS)", done: false, q: 20, current: false },
+    { name: "Dynamic Programming", done: false, q: 28, current: false },
+  ]);
+  const [questions, setQuestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!s || !s.id || isNaN(Number(s.id))) return;
+    subjectsApi.getDetail(s.id).then(res => {
+      if (res && res.topics && res.topics.length > 0) {
+        setTopics(res.topics);
+      }
+    }).catch(err => console.error(err));
+
+    subjectsApi.getQuestions(s.id).then(res => {
+      if (res && res.length > 0) {
+        setQuestions(res);
+      }
+    }).catch(err => console.error(err));
+  }, [s]);
+
   const mockScores = [
     { test: "Mock 1", score: 62 }, { test: "Mock 2", score: 71 },
     { test: "Mock 3", score: 68 }, { test: "Mock 4", score: 79 }, { test: "Mock 5", score: 84 },
@@ -333,11 +370,13 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
     { area: "Dynamic Programming", score: 55, color: C.amber },
     { area: "Segment Trees", score: 38, color: C.red },
   ];
-  const importantQs = [
-    { q: "What is the time complexity of Quicksort in best, average and worst case?", freq: "Very High", tag: "Complexity" },
-    { q: "Explain the difference between DFS and BFS with use cases.", freq: "High", tag: "Graphs" },
-    { q: "How does a HashMap work internally in Java?", freq: "Very High", tag: "Hashing" },
-    { q: "Describe the process of cycle detection in a directed graph.", freq: "Medium", tag: "Graphs" },
+  const importantQs = questions.length > 0 ? questions.slice(0, 4).map(q => ({
+    q: q.question, freq: q.difficulty === "Hard" ? "Very High" : "Medium", tag: "Interview", id: q.id, completed: q.completed
+  })) : [
+    { q: "What is the time complexity of Quicksort in best, average and worst case?", freq: "Very High", tag: "Complexity", id: 1, completed: false },
+    { q: "Explain the difference between DFS and BFS with use cases.", freq: "High", tag: "Graphs", id: 2, completed: false },
+    { q: "How does a HashMap work internally in Java?", freq: "Very High", tag: "Hashing", id: 3, completed: false },
+    { q: "Describe the process of cycle detection in a directed graph.", freq: "Medium", tag: "Graphs", id: 4, completed: false },
   ];
 
   return (
@@ -449,8 +488,18 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                   </span>
                 </div>
               </div>
-              <button className="text-xs flex-shrink-0 px-2.5 py-1 rounded-lg"
-                style={{ background: `${s.color}15`, color: s.color }}>Answer</button>
+              <button 
+                onClick={() => {
+                  if (q.id) {
+                    subjectsApi.submitAnswer(q.id, "Mock valid answer").then(() => {
+                      alert("Answer submitted and evaluated!");
+                    }).catch(e => console.error(e));
+                  }
+                }}
+                className="text-xs flex-shrink-0 px-2.5 py-1 rounded-lg"
+                style={{ background: q.completed ? `${C.green}15` : `${s.color}15`, color: q.completed ? C.green : s.color }}>
+                {q.completed ? "Done" : "Answer"}
+              </button>
             </div>
           ))}
         </div>
@@ -589,14 +638,37 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
 }
 
 function SubjectPrepPage() {
+  const [subjectsList, setSubjectsList] = useState<any[]>(SUBJECTS);
   const [selected, setSelected] = useState("dsa");
-  const selectedSubject = SUBJECTS.find(s => s.id === selected)!;
 
-  const overallProgress = Math.round(SUBJECTS.reduce((a, s) => a + s.progress, 0) / SUBJECTS.length);
-  const totalDone = SUBJECTS.reduce((a, s) => a + s.done, 0);
-  const totalTopics = SUBJECTS.reduce((a, s) => a + s.total, 0);
+  useEffect(() => {
+    subjectsApi.getAll().then(res => {
+      if (res && res.length > 0) {
+        const mapped = res.map((s: any, i: number) => ({
+          id: String(s.id),
+          name: s.subject_name,
+          icon: s.icon || "📚",
+          color: [C.purple, C.cyan, C.green, C.amber, C.indigo, C.teal, C.pink, C.amber][i % 8],
+          progress: s.progress,
+          difficulty: s.difficulty || "Medium",
+          total: s.total_topics || 1,
+          done: s.done_topics || 0,
+          streak: s.streak || 0,
+          tags: s.tags || []
+        }));
+        setSubjectsList(mapped);
+        setSelected(mapped[0].id);
+      }
+    }).catch(err => console.error("Error fetching subjects:", err));
+  }, []);
 
-  const radarData = SUBJECTS.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
+  const selectedSubject = subjectsList.find(s => s.id === selected) || subjectsList[0];
+
+  const overallProgress = subjectsList.length > 0 ? Math.round(subjectsList.reduce((a, s) => a + s.progress, 0) / subjectsList.length) : 0;
+  const totalDone = subjectsList.reduce((a, s) => a + s.done, 0);
+  const totalTopics = subjectsList.reduce((a, s) => a + s.total, 0);
+
+  const radarData = subjectsList.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -633,7 +705,7 @@ function SubjectPrepPage() {
             { label: "Overall Progress", value: `${overallProgress}%`, icon: <TrendingUp size={16} />, color: C.purple },
             { label: "Topics Completed", value: `${totalDone}/${totalTopics}`, icon: <Check size={16} />, color: C.cyan },
             { label: "Current Streak", value: "14 days", icon: <Flame size={16} />, color: C.amber },
-            { label: "Subjects Active", value: `${SUBJECTS.filter(s => s.progress > 0).length}/8`, icon: <BookOpen size={16} />, color: C.green },
+            { label: "Subjects Active", value: `${subjectsList.filter(s => s.progress > 0).length}/${subjectsList.length}`, icon: <BookOpen size={16} />, color: C.green },
           ].map(s => (
             <Card key={s.label} className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -648,7 +720,7 @@ function SubjectPrepPage() {
 
         {/* Subject cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {SUBJECTS.map(s => (
+          {subjectsList.map(s => (
             <SubjectCard key={s.id} s={s} selected={selected === s.id} onSelect={() => setSelected(s.id)} />
           ))}
         </div>
@@ -1155,8 +1227,52 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
 }
 
 function DomainPrepPage() {
+  const [domainsList, setDomainsList] = useState<any[]>(DOMAINS);
   const [selected, setSelected] = useState("web");
-  const dom = DOMAINS.find(d => d.id === selected)!;
+  const [genLoading, setGenLoading] = useState(false);
+  const [genQuestions, setGenQuestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    domainsApi.getAll().then(res => {
+      if (res && res.length > 0) {
+        const mapped = res.map((d: any, i: number) => ({
+          id: String(d.id),
+          name: d.domain_name,
+          icon: d.icon || ["🌐","🤖","📊","☁️","🔒","⚙️","📱","🧪"][i % 8],
+          color: [C.purple, C.cyan, C.green, C.blue, C.red, C.amber, C.pink, C.teal][i % 8],
+          progress: d.progress,
+          difficulty: "Intermediate",
+          time: "10 weeks left",
+          skills: ["Core Skills"],
+          demand: 90,
+          salary: "₹15–35 LPA",
+        }));
+        setDomainsList(mapped);
+        setSelected(mapped[0].id);
+      }
+    }).catch(err => console.error("Error fetching domains:", err));
+  }, []);
+
+  const dom = domainsList.find(d => d.id === selected) || domainsList[0];
+
+  const handleGenerateQuestions = async () => {
+    if (!dom) return;
+    setGenLoading(true);
+    try {
+      const result = await aiPrepApi.generateQuestions({
+        domain: dom.name,
+        skills: dom.skills,
+        difficulty: "Medium",
+        number_of_questions: 5,
+        category: "Technical"
+      });
+      setGenQuestions(result?.questions || []);
+    } catch(e) {
+      console.error("AI generation failed:", e);
+    } finally {
+      setGenLoading(false);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -1190,7 +1306,7 @@ function DomainPrepPage() {
         {/* Domain summary stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Domains Enrolled", value: "3/8", icon: <Boxes size={16} />, color: C.purple },
+            { label: "Domains Enrolled", value: `${domainsList.filter(d => d.progress > 0).length}/${domainsList.length}`, icon: <Boxes size={16} />, color: C.purple },
             { label: "Skills In Progress", value: "12", icon: <Code2 size={16} />, color: C.cyan },
             { label: "Certifications", value: "1 earned", icon: <Award size={16} />, color: C.amber },
             { label: "AI Match Score", value: "84%", icon: <Sparkles size={16} />, color: C.green },
@@ -1208,28 +1324,66 @@ function DomainPrepPage() {
 
         {/* Domain cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {DOMAINS.map(d => (
+          {domainsList.map(d => (
             <DomainCard key={d.id} d={d} selected={selected === d.id} onSelect={() => setSelected(d.id)} />
           ))}
         </div>
 
-        {/* Selected domain header */}
-        <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
-          style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>
-          <span className="text-2xl">{dom.icon}</span>
-          <div>
-            <div className="text-sm font-bold text-white">{dom.name} — Detailed Learning Path</div>
-            <div className="text-xs" style={{ color: C.muted }}>
-              {dom.progress}% complete · {dom.time} to finish · {dom.skills.length} core skills
+        {/* AI Question Generation Panel */}
+        {dom && (
+          <Card className="p-5 mb-6" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.3)" }}>
+            <div className="flex items-start justify-between">
+              <SecHead icon={<Sparkles size={16} />} title="AI Question Generator" sub={`Generate personalized ${dom.name} interview questions`} />
+              <button
+                onClick={handleGenerateQuestions}
+                disabled={genLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                style={{ background: C.grad }}>
+                {genLoading ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                {genLoading ? "Generating..." : "Generate Questions"}
+              </button>
             </div>
-          </div>
-          <div className="ml-auto flex gap-2">
-            <Pill label={dom.difficulty} color={diffColor(dom.difficulty)} />
-            <Pill label={dom.salary} color={C.green} />
-          </div>
-        </div>
+            {genQuestions.length > 0 && (
+              <div className="space-y-2.5 mt-4">
+                {genQuestions.map((q: any, i: number) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: C.grad }}>Q{i + 1}</div>
+                    <div className="flex-1">
+                      <div className="text-xs text-white leading-relaxed">{q.question}</div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Pill label={q.category} color={C.purple} />
+                        <Pill label={q.difficulty} color={q.difficulty === "Hard" ? C.red : q.difficulty === "Medium" ? C.amber : C.green} />
+                        <span className="text-xs" style={{ color: C.muted }}>{q.topic}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
 
-        <DomainDetailPanel d={dom} />
+        {/* Selected domain header */}
+        {dom && (
+          <>
+            <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
+              style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>
+              <span className="text-2xl">{dom.icon}</span>
+              <div>
+                <div className="text-sm font-bold text-white">{dom.name} — Detailed Learning Path</div>
+                <div className="text-xs" style={{ color: C.muted }}>
+                  {dom.progress}% complete · {dom.time} to finish · {dom.skills.length} core skills
+                </div>
+              </div>
+              <div className="ml-auto flex gap-2">
+                <Pill label={dom.difficulty} color={diffColor(dom.difficulty)} />
+                <Pill label={dom.salary} color={C.green} />
+              </div>
+            </div>
+            <DomainDetailPanel d={dom} />
+          </>
+        )}
       </div>
     </div>
   );
@@ -4546,19 +4700,11 @@ function ResumeAnalyzerPage() {
     filename: "Alexander_Chen_Resume.pdf",
   });
 
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      validateAndSetFile(e.dataTransfer.files[0]);
-    }
-  };
-
   const validateAndSetFile = (file: File) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
     const allowed = ["pdf", "docx", "doc", "txt", "rtf"];
     if (ext && !allowed.includes(ext)) {
-      setError(`Supported formats: .pdf, .docx, .doc, .txt, .rtf.`);
+      setError("Supported formats: .pdf, .docx, .doc, .txt, .rtf.");
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
@@ -4567,6 +4713,14 @@ function ResumeAnalyzerPage() {
     }
     setError(null);
     setSelectedFile(file);
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      validateAndSetFile(e.dataTransfer.files[0]);
+    }
   };
 
   const generateLocalEvaluation = async (file?: File, role?: string) => {
@@ -4815,7 +4969,6 @@ function ResumeAnalyzerPage() {
     }
   };
 
-
   const loadSimulatedDemo = () => {
     setError(null);
     setStep("analyzing");
@@ -4927,10 +5080,10 @@ function ResumeAnalyzerPage() {
                   <div className="text-sm" style={{ color: C.muted }}>
                     {selectedFile
                       ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready to evaluate`
-                      : "Drag & drop your PDF or Word document here"}
+                      : "Drag & drop your PDF, DOCX, DOC, or TXT document here"}
                   </div>
                   <div className="text-xs mt-1" style={{ color: C.muted }}>
-                    Supported formats: .pdf, .docx · Maximum size: 5MB
+                    Supported formats: .pdf, .docx, .doc, .txt · Maximum size: 15MB
                   </div>
                 </div>
 
@@ -4940,7 +5093,7 @@ function ResumeAnalyzerPage() {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.docx"
+                      accept=".pdf,.docx,.doc,.txt,.rtf"
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           validateAndSetFile(e.target.files[0]);
@@ -4975,7 +5128,7 @@ function ResumeAnalyzerPage() {
                 </button>
 
                 <div className="text-xs text-center" style={{ color: C.muted }}>
-                  Instant ATS evaluation · No login required for preview
+                  Instant ATS evaluation · Evaluates all resume formats
                 </div>
               </Card>
 
@@ -5920,13 +6073,32 @@ const ALL_PAGES: Page[] = [
 ];
 
 export default function App() {
+  const { loading, isAuthenticated } = useAuth();
   const [col, setCol] = useState(false);
   const [page, setPage] = useState<Page>("dashboard");
+  const [authView, setAuthView] = useState<"login" | "signup">("login");
 
   const handleNav = (id: string) => {
     if (ALL_PAGES.includes(id as Page)) setPage(id as Page);
     else setPage("404");
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center dark" style={{ background: C.bg }}>
+        <div className="animate-spin" style={{ color: C.purple }}>
+          <Loader2 size={32} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    if (authView === "login") {
+      return <LoginPage onGoSignup={() => setAuthView("signup")} />;
+    }
+    return <SignupPage onGoLogin={() => setAuthView("login")} />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden dark"

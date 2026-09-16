@@ -1,19 +1,21 @@
+import io
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, Header, UploadFile
-from starlette.datastructures import UploadFile as StarletteUploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
+from pypdf import PdfReader
 
+from app.core.security import get_current_user
 from app.database.supabase import supabase
 from app.schemas.resume import ResumeAnalysisResponse
 from app.services.resume_service import analyze_with_gemini, process_resume_upload
 
 router = APIRouter(
     prefix="/resume",
-    tags=["Resume Analyzer"]
+    tags=["Resume"]
 )
 
 
-def get_current_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
+def get_optional_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
     """Extract user_id from Supabase JWT bearer token if present."""
     if not authorization or not authorization.startswith("Bearer "):
         return None
@@ -32,10 +34,10 @@ def get_current_user_id(authorization: Optional[str] = Header(None)) -> Optional
 async def analyze_resume(
     file: UploadFile = File(...),
     target_role: Optional[str] = Form(None),
-    user_id: Optional[str] = Depends(get_current_user_id)
+    user_id: Optional[str] = Depends(get_optional_user_id)
 ):
     """
-    Upload a .pdf or .docx resume for ATS scoring and deep Gemini AI evaluation.
+    Upload any .pdf or .docx resume for ATS scoring and deep Gemini AI evaluation.
     Supports optional authenticated session for saving to database profile.
     """
     result = await process_resume_upload(
@@ -85,13 +87,9 @@ def analyze_sample_resume(
     • Built a VS Code extension and FastAPI backend using LLMs to automatically generate docstrings and unit tests.
     • Gathered 1,400+ GitHub stars and 20,000+ downloads on the VS Code marketplace.
 
-    Distributed Task Queue Engine | github.com/alexchen/task-flow
-    • Created a lightweight distributed task queue in Go and Redis with automatic retries and dead-letter queue support.
-
     EDUCATION
     Bachelor of Science in Computer Science
     University of California, Berkeley | 2017 - 2021
-    Relevant Coursework: Data Structures & Algorithms, Operating Systems, Database Systems, Computer Networks
     """
     analysis = analyze_with_gemini(sample_text, target_role)
     return {
@@ -104,3 +102,35 @@ def analyze_sample_resume(
         "persisted": False,
         "message": "Sample resume evaluated by Gemini AI"
     }
+
+
+@router.get("/analyses")
+async def get_resume_analyses(current_user: dict = Depends(get_current_user)):
+    try:
+        response = supabase.table("resume_analysis") \
+            .select("id, created_at, ats_score, overall_score, target_role") \
+            .eq("user_id", current_user["id"]) \
+            .order("created_at", desc=True) \
+            .execute()
+        return response.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/analyses/{analysis_id}")
+async def get_resume_analysis(analysis_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        response = supabase.table("resume_analysis") \
+            .select("*") \
+            .eq("id", analysis_id) \
+            .eq("user_id", current_user["id"]) \
+            .execute()
+
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+
+        return response.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
