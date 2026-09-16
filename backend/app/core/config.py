@@ -14,3 +14,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1008
 
 # CORS
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# AI
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

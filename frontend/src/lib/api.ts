@@ -19,10 +19,15 @@ async function request<T>(
 ): Promise<T> {
   const token = getToken();
 
+  const isFormData = options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...options.headers,
   };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
@@ -31,7 +36,7 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    body: isFormData ? (options.body as FormData) : (options.body ? JSON.stringify(options.body) : undefined),
   });
 
   // 401 → clear auth and redirect to login
@@ -95,3 +100,73 @@ export const authApi = {
 
   me: () => api.get<MeResponse>("/auth/me"),
 };
+
+// ─── Resume-specific API calls ────────────────────────────────────────────────
+export interface SectionScore {
+  name: string;
+  score: number;
+  tips: string[];
+}
+
+export interface KeywordMatch {
+  word: string;
+  found: boolean;
+}
+
+export interface ResumeAnalysisResult {
+  overall_score: number;
+  ats_score: number;
+  job_role_match: number;
+  readability_score: number;
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  skills: string[];
+  missing_skills: string[];
+  formatting_issues: string[];
+  improvements: string[];
+  sections: SectionScore[];
+  keywords: KeywordMatch[];
+}
+
+export const resumeApi = {
+  analyze: (file: File, targetRole?: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (targetRole) {
+      formData.append("target_role", targetRole);
+    }
+    return api.post<ResumeAnalysisResult>("/resume/analyze", { body: formData });
+  },
+  
+  getHistory: () => api.get<any[]>("/resume/analyses"),
+};
+
+// ─── Prep-specific API calls ──────────────────────────────────────────────────
+export const subjectsApi = {
+  getAll: () => api.get<any[]>("/subjects"),
+  getDetail: (id: string | number) => api.get<any>(`/subjects/${id}`),
+  getQuestions: (id: string | number) => api.get<any[]>(`/subjects/${id}/questions`),
+  submitAnswer: (questionId: string | number, answer: string) => 
+    api.post<any>(`/subjects/questions/${questionId}/answer`, { body: { answer } }),
+};
+
+export const domainsApi = {
+  getAll: () => api.get<any[]>("/domains"),
+  getDetail: (id: string | number) => api.get<any>(`/domains/${id}`),
+  getQuestions: (id: string | number) => api.get<any[]>(`/domains/${id}/questions`),
+  submitAnswer: (questionId: string | number, answer: string) => 
+    api.post<any>(`/domains/questions/${questionId}/answer`, { body: { answer } }),
+};
+
+export const aiPrepApi = {
+  generateQuestions: (params: {
+    job_role?: string;
+    domain?: string;
+    skills?: string[];
+    difficulty?: string;
+    number_of_questions?: number;
+    category?: string;
+  }) => api.post<any>("/questions/generate", { body: params }),
+};
+
