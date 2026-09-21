@@ -109,7 +109,7 @@ async def get_resume_analyses(current_user: dict = Depends(get_current_user)):
     try:
         response = supabase.table("resume_analysis") \
             .select("id, created_at, ats_score, overall_score, target_role") \
-            .eq("user_id", current_user["id"]) \
+            .eq("user_id", current_user["sub"]) \
             .order("created_at", desc=True) \
             .execute()
         return response.data
@@ -123,7 +123,7 @@ async def get_resume_analysis(analysis_id: str, current_user: dict = Depends(get
         response = supabase.table("resume_analysis") \
             .select("*") \
             .eq("id", analysis_id) \
-            .eq("user_id", current_user["id"]) \
+            .eq("user_id", current_user["sub"]) \
             .execute()
 
         if not response.data:

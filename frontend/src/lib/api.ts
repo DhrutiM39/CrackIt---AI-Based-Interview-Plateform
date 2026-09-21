@@ -299,3 +299,39 @@ export interface DashboardMetrics {
 export const dashboardApi = {
   getMetrics: () => api.get<DashboardMetrics>("/dashboard/metrics"),
 };
+
+// ─── New Feature APIs ─────────────────────────────────────────────────────────
+
+export const linkedinApi = {
+  analyze: (payload: any) => api.post<any>("/linkedin/analyze", { body: payload }),
+  getHistory: () => api.get<any[]>("/linkedin/analyses"),
+  getById: (id: string | number) => api.get<any>(`/linkedin/analyses/${id}`),
+};
+
+export const projectsApi = {
+  analyze: (payload: any) => api.post<any>("/projects/analyze", { body: payload }),
+  list: () => api.get<any[]>("/projects"),
+  getById: (id: string | number) => api.get<any>(`/projects/${id}`),
+};
+
+export const notificationsApi = {
+  list: () => api.get<any[]>("/notifications"),
+  markRead: (id: string | number) => api.patch<any>(`/notifications/${id}/read`),
+};
+
+export const profileApi = {
+  get: () => api.get<any>("/profile"),
+  update: (payload: any) => api.patch<any>("/profile", { body: payload }),
+};
+
+export const settingsApi = {
+  get: () => api.get<any>("/settings"),
+  update: (payload: any) => api.patch<any>("/settings", { body: payload }),
+};
+
+export const roadmapApi = {
+  generate: (payload: any) => api.post<any>("/roadmap/generate", { body: payload }),
+  list: () => api.get<any[]>("/roadmap"),
+  getById: (id: string | number) => api.get<any>(`/roadmap/${id}`),
+};
+

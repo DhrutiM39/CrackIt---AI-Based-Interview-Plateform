@@ -1,6 +1,7 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
+
 
 class ProjectAnalyzeRequest(BaseModel):
     project_name: str
@@ -12,20 +13,27 @@ class ProjectAnalyzeRequest(BaseModel):
     features: Optional[str] = None
     challenges: Optional[str] = None
 
-class ProjectCriteria(BaseModel):
-    name: str
-    score: int
-    desc: str
 
-class ProjectAnalyzeResponse(BaseModel):
-    id: int
-    project_id: int
-    user_id: str
-    project_title: str
-    ai_score: float
+class ProjectAnalysisResponse(BaseModel):
+    id: Optional[int] = None
+    project_id: Optional[int] = None
+    overall_score: float
+    technical_quality: float
+    complexity_score: float
+    resume_value: float
+    summary: str
     strengths: List[str]
     weaknesses: List[str]
-    suggestions: List[str]
+    missing_features: List[str]
     interview_questions: List[str]
-    criteria: List[ProjectCriteria]
-    analyzed_at: datetime
+    suggested_improvements: List[str]
+    persisted: bool = False
+
+
+class ProjectSummary(BaseModel):
+    id: int
+    project_title: str
+    description: Optional[str] = None
+    github_url: Optional[str] = None
+    created_at: Optional[datetime] = None
+    analysis: Optional[dict] = None

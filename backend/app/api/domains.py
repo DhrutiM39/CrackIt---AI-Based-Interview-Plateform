@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @router.get("", response_model=List[DomainResponse])
 async def get_domains(current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # 1. Fetch all domains
         domains_res = supabase.table("domains").select("*").execute()
@@ -52,7 +52,7 @@ async def get_domains(current_user: dict = Depends(get_current_user)):
 @router.get("/{domain_id}", response_model=DomainDetailResponse)
 async def get_domain_detail(domain_id: int, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # Fetch domain
         domain_res = supabase.table("domains").select("*").eq("id", domain_id).execute()
@@ -98,7 +98,7 @@ async def get_domain_detail(domain_id: int, current_user: dict = Depends(get_cur
 @router.get("/{domain_id}/questions", response_model=List[QuestionResponse])
 async def get_domain_questions(domain_id: int, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         topics_res = supabase.table("domain_topics").select("id").eq("domain_id", domain_id).execute()
         if not topics_res.data:
@@ -139,14 +139,32 @@ async def get_domain_questions(domain_id: int, current_user: dict = Depends(get_
 @router.post("/questions/{question_id}/answer", response_model=SubmitAnswerResponse)
 async def submit_domain_question_answer(question_id: int, payload: SubmitAnswerRequest, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
-        q_res = supabase.table("domain_questions").select("answer").eq("id", question_id).execute()
+        q_res = supabase.table("domain_questions").select("*").eq("id", question_id).execute()
         if not q_res.data:
             raise HTTPException(status_code=404, detail="Question not found")
         
-        is_correct = len(payload.answer.strip()) > 10
-        score = 100.0 if is_correct else 50.0
+        question_data = q_res.data[0]
+        
+        # Use Gemini AI to evaluate the answer
+        try:
+            from app.services.gemini_service import gemini_service
+            eval_res = gemini_service.evaluate_answer(
+                question=question_data.get("question"),
+                answer=payload.answer,
+                difficulty=question_data.get("difficulty", "Medium")
+            )
+            score = eval_res.score
+            is_correct = score >= 60
+            feedback = eval_res.feedback
+            if eval_res.suggestions:
+                feedback += " Suggestions: " + "; ".join(eval_res.suggestions)
+        except Exception as e:
+            # Fallback if Gemini fails
+            is_correct = len(payload.answer.strip()) > 10
+            score = 100.0 if is_correct else 50.0
+            feedback = "Good" if is_correct else "Needs more detail"
         
         progress_data = {
             "user_id": user_id,

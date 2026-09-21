@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @router.get("", response_model=List[SubjectResponse])
 async def get_subjects(current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # 1. Fetch all subjects
         subjects_res = supabase.table("subjects").select("*").execute()
@@ -54,7 +54,7 @@ async def get_subjects(current_user: dict = Depends(get_current_user)):
 @router.get("/{subject_id}", response_model=SubjectDetailResponse)
 async def get_subject_detail(subject_id: int, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # Fetch subject
         subject_res = supabase.table("subjects").select("*").eq("id", subject_id).execute()
@@ -104,7 +104,7 @@ async def get_subject_detail(subject_id: int, current_user: dict = Depends(get_c
 @router.get("/{subject_id}/questions", response_model=List[QuestionResponse])
 async def get_subject_questions(subject_id: int, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # 1. Get all topics for this subject
         topics_res = supabase.table("topics").select("id").eq("subject_id", subject_id).execute()
@@ -148,17 +148,32 @@ async def get_subject_questions(subject_id: int, current_user: dict = Depends(ge
 @router.post("/questions/{question_id}/answer", response_model=SubmitAnswerResponse)
 async def submit_question_answer(question_id: int, payload: SubmitAnswerRequest, current_user: dict = Depends(get_current_user)):
     try:
-        user_id = current_user["id"]
+        user_id = current_user["sub"]
         
         # 1. Verify question exists and get answer
-        q_res = supabase.table("questions").select("answer").eq("id", question_id).execute()
+        q_res = supabase.table("questions").select("*").eq("id", question_id).execute()
         if not q_res.data:
             raise HTTPException(status_code=404, detail="Question not found")
         
         # In a real scenario, we might use AI to evaluate the answer. 
-        # For this prototype, we'll assume they completed it.
-        is_correct = len(payload.answer.strip()) > 10
-        score = 100.0 if is_correct else 50.0
+        # Use Gemini AI to evaluate the answer
+        try:
+            from app.services.gemini_service import gemini_service
+            eval_res = gemini_service.evaluate_answer(
+                question=q_res.data[0]["question"],
+                answer=payload.answer,
+                difficulty=q_res.data[0].get("difficulty", "Medium")
+            )
+            score = eval_res.score
+            is_correct = score >= 60
+            feedback = eval_res.feedback
+            if eval_res.suggestions:
+                feedback += " Suggestions: " + "; ".join(eval_res.suggestions)
+        except Exception as e:
+            # Fallback if Gemini fails
+            is_correct = len(payload.answer) > 10
+            score = 100 if is_correct else 0
+            feedback = "Good" if is_correct else "Needs more detail"
         
         # 2. Upsert user_question_progress
         progress_data = {
