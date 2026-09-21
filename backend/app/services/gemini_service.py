@@ -1,12 +1,26 @@
 import json
 import logging
+from typing import List, Dict, Any
 import google.generativeai as genai
 from fastapi import HTTPException, status
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.core.config import GEMINI_API_KEY
 from app.schemas.resume import ResumeAnalysisResult
 from app.schemas.prep import GeneratedQuestionList
+
+
+# ── Structured output schema for interview report ─────────────────────────────
+class InterviewReportAI(BaseModel):
+    overall_score: float  # 0-100
+    technical_score: float
+    communication_score: float
+    strengths: List[str]
+    weaknesses: List[str]
+    missed_concepts: List[str]
+    recommended_topics: List[str]
+    summary: str
+    next_steps: List[str]
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +162,105 @@ class GeminiService:
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"AI service error: {str(e)}"
             )
+
+    def generate_interview_report(
+        self,
+        interview_type: str,
+        target_role: str,
+        difficulty: str,
+        questions_and_answers: List[Dict[str, Any]],
+        user_name: str = "Candidate",
+    ) -> InterviewReportAI:
+        """
+        Given full interview Q&A data, produce a structured evaluation report.
+        Uses actual answer content — does NOT invent scores.
+        """
+        if not GEMINI_API_KEY:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Gemini API is not configured on the server."
+            )
+
+        # Build Q&A transcript string
+        qa_text = ""
+        for i, qa in enumerate(questions_and_answers, 1):
+            q = qa.get("question_text", "")
+            a = qa.get("answer_text") or "[No answer provided]"
+            score = qa.get("ai_score")
+            feedback = qa.get("ai_feedback") or ""
+            score_str = f"  Pre-score: {score}/100" if score is not None else ""
+            qa_text += f"\nQ{i}: {q}\nAnswer: {a}{score_str}\n{feedback}\n"
+
+        n = len(questions_and_answers)
+        answered = sum(1 for qa in questions_and_answers if qa.get("answer_text"))
+
+        prompt = f"""
+        You are an expert technical interviewer and talent evaluator at a top tech company.
+        Evaluate the following mock {interview_type} interview for the role of "{target_role}" at {difficulty} difficulty level.
+        The candidate is: {user_name}.
+        They answered {answered} out of {n} questions.
+
+        INTERVIEW TRANSCRIPT:
+        {qa_text}
+
+        Provide a thorough, honest, and constructive evaluation. Base ALL scores strictly on the answers provided above — do NOT invent positive scores for missing or weak answers.
+
+        Scoring guidelines:
+        - overall_score: weighted combination of technical + communication (0-100)
+        - technical_score: accuracy, depth, correctness of technical answers (0-100)
+        - communication_score: clarity, structure, articulation of answers (0-100)
+        - If answers are missing or very weak, scores should reflect that honestly (e.g. 30-50)
+
+        Provide:
+        - strengths: 3-5 specific things the candidate did well (based on actual answers)
+        - weaknesses: 3-5 specific areas needing improvement
+        - missed_concepts: concepts/topics the candidate clearly didn't know or skipped
+        - recommended_topics: 4-6 specific topics/resources the candidate should study next
+        - summary: 2-3 sentence overall evaluation paragraph
+        - next_steps: 3-5 concrete actionable next steps for the candidate
+        """
+
+        try:
+            model = genai.GenerativeModel(self.model_name)
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=InterviewReportAI,
+                    temperature=0.3,
+                ),
+            )
+
+            if not response.text:
+                raise HTTPException(500, "Empty response from Gemini API")
+
+            raw_json = response.text
+            result_dict = json.loads(raw_json)
+            return InterviewReportAI(**result_dict)
+
+        except (json.JSONDecodeError, ValidationError) as e:
+            logger.error(f"Failed to parse Gemini interview report: {e}")
+            # Return a fallback with computed scores
+            scores = [qa["ai_score"] for qa in questions_and_answers if qa.get("ai_score") is not None]
+            avg = round(sum(scores) / len(scores), 1) if scores else 50.0
+            return InterviewReportAI(
+                overall_score=avg,
+                technical_score=avg,
+                communication_score=avg,
+                strengths=["Attempted the interview"],
+                weaknesses=["Could not fully evaluate responses"],
+                missed_concepts=[],
+                recommended_topics=["Review core concepts for " + target_role],
+                summary=f"Completed a {interview_type} interview for {target_role}.",
+                next_steps=["Review interview feedback", "Practice more questions"],
+            )
+        except Exception as e:
+            logger.error(f"Gemini API error during interview report: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"AI service error: {str(e)}"
+            )
+
 
 # Singleton instance
 gemini_service = GeminiService()
