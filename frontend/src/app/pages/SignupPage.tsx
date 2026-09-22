@@ -4,17 +4,17 @@ import { useAuth } from "../AuthContext";
 
 // ─── Design tokens (mirror App.tsx) ──────────────────────────────────────────
 const C = {
-  bg:         "#0B1120",
-  card:       "#111827",
-  surface:    "#1F2937",
-  border:     "#374151",
-  muted:      "#9CA3AF",
-  text:       "#F9FAFB",
-  purple:     "#A855F7",
-  cyan:       "#22D3EE",
-  green:      "#34D399",
-  red:        "#EF4444",
-  grad:       "linear-gradient(135deg, #A855F7 0%, #22D3EE 100%)",
+  bg:         "#0D1724",
+  card:       "#132131",
+  surface:    "#172A3C",
+  border:     "#2A3D52",
+  muted:      "#9EACBA",
+  text:       "#EDF2F4",
+  purple:     "#6D9995",
+  cyan:       "#7E9BB5",
+  green:      "#9BAF9C",
+  red:        "#C96B68",
+  grad:       "linear-gradient(135deg, #31536D 0%, #477773 100%)",
 };
 
 const passwordRules = [
@@ -61,14 +61,14 @@ export default function SignupPage({ onGoLogin }: SignupPageProps) {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: C.bg, fontFamily: "'Inter', sans-serif" }}
+      style={{ background: C.bg, fontFamily: "'Manrope', sans-serif" }}
     >
       {/* Background glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(168,85,247,.18) 0%, transparent 70%)",
+            "linear-gradient(135deg, rgba(95,139,137,.08), transparent 48%)",
         }}
       />
 
@@ -77,7 +77,7 @@ export default function SignupPage({ onGoLogin }: SignupPageProps) {
         <div className="flex items-center justify-center gap-3 mb-8">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: C.grad, boxShadow: "0 4px 20px rgba(168,85,247,.5)" }}
+            style={{ background: C.grad, boxShadow: "0 8px 24px rgba(3,12,22,.28)" }}
           >
             <Brain size={20} color="white" />
           </div>
@@ -254,7 +254,7 @@ export default function SignupPage({ onGoLogin }: SignupPageProps) {
               className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all flex items-center justify-center gap-2 mt-1"
               style={{
                 background: loading ? C.surface : C.grad,
-                boxShadow: loading ? "none" : "0 4px 20px rgba(168,85,247,.4)",
+                boxShadow: loading ? "none" : "0 8px 20px rgba(3,12,22,.24)",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >

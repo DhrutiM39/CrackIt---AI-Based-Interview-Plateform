@@ -33,11 +33,16 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: isFormData ? (options.body as FormData) : (options.body ? JSON.stringify(options.body) : undefined),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: isFormData ? (options.body as FormData) : (options.body ? JSON.stringify(options.body) : undefined),
+    });
+  } catch {
+    throw new Error(`Unable to reach the CrackIt backend at ${BASE_URL}. Start FastAPI and try again.`);
+  }
 
   // 401 → clear auth and redirect to login
   if (res.status === 401) {

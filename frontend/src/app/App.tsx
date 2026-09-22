@@ -30,13 +30,13 @@ import type { Report, ReportSummary, DashboardMetrics } from "../lib/api";
 
 // â”€â”€â”€ Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
-  bg: "#0B1120", card: "#111827", surface: "#1F2937",
-  border: "#374151", muted: "#9CA3AF", text: "#F9FAFB",
-  purple: "#A855F7", cyan: "#22D3EE", green: "#34D399",
-  amber: "#F59E0B", pink: "#F472B6", red: "#EF4444",
-  indigo: "#818CF8", blue: "#60A5FA", teal: "#2DD4BF",
-  grad: "linear-gradient(135deg, #A855F7 0%, #22D3EE 100%)",
-  gradSubtle: "linear-gradient(135deg,rgba(168,85,247,.15) 0%,rgba(34,211,238,.1) 100%)",
+  bg: "#0D1724", card: "#132131", surface: "#1A2B3D",
+  border: "#2A3D52", muted: "#9EACBA", text: "#EDF2F4",
+  purple: "#5F8B89", cyan: "#7E9BB5", green: "#9BAF9C",
+  amber: "#C6A574", pink: "#9D8791", red: "#C96B68",
+  indigo: "#7E9BB5", blue: "#7894A8", teal: "#6D9995",
+  grad: "linear-gradient(135deg, #31536D 0%, #477773 100%)",
+  gradSubtle: "linear-gradient(135deg,rgba(95,139,137,.14) 0%,rgba(49,83,109,.14) 100%)",
 };
 
 // â”€â”€â”€ Primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -46,8 +46,8 @@ const Grad = ({ children }: { children: React.ReactNode }) => (
 const Card = ({ children, className = "", style = {}, onClick }: {
   children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void;
 }) => (
-  <div className={className} onClick={onClick}
-    style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, ...style }}>{children}</div>
+  <div className={`crackit-card-enter ${className}`} onClick={onClick}
+    style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, boxShadow: "0 12px 30px rgba(3, 12, 22, .18)", ...style }}>{children}</div>
 );
 const ChartTip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -65,7 +65,7 @@ const Pill = ({ label, color }: { label: string; color: string }) => (
 const SecHead = ({ icon, title, sub, action }: { icon: React.ReactNode; title: string; sub?: string; action?: React.ReactNode }) => (
   <div className="flex items-start justify-between mb-5">
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.12)", color: C.purple }}>{icon}</div>
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(95,139,137,.13)", color: C.purple }}>{icon}</div>
       <div><div className="text-sm font-bold text-white">{title}</div>{sub && <div className="text-xs mt-0.5" style={{ color: C.muted }}>{sub}</div>}</div>
     </div>
     {action}
@@ -117,8 +117,8 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
           const Icon = item.icon; const isA = active === item.id;
           return (
             <button key={item.id} onClick={() => onNav(item.id)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
-              style={{ background: isA ? C.gradSubtle : "transparent", border: isA ? "1px solid rgba(168,85,247,.3)" : "1px solid transparent" }}>
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${isA ? "sidebar-active" : ""}`}
+              style={{ background: isA ? C.gradSubtle : "transparent", border: "1px solid transparent" }}>
               <Icon size={16} style={{ color: isA ? C.purple : C.muted, flexShrink: 0 }} />
               {!col && <span className="text-sm font-medium truncate" style={{ color: isA ? C.text : C.muted }}>{item.label}</span>}
             </button>
@@ -130,7 +130,7 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
           const Icon = item.icon; const isA = active === item.id;
           return (
             <button key={item.id} onClick={() => onNav(item.id)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${isA ? "sidebar-active" : ""}`}
               style={{ background: isA ? C.gradSubtle : "transparent" }}>
               <Icon size={16} style={{ color: isA ? C.purple : C.muted, flexShrink: 0 }} />
               {!col && <span className="text-sm font-medium" style={{ color: isA ? C.text : C.muted }}>{item.label}</span>}
@@ -165,10 +165,10 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
       <button className="lg:hidden" onClick={onToggle} style={{ color: C.muted }}><Menu size={20} /></button>
       <div className="flex-1 max-w-md relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
-        <input placeholder="Search subjects, topics, questionsâ€¦"
+        <input placeholder="Search subjects, topics, questions..."
           className="w-full pl-9 pr-4 py-2 rounded-xl text-sm outline-none"
           style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded" style={{ background: C.border, color: C.muted }}>âŒ˜K</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded" style={{ background: C.border, color: C.muted }}>Ctrl K</span>
       </div>
       <div className="flex items-center gap-2 ml-auto">
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
@@ -225,42 +225,42 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
 
 const SUBJECTS = [
   {
-    id: "dsa", name: "Data Structures & Algorithms", icon: "âš¡", color: C.purple,
+    id: "dsa", name: "Data Structures & Algorithms", icon: "DSA", color: C.purple,
     progress: 68, difficulty: "Hard", total: 120, done: 82, streak: 7,
     tags: ["Arrays", "Trees", "Graphs", "DP"],
   },
   {
-    id: "dbms", name: "DBMS", icon: "ðŸ—„ï¸", color: C.cyan,
+    id: "dbms", name: "DBMS", icon: "DB", color: C.cyan,
     progress: 55, difficulty: "Medium", total: 80, done: 44, streak: 3,
     tags: ["Normalization", "Transactions", "Indexing"],
   },
   {
-    id: "os", name: "Operating Systems", icon: "ðŸ–¥ï¸", color: C.green,
+    id: "os", name: "Operating Systems", icon: "OS", color: C.green,
     progress: 72, difficulty: "Hard", total: 95, done: 68, streak: 5,
     tags: ["Processes", "Memory", "Scheduling"],
   },
   {
-    id: "cn", name: "Computer Networks", icon: "ðŸŒ", color: C.amber,
+    id: "cn", name: "Computer Networks", icon: "NET", color: C.amber,
     progress: 41, difficulty: "Medium", total: 75, done: 31, streak: 0,
     tags: ["OSI Model", "TCP/IP", "DNS"],
   },
   {
-    id: "oop", name: "Object-Oriented Programming", icon: "ðŸ”·", color: C.indigo,
+    id: "oop", name: "Object-Oriented Programming", icon: "OOP", color: C.indigo,
     progress: 88, difficulty: "Easy", total: 60, done: 53, streak: 12,
     tags: ["Polymorphism", "Inheritance", "SOLID"],
   },
   {
-    id: "sql", name: "SQL", icon: "ðŸ“Š", color: C.teal,
+    id: "sql", name: "SQL", icon: "SQL", color: C.teal,
     progress: 61, difficulty: "Medium", total: 70, done: 43, streak: 2,
     tags: ["Joins", "Aggregations", "Indexes"],
   },
   {
-    id: "apt", name: "Aptitude", icon: "ðŸ§®", color: C.pink,
+    id: "apt", name: "Aptitude", icon: "APT", color: C.pink,
     progress: 45, difficulty: "Easy", total: 100, done: 45, streak: 1,
     tags: ["Quant", "Logical", "Verbal"],
   },
   {
-    id: "hr", name: "HR Interview", icon: "ðŸ¤", color: C.amber,
+    id: "hr", name: "HR Interview", icon: "HR", color: C.amber,
     progress: 79, difficulty: "Easy", total: 50, done: 39, streak: 8,
     tags: ["STAR Method", "Behavioral", "Situational"],
   },
@@ -537,9 +537,9 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
             sub="Based on your weak areas and exam patterns" />
           <div className="space-y-2.5">
             {[
-              { topic: "Kruskal's & Prim's Algorithm", reason: "Frequently asked, not practiced yet", icon: "ðŸ”—" },
-              { topic: "Fenwick Tree (BIT)", reason: "Common in competitive coding rounds", icon: "ðŸŒ²" },
-              { topic: "Trie Data Structure", reason: "Appears in 67% of string-related FAANG questions", icon: "ðŸ“š" },
+              { topic: "Kruskal's & Prim's Algorithm", reason: "Frequently asked, not practiced yet", icon: "ALGO" },
+              { topic: "Fenwick Tree (BIT)", reason: "Common in competitive coding rounds", icon: "TREE" },
+              { topic: "Trie Data Structure", reason: "Appears in 67% of string-related FAANG questions", icon: "READ" },
             ].map(r => (
               <div key={r.topic} className="flex items-start gap-2.5 p-3 rounded-xl"
                 style={{ background: "rgba(168,85,247,.07)", border: "1px solid rgba(168,85,247,.2)" }}>
@@ -795,49 +795,49 @@ function SubjectPrepPage() {
 
 const DOMAINS = [
   {
-    id: "web", name: "Web Development", icon: "ðŸŒ", color: C.purple,
+    id: "web", name: "Web Development", icon: "WEB", color: C.purple,
     progress: 72, difficulty: "Intermediate", time: "8 weeks left",
     skills: ["React", "Node.js", "TypeScript", "CSS", "REST APIs"],
     demand: 96, salary: "â‚¹18â€“35 LPA",
   },
   {
-    id: "ai", name: "AI / Machine Learning", icon: "ðŸ¤–", color: C.cyan,
+    id: "ai", name: "AI / Machine Learning", icon: "AI", color: C.cyan,
     progress: 38, difficulty: "Advanced", time: "14 weeks left",
     skills: ["Python", "PyTorch", "Transformers", "MLOps"],
     demand: 99, salary: "â‚¹25â€“60 LPA",
   },
   {
-    id: "ds", name: "Data Science", icon: "ðŸ“Š", color: C.green,
+    id: "ds", name: "Data Science", icon: "DATA", color: C.green,
     progress: 51, difficulty: "Intermediate", time: "10 weeks left",
     skills: ["Python", "SQL", "Pandas", "Statistics", "Power BI"],
     demand: 94, salary: "â‚¹15â€“30 LPA",
   },
   {
-    id: "cloud", name: "Cloud Computing", icon: "â˜ï¸", color: C.blue,
+    id: "cloud", name: "Cloud Computing", icon: "CLOUD", color: C.blue,
     progress: 29, difficulty: "Intermediate", time: "12 weeks left",
     skills: ["AWS", "GCP", "Terraform", "Docker", "Kubernetes"],
     demand: 92, salary: "â‚¹20â€“45 LPA",
   },
   {
-    id: "cyber", name: "Cybersecurity", icon: "ðŸ”’", color: C.red,
+    id: "cyber", name: "Cybersecurity", icon: "SEC", color: C.red,
     progress: 18, difficulty: "Advanced", time: "16 weeks left",
     skills: ["Penetration Testing", "SIEM", "Cryptography", "OWASP"],
     demand: 88, salary: "â‚¹20â€“50 LPA",
   },
   {
-    id: "devops", name: "DevOps", icon: "âš™ï¸", color: C.amber,
+    id: "devops", name: "DevOps", icon: "OPS", color: C.amber,
     progress: 44, difficulty: "Intermediate", time: "9 weeks left",
     skills: ["CI/CD", "Docker", "Kubernetes", "Ansible", "Monitoring"],
     demand: 91, salary: "â‚¹18â€“40 LPA",
   },
   {
-    id: "mobile", name: "Mobile App Development", icon: "ðŸ“±", color: C.pink,
+    id: "mobile", name: "Mobile App Development", icon: "MOB", color: C.pink,
     progress: 63, difficulty: "Intermediate", time: "7 weeks left",
     skills: ["React Native", "Flutter", "Swift", "Kotlin"],
     demand: 84, salary: "â‚¹15â€“28 LPA",
   },
   {
-    id: "test", name: "Software Testing", icon: "ðŸ§ª", color: C.teal,
+    id: "test", name: "Software Testing", icon: "QA", color: C.teal,
     progress: 57, difficulty: "Beginner", time: "6 weeks left",
     skills: ["Selenium", "Jest", "Cypress", "Postman", "JUnit"],
     demand: 79, salary: "â‚¹10â€“22 LPA",
@@ -1448,11 +1448,11 @@ function Waveform({ active, bars = 22 }: { active: boolean; bars?: number }) {
 }
 
 const INTERVIEW_TYPES = [
-  { id: "hr", label: "HR Interview", icon: "ðŸ¤", desc: "Behavioural & cultural fit", color: C.purple },
-  { id: "technical", label: "Technical", icon: "ðŸ’»", desc: "DSA, system design", color: C.cyan },
-  { id: "behavioral", label: "Behavioral", icon: "ðŸ§ ", desc: "STAR method & scenarios", color: C.green },
-  { id: "mixed", label: "Mixed Round", icon: "ðŸ”€", desc: "HR + Technical combined", color: C.amber },
-  { id: "coding", label: "Live Coding", icon: "âŒ¨ï¸", desc: "Real-time problem solving", color: C.pink },
+  { id: "hr", label: "HR Interview", icon: "HR", desc: "Behavioural & cultural fit", color: C.purple },
+  { id: "technical", label: "Technical", icon: "TECH", desc: "DSA, system design", color: C.cyan },
+  { id: "behavioral", label: "Behavioral", icon: "BEHAVIOR", desc: "STAR method & scenarios", color: C.green },
+  { id: "mixed", label: "Mixed Round", icon: "MIXED", desc: "HR + Technical combined", color: C.amber },
+  { id: "coding", label: "Live Coding", icon: "CODE", desc: "Real-time problem solving", color: C.pink },
 ];
 
 const QUESTIONS_BANK = [
@@ -1539,9 +1539,9 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
           </div>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Easy", icon: "ðŸŸ¢", desc: "Freshers & campus interviews", bars: 1, color: C.green },
-              { label: "Medium", icon: "ðŸŸ¡", desc: "1â€“3 years experience", bars: 2, color: C.amber },
-              { label: "Hard", icon: "ðŸ”´", desc: "Senior & FAANG level", bars: 3, color: C.red },
+              { label: "Easy", icon: "E", desc: "Freshers & campus interviews", bars: 1, color: C.green },
+              { label: "Medium", icon: "M", desc: "1-3 years experience", bars: 2, color: C.amber },
+              { label: "Hard", icon: "H", desc: "Senior & FAANG level", bars: 3, color: C.red },
             ].map(d => (
               <button key={d.label} onClick={() => setDiff(d.label)}
                 className="flex flex-col gap-3 p-5 rounded-2xl text-left transition-all"
@@ -2257,9 +2257,9 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 <div className="space-y-2">
                   {[
                     { tip: "Use the STAR method for behavioural answers", icon: "â­" },
-                    { tip: "Think out loud â€” process matters as much as the answer", icon: "ðŸ’­" },
+                    { tip: "Think out loud - process matters as much as the answer", icon: "THINK" },
                     { tip: "Ask clarifying questions before jumping in", icon: "â“" },
-                    { tip: "Keep eye contact with the camera", icon: "ðŸ‘ï¸" },
+                    { tip: "Keep eye contact with the camera", icon: "FOCUS" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl"
                       style={{ background: "rgba(168,85,247,.06)", border: "1px solid rgba(168,85,247,.14)" }}>
@@ -2364,10 +2364,10 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 <SecHead icon={<Lightbulb size={14} />} title="Coding Tips" />
                 <div className="space-y-2">
                   {[
-                    { tip: "Clarify constraints before coding", icon: "ðŸ“" },
-                    { tip: "Start with brute force, optimise later", icon: "ðŸ”„" },
+                    { tip: "Clarify constraints before coding", icon: "PLAN" },
+                    { tip: "Start with brute force, optimise later", icon: "ITERATE" },
                     { tip: "Write clean, readable variable names", icon: "âœï¸" },
-                    { tip: "Handle edge cases explicitly", icon: "âš ï¸" },
+                    { tip: "Handle edge cases explicitly", icon: "ALERT" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl"
                       style={{ background: "rgba(34,211,238,.05)", border: "1px solid rgba(34,211,238,.12)" }}>
@@ -2962,14 +2962,14 @@ const SKILLS_GROWTH = [
   { month: "Aug", DSA: 78, System: 60, OOP: 88, SQL: 74 },
 ];
 const ACHIEVEMENTS_LIST = [
-  { title: "First Mock", icon: "ðŸŽ¯", earned: true, date: "Jun 12" },
-  { title: "7-Day Streak", icon: "ðŸ”¥", earned: true, date: "Jul 3" },
-  { title: "DSA Beginner", icon: "âš¡", earned: true, date: "May 28" },
-  { title: "Resume Pro", icon: "ðŸ“„", earned: true, date: "Apr 15" },
-  { title: "LinkedIn Ready", icon: "ðŸ’¼", earned: true, date: "May 1" },
-  { title: "30-Day Streak", icon: "ðŸ†", earned: false, date: null },
-  { title: "Perfect Score", icon: "ðŸ’¯", earned: false, date: null },
-  { title: "Top 10%", icon: "ðŸŒŸ", earned: false, date: null },
+  { title: "First Mock", icon: "01", earned: true, date: "Jun 12" },
+  { title: "7-Day Streak", icon: "07", earned: true, date: "Jul 3" },
+  { title: "DSA Beginner", icon: "DSA", earned: true, date: "May 28" },
+  { title: "Resume Pro", icon: "CV", earned: true, date: "Apr 15" },
+  { title: "LinkedIn Ready", icon: "IN", earned: true, date: "May 1" },
+  { title: "30-Day Streak", icon: "30", earned: false, date: null },
+  { title: "Perfect Score", icon: "100", earned: false, date: null },
+  { title: "Top 10%", icon: "TOP", earned: false, date: null },
 ];
 const RECENT_ACTS = [
   { icon: <Mic size={13} />, label: "Technical Mock Interview â€” Score: 81", time: "2h ago", color: C.purple },
@@ -2981,11 +2981,11 @@ const RECENT_ACTS = [
 ];
 
 const CAREER_GOALS_LIST = [
-  { id: "sde", label: "Software Engineer", icon: "ðŸ’»", color: C.purple, companies: "Google Â· Meta Â· Amazon" },
-  { id: "fe", label: "Frontend Developer", icon: "ðŸŽ¨", color: C.cyan, companies: "Flipkart Â· Swiggy Â· Zomato" },
-  { id: "ds", label: "Data Scientist", icon: "ðŸ“Š", color: C.green, companies: "Microsoft Â· IBM Â· Google" },
-  { id: "devops", label: "DevOps Engineer", icon: "âš™ï¸", color: C.amber, companies: "AWS Â· Azure Â· GCP" },
-  { id: "ml", label: "ML Engineer", icon: "ðŸ¤–", color: C.pink, companies: "OpenAI Â· HuggingFace Â· NVIDIA" },
+  { id: "sde", label: "Software Engineer", icon: "SWE", color: C.purple, companies: "Google | Meta | Amazon" },
+  { id: "fe", label: "Frontend Developer", icon: "FE", color: C.cyan, companies: "Flipkart | Swiggy | Zomato" },
+  { id: "ds", label: "Data Scientist", icon: "DS", color: C.green, companies: "Microsoft | IBM | Google" },
+  { id: "devops", label: "DevOps Engineer", icon: "OPS", color: C.amber, companies: "AWS | Azure | GCP" },
+  { id: "ml", label: "ML Engineer", icon: "ML", color: C.pink, companies: "OpenAI | HuggingFace | NVIDIA" },
 ];
 const ROADMAP_PHASES_LIST = [
   { phase: 1, title: "Foundation Building", weeks: "Weeks 1â€“3", status: "done",
@@ -3341,12 +3341,12 @@ function ProgressDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Card className="p-5">
             <SecHead icon={<Award size={15} />} title="Achievement Badges"
-              sub={`${ACHIEVEMENTS_LIST.filter(a => a.earned).length} earned Â· ${ACHIEVEMENTS_LIST.filter(a => !a.earned).length} locked`} />
+              sub={`${ACHIEVEMENTS_LIST.filter(a => a.earned).length} earned | ${ACHIEVEMENTS_LIST.filter(a => !a.earned).length} locked`} />
             <div className="grid grid-cols-4 gap-3">
               {ACHIEVEMENTS_LIST.map((a, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-xl text-center"
                   style={{ background: a.earned ? "rgba(168,85,247,.08)" : C.surface, border: `1px solid ${a.earned ? "rgba(168,85,247,.22)" : C.border}`, opacity: a.earned ? 1 : 0.55 }}>
-                  <div className="text-2xl" style={{ filter: a.earned ? "none" : "grayscale(1)" }}>{a.icon}</div>
+                  <div className="text-sm font-bold tracking-tight" style={{ filter: a.earned ? "none" : "grayscale(1)", color: a.earned ? C.purple : C.muted }}>{a.icon}</div>
                   <div className="text-xs font-semibold leading-tight" style={{ color: a.earned ? C.text : C.muted }}>{a.title}</div>
                   <div className="text-xs" style={{ color: C.muted }}>{a.earned ? a.date : "Locked"}</div>
                 </div>
@@ -6092,7 +6092,7 @@ function Footer() {
           <defs><linearGradient id="footerGrad" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#A855F7"/><stop offset="1" stopColor="#22D3EE"/></linearGradient></defs>
         </svg>
         <span className="text-xs font-semibold" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>CrackIt</span>
-        <span className="text-xs" style={{ color: C.muted }}>Â© 2025 Â· All rights reserved.</span>
+        <span className="text-xs" style={{ color: C.muted }}>(c) 2025 | All rights reserved.</span>
       </div>
       <div className="flex gap-4">
         {["Privacy Policy", "Terms of Service", "Help Center"].map(l => (
@@ -6152,7 +6152,7 @@ export default function App() {
       <Sidebar col={col} active={page} onNav={handleNav} onToggle={() => setCol(!col)} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar onToggle={() => setCol(!col)} />
-        <div className="flex flex-1 overflow-hidden">
+        <div key={page} className="flex flex-1 overflow-hidden crackit-page-enter">
           {page === "dashboard" && <ProgressDashboardPage />}
           {page === "resume" && <ResumeAnalyzerPage />}
           {page === "linkedin" && <LinkedInAnalyzerPage />}
