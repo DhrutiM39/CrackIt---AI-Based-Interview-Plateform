@@ -1882,13 +1882,12 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [qIndex, setQIndex] = useState(0);
+  const [aiQuestions, setAiQuestions] = useState<any[]>([]);
   const [showFollow, setShowFollow] = useState(false);
   const [notes, setNotes] = useState("");
   const [mainTab, setMainTab] = useState<"interview" | "coding">("interview");
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Hello! I'm your AI interviewer. Before we start coding, let me ask â€” can you walk me through your problem-solving approach?" },
-    { role: "user", text: "Sure! I usually start by understanding the problem clearly, then think about edge cases before writing any code." },
-    { role: "ai", text: QUESTIONS_BANK[0].q },
+  const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([
+    { role: "ai", text: "Preparing your personalized interview questions..." },
   ]);
   const [inputMsg, setInputMsg] = useState("");
   const timer = useTimer(true);
@@ -1896,7 +1895,6 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
 
   // â”€â”€ Session tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const sessionIdRef = useRef<number | null>(null);
-  const answersRef = useRef<Record<number, string>>({}); // qIndex â†’ answer text
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -1906,41 +1904,50 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
       hr: "HR", technical: "Technical", behavioral: "Behavioral",
       mixed: "Technical", coding: "Technical",
     };
-    interviewsApi.createSession({
+    interviewsApi.start({
       interview_type: typeMap[cfg.type] ?? "Technical",
       target_role: cfg.role ?? "Software Engineer",
       difficulty: cfg.difficulty ?? "Medium",
-    }).then(session => {
-      sessionIdRef.current = session.id;
+      number_of_questions: 5,
+    }).then(result => {
+      sessionIdRef.current = result.session.id;
+      setAiQuestions(result.question ? [result.question] : []);
+      setMessages([{ role: "ai", text: result.question?.question_text ?? "No question was generated." }]);
     }).catch(err => {
-      console.warn("Could not create session (offline?):", err);
+      setSaveError(err?.message ?? "Could not start the AI interview.");
     });
   }, []);
 
-  const currentQ = QUESTIONS_BANK[qIndex];
+  const currentQ = aiQuestions[qIndex] ?? { question_text: "Waiting for the AI interviewer...", question_type: "Technical" };
+  const totalQuestions = 5;
   const typeInfo = INTERVIEW_TYPES.find(t => t.id === cfg.type) || INTERVIEW_TYPES[1];
 
-  const sendMsg = () => {
+  const sendMsg = async () => {
     if (!inputMsg.trim()) return;
     const text = inputMsg;
     setMessages(m => [...m, { role: "user", text }]);
-    // Track this as the answer for current question
-    answersRef.current[qIndex] = (answersRef.current[qIndex] ? answersRef.current[qIndex] + " " : "") + text;
     setInputMsg("");
-    setTimeout(() => {
-      setSpeaking(true);
-      setMessages(m => [...m, { role: "ai", text: "Great response! Let me dig a bit deeper on that point." }]);
-      setTimeout(() => setSpeaking(false), 2800);
-    }, 700);
+    const sessionId = sessionIdRef.current;
+    const questionId = currentQ.id;
+    if (!sessionId || !questionId) return;
+    setSpeaking(true);
+    try {
+      const result = await interviewsApi.answer({ session_id: sessionId, question_id: questionId, answer_text: text });
+      setMessages(m => [...m, { role: "ai", text: result.feedback }]);
+      if (result.next_question) {
+        setAiQuestions(q => [...q, result.next_question]);
+        setQIndex(i => i + 1);
+        setMessages(m => [...m, { role: "ai", text: result.next_question.question_text }]);
+      }
+    } catch (err: any) {
+      setSaveError(err?.message ?? "Answer evaluation failed.");
+    } finally {
+      setSpeaking(false);
+    }
   };
 
   const nextQuestion = () => {
-    const next = (qIndex + 1) % QUESTIONS_BANK.length;
-    setQIndex(next);
     setShowFollow(false);
-    setSpeaking(true);
-    setMessages(m => [...m, { role: "ai", text: QUESTIONS_BANK[next].q }]);
-    setTimeout(() => setSpeaking(false), 3000);
   };
 
   const handleEndInterview = async () => {
@@ -1953,32 +1960,14 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
     setSaving(true);
     setSaveError(null);
     try {
-      // Save each question + answer
-      for (let i = 0; i < QUESTIONS_BANK.length; i++) {
-        const q = QUESTIONS_BANK[i];
-        const answerText = answersRef.current[i] || null;
-        // Simulate a basic score based on answer length
-        const aiScore = answerText
-          ? Math.min(100, Math.max(40, 50 + Math.round(answerText.length / 8)))
-          : null;
-        await interviewsApi.saveAnswer(sessionId, {
-          question_text: q.q,
-          sequence_no: i + 1,
-          answer_text: answerText ?? undefined,
-          ai_score: aiScore ?? undefined,
-          ai_feedback: answerText ? `Answer addressed the question on ${q.type}.` : "No answer provided.",
-        });
-      }
-      // End the session
-      await interviewsApi.endSession(sessionId);
+      await interviewsApi.finish(sessionId);
       // Generate the AI report
       const report = await reportsApi.generate(sessionId);
       onEnd(report.id);
     } catch (err: any) {
       console.error("Error saving interview session:", err);
       setSaveError(err?.message ?? "Failed to save interview. Proceeding anyway.");
-      // Still navigate to reports even if save fails
-      setTimeout(() => onEnd(undefined), 2000);
+      setTimeout(() => setSaveError(null), 2000);
     }
   };
 
@@ -2141,8 +2130,8 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.04))", border: "1px solid rgba(168,85,247,.32)" }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Pill label={`Q${qIndex + 1} / ${QUESTIONS_BANK.length}`} color={C.purple} />
-                    <Pill label={currentQ.type} color={typeInfo.color} />
+                    <Pill label={`Q${qIndex + 1} / ${totalQuestions}`} color={C.purple} />
+                    <Pill label={currentQ.category ?? typeInfo.label} color={typeInfo.color} />
                   </div>
                   <button onClick={() => setShowFollow(v => !v)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -2150,14 +2139,14 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                     <Sparkles size={11} /> {showFollow ? "Hide" : "AI Follow-up"}
                   </button>
                 </div>
-                <p className="text-sm font-medium text-white leading-relaxed">{currentQ.q}</p>
+                <p className="text-sm font-medium text-white leading-relaxed">{currentQ.question_text}</p>
                 {showFollow && (
                   <div className="mt-3 p-3.5 rounded-xl flex items-start gap-2.5"
                     style={{ background: "rgba(34,211,238,.07)", border: "1px solid rgba(34,211,238,.2)" }}>
                     <Sparkles size={13} style={{ color: C.cyan, flexShrink: 0, marginTop: 1 }} />
                     <div>
                       <div className="text-xs font-bold mb-1" style={{ color: C.cyan }}>AI Follow-up Question</div>
-                      <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{currentQ.follow}</p>
+                      <p className="text-xs leading-relaxed" style={{ color: C.muted }}>Ask the AI interviewer for clarification or an example.</p>
                     </div>
                   </div>
                 )}
@@ -2225,15 +2214,15 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
               <Card className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-white">Question Progress</span>
-                  <span className="text-xs font-bold" style={{ color: C.purple }}>{qIndex + 1}/{QUESTIONS_BANK.length}</span>
+                  <span className="text-xs font-bold" style={{ color: C.purple }}>{qIndex + 1}/{totalQuestions}</span>
                 </div>
                 {/* Progress bar */}
                 <div className="h-2 rounded-full mb-3" style={{ background: C.border }}>
                   <div className="h-full rounded-full transition-all"
-                    style={{ width: `${((qIndex) / QUESTIONS_BANK.length) * 100}%`, background: C.grad }} />
+                    style={{ width: `${((qIndex) / totalQuestions) * 100}%`, background: C.grad }} />
                 </div>
                 <div className="space-y-1.5 mb-3">
-                  {QUESTIONS_BANK.map((q, i) => (
+                  {aiQuestions.map((q, i) => (
                     <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl"
                       style={{
                         background: i === qIndex ? "rgba(168,85,247,.1)" : i < qIndex ? "rgba(52,211,153,.06)" : C.surface,
@@ -2243,7 +2232,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                         style={{ background: i < qIndex ? C.green : i === qIndex ? C.purple : C.border, color: i <= qIndex ? "#fff" : C.muted }}>
                         {i < qIndex ? <Check size={9} /> : i + 1}
                       </div>
-                      <span className="text-xs flex-1 truncate" style={{ color: i === qIndex ? C.text : C.muted }}>{q.type}</span>
+                      <span className="text-xs flex-1 truncate" style={{ color: i === qIndex ? C.text : C.muted }}>{q.category ?? "Technical"}</span>
                       {i === qIndex && <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: C.purple }} />}
                     </div>
                   ))}
@@ -2333,7 +2322,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Questions Done", value: `${qIndex}/${QUESTIONS_BANK.length}`, color: C.purple },
+                    { label: "Questions Done", value: `${qIndex}/${totalQuestions}`, color: C.purple },
                     { label: "Avg Response Time", value: "1m 42s", color: C.green },
                     { label: "Filler Words", value: "8 detected", color: C.amber },
                     { label: "AI Score (so far)", value: "74%", color: C.cyan },
@@ -4986,6 +4975,10 @@ function ResumeAnalyzerPage() {
   };
 
   const startAnalysis = async (fileToAnalyze?: File) => {
+    if (!fileToAnalyze) {
+      setError("Choose a PDF or DOCX resume before starting analysis.");
+      return;
+    }
     setStep("analyzing");
     setProgress(15);
     setProgressPhase("Extracting text and scanning document structureâ€¦");
@@ -5010,46 +5003,7 @@ function ResumeAnalyzerPage() {
     }, 240);
 
     try {
-      const apiUrl = (import.meta as any).env?.VITE_API_URL || "http://localhost:8000";
-      let data: any = null;
-
-      if (fileToAnalyze) {
-        const formData = new FormData();
-        formData.append("file", fileToAnalyze);
-        if (targetRole) formData.append("target_role", targetRole);
-
-        try {
-          const res = await fetch(`${apiUrl}/resume/analyze`, {
-            method: "POST",
-            body: formData,
-          });
-          if (res.ok) {
-            data = await res.json();
-          }
-        } catch (fetchErr) {
-          console.warn("Backend fetch failed, activating smart local analyzer:", fetchErr);
-        }
-      } else {
-        const formData = new FormData();
-        formData.append("target_role", targetRole);
-
-        try {
-          const res = await fetch(`${apiUrl}/resume/sample`, {
-            method: "POST",
-            body: formData,
-          });
-          if (res.ok) {
-            data = await res.json();
-          }
-        } catch (fetchErr) {
-          console.warn("Backend fetch failed, activating smart local analyzer:", fetchErr);
-        }
-      }
-
-      // If server is not reachable, perform smart local analysis on the actual resume
-      if (!data) {
-        data = await generateLocalEvaluation(fileToAnalyze, targetRole);
-      }
+      const data = await resumeApi.analyze(fileToAnalyze, targetRole);
 
       clearInterval(iv);
       setProgress(100);
@@ -5069,47 +5023,15 @@ function ResumeAnalyzerPage() {
         priorityActionPlan: full.priority_action_plan || [
           { section: "Work Experience", action: "Quantify achievements with concrete numbers and business metrics", potential_gain: 8, impact: "Critical" },
         ],
-        filename: fileToAnalyze ? fileToAnalyze.name : "Alexander_Chen_Resume.pdf",
+        filename: fileToAnalyze.name,
       });
 
       setTimeout(() => setStep("results"), 400);
     } catch (err: any) {
       clearInterval(iv);
-      console.warn("Analysis fallback invoked:", err);
-      const fallback = await generateLocalEvaluation(fileToAnalyze, targetRole);
-      const full = fallback.full_analysis;
-      setAnalysisResult({
-        overallScore: fallback.overall_score,
-        atsScore: fallback.ats_score,
-        readabilityScore: full.readability_score,
-        keywordMatchScore: full.keyword_match_score,
-        summaryFeedback: fallback.ai_feedback,
-        sections: full.sections,
-        detectedSkills: full.detected_skills,
-        foundKeywords: full.found_keywords,
-        missingKeywords: full.missing_keywords,
-        priorityActionPlan: full.priority_action_plan,
-        filename: fileToAnalyze ? fileToAnalyze.name : "Resume.docx",
-      });
-      setStep("results");
+      setError(err?.message ?? "Resume analysis failed. Please try again.");
+      setStep("upload");
     }
-  };
-
-  const loadSimulatedDemo = () => {
-    setError(null);
-    setStep("analyzing");
-    setProgress(20);
-    setProgressPhase("Loading demo evaluation powered by Gemini AIâ€¦");
-
-    let p = 20;
-    const iv = setInterval(() => {
-      p += 20;
-      setProgress(Math.min(p, 100));
-      if (p >= 100) {
-        clearInterval(iv);
-        setTimeout(() => setStep("results"), 300);
-      }
-    }, 180);
   };
 
   // Compile section list for rendering
@@ -5169,11 +5091,6 @@ function ResumeAnalyzerPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button onClick={loadSimulatedDemo}
-                className="px-3 py-1 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90"
-                style={{ background: C.grad }}>
-                View Demo Results
-              </button>
               <button onClick={() => setError(null)} className="text-xs text-gray-400 hover:text-white px-1">âœ•</button>
             </div>
           </div>
@@ -5242,7 +5159,7 @@ function ResumeAnalyzerPage() {
 
                 {/* Primary Action Button */}
                 <button
-                  onClick={() => selectedFile ? startAnalysis(selectedFile) : startAnalysis()}
+                  onClick={() => startAnalysis(selectedFile ?? undefined)}
                   className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                   style={{
                     background: C.grad,
@@ -5250,7 +5167,7 @@ function ResumeAnalyzerPage() {
                   }}
                 >
                   <Sparkles size={16} />
-                  {selectedFile ? "Analyze Selected Resume with Gemini AI" : "Analyze Sample Resume (Instant Demo)"}
+                  {selectedFile ? "Analyze Selected Resume with Gemini AI" : "Choose a Resume to Analyze"}
                 </button>
 
                 <div className="text-xs text-center" style={{ color: C.muted }}>

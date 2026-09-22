@@ -187,6 +187,13 @@ export interface QuestionAnswerPayload {
 }
 
 export const interviewsApi = {
+  start: (payload: { interview_type: string; target_role: string; difficulty: string; number_of_questions?: number }) =>
+    api.post<any>("/interview/start", { body: payload }),
+  answer: (payload: { session_id: number; question_id: number; answer_text: string }) =>
+    api.post<any>("/interview/answer", { body: payload }),
+  get: (sessionId: number) => api.get<any>(`/interview/${sessionId}`),
+  finish: (sessionId: number) => api.post<any>(`/interview/${sessionId}/finish`),
+  history: () => api.get<any[]>("/interview/history"),
   createSession: (payload: InterviewSessionPayload) =>
     api.post<any>("/interviews/sessions", { body: payload }),
 

@@ -72,14 +72,27 @@ async def get_subject_detail(subject_id: int, current_user: dict = Depends(get_c
         
         # We would typically need to fetch completed status per topic based on user_question_progress,
         # but for simplicity we'll just mock the topic completion state or calculate it simply
+        topic_ids = [t["id"] for t in topics]
+        question_rows = supabase.table("questions").select("id, topic_id").in_("topic_id", topic_ids).execute().data if topic_ids else []
+        progress_rows = supabase.table("user_question_progress").select("question_id, completed").eq("user_id", user_id).in_("question_id", [q["id"] for q in question_rows]).execute().data if question_rows else []
+        completed_ids = {p["question_id"] for p in progress_rows if p.get("completed")}
+        question_count_by_topic = {topic_id: 0 for topic_id in topic_ids}
+        completed_count_by_topic = {topic_id: 0 for topic_id in topic_ids}
+        for question in question_rows:
+            question_count_by_topic[question["topic_id"]] += 1
+            if question["id"] in completed_ids:
+                completed_count_by_topic[question["topic_id"]] += 1
+
         topics_with_status = []
         for t in topics:
+            total = question_count_by_topic[t["id"]]
+            completed = completed_count_by_topic[t["id"]]
             topics_with_status.append({
                 "id": t["id"],
                 "name": t["topic_name"],
-                "done": False, # simplified
-                "q": 0,
-                "current": False
+                "done": total > 0 and completed == total,
+                "q": total,
+                "current": total > 0 and completed < total
             })
             
         return SubjectDetailResponse(
@@ -169,11 +182,11 @@ async def submit_question_answer(question_id: int, payload: SubmitAnswerRequest,
             feedback = eval_res.feedback
             if eval_res.suggestions:
                 feedback += " Suggestions: " + "; ".join(eval_res.suggestions)
+        except HTTPException:
+            raise
         except Exception as e:
-            # Fallback if Gemini fails
-            is_correct = len(payload.answer) > 10
-            score = 100 if is_correct else 0
-            feedback = "Good" if is_correct else "Needs more detail"
+            logger.error("Subject answer evaluation failed: %s", e)
+            raise HTTPException(status_code=502, detail="AI answer evaluation failed. Please retry shortly.") from e
         
         # 2. Upsert user_question_progress
         progress_data = {
@@ -190,6 +203,22 @@ async def submit_question_answer(question_id: int, payload: SubmitAnswerRequest,
             supabase.table("user_question_progress").update(progress_data).eq("id", existing_res.data[0]["id"]).execute()
         else:
             supabase.table("user_question_progress").insert(progress_data).execute()
+
+        topic = supabase.table("topics").select("subject_id").eq("id", q_res.data[0]["topic_id"]).single().execute().data
+        subject_id = topic["subject_id"]
+        subject_topic_ids = [row["id"] for row in supabase.table("topics").select("id").eq("subject_id", subject_id).execute().data or []]
+        subject_questions = supabase.table("questions").select("id").in_("topic_id", subject_topic_ids).execute().data if subject_topic_ids else []
+        subject_question_ids = [row["id"] for row in subject_questions]
+        subject_progress = supabase.table("user_question_progress").select("question_id, completed").eq("user_id", user_id).in_("question_id", subject_question_ids).execute().data if subject_question_ids else []
+        completed_count = sum(1 for row in subject_progress if row.get("completed"))
+        total_count = len(subject_question_ids)
+        supabase.table("user_subject_progress").upsert({
+            "user_id": user_id,
+            "subject_id": subject_id,
+            "completed_questions": completed_count,
+            "total_questions": total_count,
+            "completion_percentage": round((completed_count / total_count) * 100, 2) if total_count else 0,
+        }, on_conflict="user_id,subject_id").execute()
             
         return SubmitAnswerResponse(
             is_correct=is_correct,

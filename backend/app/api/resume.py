@@ -1,8 +1,6 @@
-import io
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
-from pypdf import PdfReader
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.core.security import get_current_user
 from app.database.supabase import supabase
@@ -15,34 +13,20 @@ router = APIRouter(
 )
 
 
-def get_optional_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
-    """Extract user_id from Supabase JWT bearer token if present."""
-    if not authorization or not authorization.startswith("Bearer "):
-        return None
-
-    token = authorization.split("Bearer ")[1].strip()
-    try:
-        user_response = supabase.auth.get_user(token)
-        if user_response and user_response.user:
-            return user_response.user.id
-    except Exception:
-        pass
-    return None
-
-
+@router.post("/upload", response_model=ResumeAnalysisResponse)
 @router.post("/analyze", response_model=ResumeAnalysisResponse)
 async def analyze_resume(
     file: UploadFile = File(...),
     target_role: Optional[str] = Form(None),
-    user_id: Optional[str] = Depends(get_optional_user_id)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Upload any .pdf or .docx resume for ATS scoring and deep Gemini AI evaluation.
-    Supports optional authenticated session for saving to database profile.
+    The authenticated user's JWT identifies the owner of the saved analysis.
     """
     result = await process_resume_upload(
         file=file,
-        user_id=user_id,
+        user_id=current_user["sub"],
         target_role=target_role
     )
     return result
@@ -108,7 +92,7 @@ def analyze_sample_resume(
 async def get_resume_analyses(current_user: dict = Depends(get_current_user)):
     try:
         response = supabase.table("resume_analysis") \
-            .select("id, created_at, ats_score, overall_score, target_role") \
+            .select("id, uploaded_at, updated_at, ats_score, ai_feedback") \
             .eq("user_id", current_user["sub"]) \
             .order("created_at", desc=True) \
             .execute()

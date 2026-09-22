@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.resume import router as resume_router
-from app.api.interviews import router as interviews_router
+from app.api.interviews import router as interviews_router, ai_router
 from app.api.reports import router as reports_router
 from app.api.dashboard import router as dashboard_router
 from app.api.subjects import router as subjects_router
@@ -27,7 +27,11 @@ app = FastAPI(
 # ─── CORS ───────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
+    allow_origins=list(dict.fromkeys([
+        FRONTEND_URL,
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ])),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +41,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(interviews_router)
+app.include_router(ai_router)
 app.include_router(reports_router)
 app.include_router(dashboard_router)
 app.include_router(subjects_router)

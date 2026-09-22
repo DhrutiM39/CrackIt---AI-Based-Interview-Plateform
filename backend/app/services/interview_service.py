@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import HTTPException, status
 
 from app.database.supabase import supabase
+from app.services.gemini_service import gemini_service
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,98 @@ def create_session(
     except Exception as e:
         logger.error(f"create_session error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def start_ai_session(
+    user_id: str,
+    interview_type: str,
+    target_role: str,
+    difficulty: str,
+    number_of_questions: int,
+) -> Dict[str, Any]:
+    """Create a session and persist its Gemini-generated question set."""
+    session = create_session(user_id, interview_type, target_role, difficulty)
+    try:
+        generated = gemini_service.generate_questions(
+            job_role=target_role,
+            difficulty=difficulty,
+            number_of_questions=number_of_questions,
+            category=interview_type,
+        )
+        questions = []
+        for sequence_no, generated_question in enumerate(generated.questions, 1):
+            result = supabase.table("interview_questions").insert({
+                "session_id": session["id"],
+                "question_text": generated_question.question,
+                "sequence_no": sequence_no,
+            }).execute()
+            if not result.data:
+                raise HTTPException(500, "Failed to save generated interview question")
+            questions.append(result.data[0])
+        if not questions:
+            raise HTTPException(502, "AI generated no interview questions")
+        return {"session": session, "question": questions[0]}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("start_ai_session error: %s", exc)
+        raise HTTPException(status_code=502, detail="Unable to generate interview questions") from exc
+
+
+def evaluate_session_answer(
+    session_id: int,
+    question_id: int,
+    user_id: str,
+    answer_text: str,
+) -> Dict[str, Any]:
+    """Evaluate and save an answer, returning the next unanswered question."""
+    session_result = supabase.table("interview_sessions").select("*").eq("id", session_id).eq("user_id", user_id).execute()
+    if not session_result.data:
+        raise HTTPException(404, "Interview session not found")
+
+    question_result = supabase.table("interview_questions").select("*").eq("id", question_id).eq("session_id", session_id).execute()
+    if not question_result.data:
+        raise HTTPException(404, "Interview question not found")
+    question = question_result.data[0]
+
+    evaluation = gemini_service.evaluate_answer(
+        question=question["question_text"],
+        answer=answer_text,
+        difficulty=session_result.data[0].get("difficulty", "Medium"),
+    )
+    answer_result = supabase.table("interview_answers").insert({
+        "question_id": question_id,
+        "answer_type": "text",
+        "answer_text": answer_text,
+        "ai_score": evaluation.score,
+        "ai_feedback": evaluation.model_dump_json(),
+    }).execute()
+    if not answer_result.data:
+        raise HTTPException(500, "Failed to save interview answer")
+
+    answer = answer_result.data[0]
+    all_questions = supabase.table("interview_questions").select("*").eq("session_id", session_id).order("sequence_no").execute().data or []
+    answered = supabase.table("interview_answers").select("question_id").in_("question_id", [q["id"] for q in all_questions]).execute().data if all_questions else []
+    answered_ids = {item["question_id"] for item in answered}
+    next_question = next((item for item in all_questions if item["id"] not in answered_ids), None)
+
+    return {
+        "question_id": question_id,
+        "answer_id": answer["id"],
+        "score": evaluation.score,
+        "correctness": evaluation.correctness,
+        "relevance": evaluation.relevance,
+        "clarity": evaluation.clarity,
+        "feedback": evaluation.feedback,
+        "missing_points": evaluation.missing_points,
+        "suggestions": evaluation.suggestions,
+        "next_question": next_question,
+        "completed": next_question is None,
+    }
+
+
+def get_session(session_id: int, user_id: str) -> Dict[str, Any]:
+    return get_session_with_qa(session_id, user_id)
 
 
 def save_question_answer(

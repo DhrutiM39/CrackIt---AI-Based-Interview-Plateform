@@ -16,10 +16,56 @@ from app.schemas.interview import (
     InterviewSessionResponse,
     SaveQuestionAnswerRequest,
     QuestionAnswerResponse,
+    InterviewStartRequest,
+    InterviewAnswerRequest,
 )
 from app.services import interview_service
 
 router = APIRouter(prefix="/interviews", tags=["Interviews"])
+
+ai_router = APIRouter(prefix="/interview", tags=["AI Mock Interview"])
+
+
+@ai_router.post("/start", status_code=status.HTTP_201_CREATED)
+def start_interview(
+    body: InterviewStartRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    return interview_service.start_ai_session(
+        user_id=current_user["sub"],
+        interview_type=body.interview_type,
+        target_role=body.target_role,
+        difficulty=body.difficulty,
+        number_of_questions=body.number_of_questions,
+    )
+
+
+@ai_router.post("/answer")
+def answer_interview(
+    body: InterviewAnswerRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    return interview_service.evaluate_session_answer(
+        session_id=body.session_id,
+        question_id=body.question_id,
+        user_id=current_user["sub"],
+        answer_text=body.answer_text,
+    )
+
+
+@ai_router.get("/history")
+def interview_history(current_user: dict = Depends(get_current_user)):
+    return interview_service.list_user_sessions(current_user["sub"])
+
+
+@ai_router.get("/{session_id}")
+def get_interview(session_id: int, current_user: dict = Depends(get_current_user)):
+    return interview_service.get_session(session_id, current_user["sub"])
+
+
+@ai_router.post("/{session_id}/finish")
+def finish_interview(session_id: int, current_user: dict = Depends(get_current_user)):
+    return interview_service.end_session(session_id, current_user["sub"])
 
 
 @router.post(

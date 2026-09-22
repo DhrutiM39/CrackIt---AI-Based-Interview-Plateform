@@ -155,92 +155,15 @@ def _parse_gemini_json(raw_text: str) -> Dict[str, Any]:
     )
 
 
-def _generate_fallback_analysis(resume_text: str, target_role: str) -> Dict[str, Any]:
-    """Generates an intelligent simulated analysis if GEMINI_API_KEY is not configured yet."""
-    length = len(resume_text)
-    score_base = min(88, max(55, 60 + int(length / 200)))
-    ats_base = min(92, max(50, score_base - 4))
-
-    return {
-        "overall_score": score_base,
-        "ats_score": ats_base,
-        "readability_score": 82,
-        "keyword_match_score": 74,
-        "summary_feedback": f"Resume effectively demonstrates technical competencies relevant to {target_role}. To achieve top ATS ranking, quantify project impacts with concrete metrics and incorporate additional industry keywords.",
-        "sections": {
-            "contact_info": {
-                "name": "Contact Information",
-                "score": 95,
-                "tips": ["GitHub and LinkedIn profiles clearly listed", "Ensure phone number includes country code for international recruiters"]
-            },
-            "summary": {
-                "name": "Professional Summary",
-                "score": 68,
-                "tips": [f"Tailor the opening summary specifically for {target_role} roles", "Highlight 1-2 major achievements within the first 3 lines"]
-            },
-            "work_experience": {
-                "name": "Work Experience",
-                "score": 75,
-                "tips": ["Use Google XYZ format (Accomplished [X], as measured by [Y], by doing [Z])", "Begin each bullet point with strong action verbs (Architected, Engineered, Optimized)"]
-            },
-            "education": {
-                "name": "Education",
-                "score": 88,
-                "tips": ["Degree and graduation year are well formatted", "Include relevant core coursework (Algorithms, Systems, DB)"]
-            },
-            "skills": {
-                "name": "Skills & Technologies",
-                "score": 78,
-                "tips": ["Organize skills by categories (Languages, Frameworks, Cloud, Databases)", "Remove obsolete tools to keep the section punchy"]
-            },
-            "projects": {
-                "name": "Projects",
-                "score": 72,
-                "tips": ["Include live demo URLs and GitHub repository links", "Mention architecture choices and performance metrics (e.g., reduced latency by 30%)"]
-            }
-        },
-        "detected_skills": [
-            {"skill": "React", "category": "Frontend", "confidence": 95},
-            {"skill": "TypeScript", "category": "Language", "confidence": 92},
-            {"skill": "Python", "category": "Language", "confidence": 88},
-            {"skill": "FastAPI", "category": "Backend", "confidence": 85},
-            {"skill": "PostgreSQL", "category": "Database", "confidence": 84},
-            {"skill": "Docker", "category": "DevOps", "confidence": 80},
-            {"skill": "Git", "category": "Tools", "confidence": 98},
-            {"skill": "Tailwind CSS", "category": "Frontend", "confidence": 90}
-        ],
-        "found_keywords": ["REST APIs", "Git", "React", "SQL", "Database Design", "Agile", "Full Stack"],
-        "missing_keywords": ["CI/CD Pipelines", "Unit Testing / Jest", "Cloud Deployment (AWS/GCP)", "System Architecture"],
-        "priority_action_plan": [
-            {
-                "section": "Work Experience",
-                "action": "Quantify bullet points with metric-driven outcomes (%, $, latency, scale)",
-                "potential_gain": 9,
-                "impact": "Critical"
-            },
-            {
-                "section": "Skills & Technologies",
-                "action": "Add keywords for CI/CD and Cloud infrastructure to pass initial ATS filters",
-                "potential_gain": 7,
-                "impact": "High"
-            },
-            {
-                "section": "Professional Summary",
-                "action": f"Focus executive summary around {target_role} impact",
-                "potential_gain": 5,
-                "impact": "Medium"
-            }
-        ]
-    }
-
-
 def analyze_with_gemini(resume_text: str, target_role: Optional[str] = None) -> Dict[str, Any]:
     """Sends resume text to Google Gemini for deep ATS and semantic evaluation."""
     role = target_role or "Software Engineer / Tech Professional"
 
     if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your-"):
-        logger.warning("GEMINI_API_KEY not set or is placeholder. Using smart simulated analysis.")
-        return _generate_fallback_analysis(resume_text, role)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini API is not configured on the server.",
+        )
 
     try:
         import google.generativeai as genai
@@ -265,9 +188,10 @@ def analyze_with_gemini(resume_text: str, target_role: Optional[str] = None) -> 
         raise
     except Exception as exc:
         logger.error(f"Gemini API call failed: {exc}")
-        # Fallback to simulated response if rate limit or network issue occurs
-        logger.info("Providing simulated response due to Gemini API failure.")
-        return _generate_fallback_analysis(resume_text, role)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Gemini analysis failed. Please retry shortly.",
+        ) from exc
 
 
 def upload_to_supabase_storage(file_bytes: bytes, filename: str, user_id: str) -> Optional[str]:
@@ -306,7 +230,7 @@ def persist_analysis(
             "resume_file_url": file_url or "uploaded_locally",
             "parsed_text": parsed_text[:10000],
             "ats_score": analysis.get("ats_score"),
-            "ai_feedback": analysis,
+            "ai_feedback": json.dumps(analysis),
         }
         res = supabase.table("resume_analysis").insert(record).execute()
         if not res.data:

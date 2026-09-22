@@ -49,8 +49,6 @@ def get_dashboard_metrics(user_id: str) -> DashboardMetrics:
         completed_goals = sum(1 for m in milestones_res.data if m["status"] == "completed")
     
     # If no roadmap, we can fallback to career_goals or just return 0/0 (we will set to 0/1 to avoid div by zero in UI)
-    if total_goals == 0:
-        total_goals = 1
 
     # 4. Fetch Subject & Domain Progress
     subj_res = supabase.table("user_subject_progress").select("completion_percentage, subjects(id, subject_name)").eq("user_id", user_id).execute()
@@ -165,34 +163,29 @@ def get_dashboard_metrics(user_id: str) -> DashboardMetrics:
     recent_activity.sort(key=lambda x: x["ts"], reverse=True)
     final_recent = [a["item"] for a in recent_activity][:6]
 
-    # 8. Weekly Activity (Mock for now or simple calculation)
-    # We will generate a mock week activity based on the user's total counts to keep the chart looking alive
-    weekly_activity = [
-        DailyActivity(day="Mon", topics=1, mock=0),
-        DailyActivity(day="Tue", topics=2, mock=1),
-        DailyActivity(day="Wed", topics=0, mock=0),
-        DailyActivity(day="Thu", topics=3, mock=0),
-        DailyActivity(day="Fri", topics=1, mock=1),
-        DailyActivity(day="Sat", topics=4, mock=0),
-        DailyActivity(day="Sun", topics=2, mock=0)
-    ]
-    
-    # 9. Monthly Progress (Mock for now to prevent chart crash)
-    monthly_progress = [
-        WeeklyProgress(week="Week 1", progress=20, target=50),
-        WeeklyProgress(week="Week 2", progress=35, target=55),
-        WeeklyProgress(week="Week 3", progress=50, target=60),
-        WeeklyProgress(week="Week 4", progress=overall_progress or 10, target=65)
-    ]
+    # 8. Activity and performance series are derived from stored records.
+    weekly_activity = []
+    week_start = datetime.now().date() - timedelta(days=6)
+    question_activity = supabase.table("user_question_progress").select("solved_at").eq("user_id", user_id).gte("solved_at", week_start.isoformat()).execute().data or []
+    domain_activity = supabase.table("user_domain_question_progress").select("solved_at").eq("user_id", user_id).gte("solved_at", week_start.isoformat()).execute().data or []
+    for offset in range(7):
+        day = week_start + timedelta(days=offset)
+        day_key = day.isoformat()
+        topics = sum(1 for item in question_activity + domain_activity if (item.get("solved_at") or "")[:10] == day_key)
+        mocks = sum(1 for item in valid_reports if (item.get("generated_at") or "")[:10] == day_key)
+        weekly_activity.append(DailyActivity(day=day.strftime("%a"), topics=topics, mock=mocks))
 
-    # 10. Skills Growth (Mock for now to prevent chart crash)
+    monthly_progress = []
+    metrics_res = supabase.table("performance_metrics").select("recorded_at, communication_score, technical_score, interview_score").eq("user_id", user_id).order("recorded_at").limit(12).execute()
     skills_growth = [
-        SkillGrowth(month="M1", DSA=10, System=5, OOP=20, SQL=15),
-        SkillGrowth(month="M2", DSA=20, System=10, OOP=30, SQL=25),
-        SkillGrowth(month="M3", DSA=35, System=20, OOP=45, SQL=40),
-        SkillGrowth(month="M4", DSA=50, System=35, OOP=60, SQL=55),
-        SkillGrowth(month="M5", DSA=65, System=50, OOP=75, SQL=70),
-        SkillGrowth(month="M6", DSA=80, System=65, OOP=90, SQL=85),
+        SkillGrowth(
+            month=(row.get("recorded_at") or "")[:7],
+            DSA=int(row.get("technical_score") or 0),
+            System=int(row.get("communication_score") or 0),
+            OOP=int(row.get("interview_score") or 0),
+            SQL=int(row.get("technical_score") or 0),
+        )
+        for row in (metrics_res.data or [])
     ]
 
     return DashboardMetrics(

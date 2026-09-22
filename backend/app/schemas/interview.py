@@ -33,6 +33,36 @@ class SaveQuestionAnswerRequest(BaseModel):
     ai_feedback: Optional[str] = None
 
 
+class InterviewStartRequest(BaseModel):
+    interview_type: str = Field("Technical", description="HR | Technical | Behavioral")
+    target_role: str = Field(..., min_length=2, max_length=100)
+    difficulty: str = Field("Medium", description="Easy | Medium | Hard")
+    number_of_questions: int = Field(5, ge=1, le=15)
+
+
+class InterviewAnswerRequest(BaseModel):
+    session_id: int
+    question_id: int
+    answer_text: str = Field(..., min_length=1, max_length=10000)
+
+
+class InterviewAnswerResult(BaseModel):
+    question_id: int
+    answer_id: int
+    score: float
+    correctness: float
+    relevance: float
+    clarity: float
+    feedback: str
+    missing_points: List[str]
+    suggestions: List[str]
+
+
+class InterviewStartResponse(BaseModel):
+    session: InterviewSessionResponse
+    question: Optional[Dict[str, Any]] = None
+
+
 class QuestionAnswerResponse(BaseModel):
     question_id: int
     answer_id: Optional[int]

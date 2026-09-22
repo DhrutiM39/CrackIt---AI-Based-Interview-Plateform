@@ -354,18 +354,10 @@ class GeminiService:
             return AnswerEvaluationAI(**result["data"])
         except Exception as e:
             logger.error(f"Answer evaluation error: {e}")
-            # Basic fallback
-            answer_len = len(answer.strip()) if answer else 0
-            base_score = min(70, max(20, answer_len // 3))
-            return AnswerEvaluationAI(
-                score=base_score,
-                correctness=base_score,
-                relevance=base_score,
-                clarity=base_score + 10,
-                feedback="Your answer was received. For a more detailed evaluation, please try again.",
-                missing_points=["Could not fully evaluate — AI service temporarily unavailable"],
-                suggestions=["Provide more detailed answers for better evaluation"],
-            )
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI answer evaluation failed. Please retry shortly.",
+            ) from e
 
     # ── Roadmap Generation ─────────────────────────────────────────────────────
 
