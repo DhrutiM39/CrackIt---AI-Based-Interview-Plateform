@@ -16,17 +16,24 @@ class AuthService:
         Register a new user via Supabase Auth.
         Returns our own JWT access token on success.
         """
-        response = supabase.auth.sign_up(
-            {
-                "email": user.email,
-                "password": user.password,
-                "options": {
-                    "data": {
-                        "full_name": user.full_name
+        try:
+            response = supabase.auth.sign_up(
+                {
+                    "email": user.email,
+                    "password": user.password,
+                    "options": {
+                        "data": {
+                            "full_name": user.full_name
+                        }
                     }
                 }
-            }
-        )
+            )
+        except Exception as e:
+            error_msg = getattr(e, "message", str(e))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg or "Signup failed. Please try again."
+            )
 
         auth_user = response.user
 
@@ -36,12 +43,24 @@ class AuthService:
                 detail="Signup failed. Email may already be in use."
             )
 
+        # Attempt to populate public.users profile row if not auto-populated by trigger
+        try:
+            supabase.table("users").upsert({
+                "id": str(auth_user.id),
+                "full_name": user.full_name,
+                "email": user.email,
+            }).execute()
+        except Exception:
+            pass
+
+        full_name = (auth_user.user_metadata or {}).get("full_name", user.full_name)
+
         # Issue our own JWT
         access_token = create_access_token(
             data={
                 "sub": str(auth_user.id),
                 "email": auth_user.email,
-                "full_name": auth_user.user_metadata.get("full_name", ""),
+                "full_name": full_name,
             },
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
         )
@@ -51,7 +70,7 @@ class AuthService:
             "token_type": "bearer",
             "user": {
                 "id": str(auth_user.id),
-                "full_name": auth_user.user_metadata.get("full_name", ""),
+                "full_name": full_name,
                 "email": auth_user.email,
             },
         }
@@ -68,10 +87,11 @@ class AuthService:
                     "password": user.password
                 }
             )
-        except Exception:
+        except Exception as e:
+            error_msg = getattr(e, "message", "Invalid email or password")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
+                detail=error_msg,
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -85,12 +105,14 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
+        full_name = (auth_user.user_metadata or {}).get("full_name", "")
+
         # Issue our own JWT
         access_token = create_access_token(
             data={
                 "sub": str(auth_user.id),
                 "email": auth_user.email,
-                "full_name": auth_user.user_metadata.get("full_name", ""),
+                "full_name": full_name,
             },
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
         )
@@ -100,7 +122,7 @@ class AuthService:
             "token_type": "bearer",
             "user": {
                 "id": str(auth_user.id),
-                "full_name": auth_user.user_metadata.get("full_name", ""),
+                "full_name": full_name,
                 "email": auth_user.email,
             },
         }
@@ -109,7 +131,7 @@ class AuthService:
     def get_me(user_id: str) -> dict:
         """
         Fetch the current user's profile from public.users table.
-        Falls back to just the JWT payload data if the profile row doesn't exist yet.
+        Falls back to default profile data if the profile row doesn't exist yet.
         """
         try:
             result = (
@@ -125,7 +147,11 @@ class AuthService:
         except Exception:
             pass
 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found"
-        )
+        return {
+            "id": user_id,
+            "full_name": "",
+            "email": "",
+            "target_job_role": None,
+            "experience_level": None,
+            "streak_count": 0,
+        }
