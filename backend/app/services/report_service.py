@@ -60,6 +60,17 @@ def generate_and_save_report(session_id: int, user_id: str) -> Dict[str, Any]:
     data = get_session_with_qa(session_id, user_id)
     session = data["session"]
     questions = data["questions"]  # list of {question_id, question_text, seq, answer: {...}}
+    if session.get("status") != "completed":
+        raise HTTPException(409, "Reports are available only for completed interviews")
+
+    existing = (
+        supabase.table("interview_reports")
+        .select("id")
+        .eq("session_id", session_id)
+        .execute()
+    )
+    if existing.data:
+        return get_report_by_id(report_id=existing.data[0]["id"], user_id=user_id)
 
     # 2. Fetch user name
     user_name = "Candidate"
@@ -124,18 +135,11 @@ def generate_and_save_report(session_id: int, user_id: str) -> Dict[str, Any]:
         "next_steps": ai_result.next_steps,
         "question_performance": question_performance,
         "user_name": user_name,
+        "fallback_used": ai_result.fallback_used,
     }
 
     # 7. Save (or upsert) to interview_reports
     try:
-        # Check if report already exists for this session
-        existing = (
-            supabase.table("interview_reports")
-            .select("id")
-            .eq("session_id", session_id)
-            .execute()
-        )
-
         report_data = {
             "session_id": session_id,
             "overall_score": ai_result.overall_score,
@@ -211,6 +215,7 @@ def _build_report_response(
         "recommended_topics": extended.get("recommended_topics", []),
         "summary": extended.get("summary"),
         "next_steps": extended.get("next_steps", []),
+        "fallback_used": extended.get("fallback_used", False),
         "question_performance": extended.get("question_performance", []),
         "generated_at": report_row.get("generated_at"),
     }

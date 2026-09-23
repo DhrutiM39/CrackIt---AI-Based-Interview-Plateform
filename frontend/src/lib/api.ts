@@ -203,13 +203,63 @@ export interface QuestionAnswerPayload {
   ai_feedback?: string;
 }
 
+export interface InterviewAnswerEvaluation {
+  overall_score: number;
+  rubric: {
+    technical_correctness: number;
+    relevance: number;
+    completeness: number;
+    clarity_structure: number;
+  };
+  strengths: string[];
+  missing_points: string[];
+  incorrect_or_unclear_points: string[];
+  improvement_suggestions: string[];
+  improved_answer_outline: string[];
+  recommended_topics: string[];
+  feedback_summary: string;
+}
+
+export interface InterviewAnswerResponse {
+  question_id: number;
+  answer_id: number;
+  evaluation: InterviewAnswerEvaluation;
+  next_question?: { id: number; sequence_no: number; question_text: string } | null;
+  completed: boolean;
+}
+
+export interface InterviewStartResponse {
+  session: {
+    id: number;
+    user_id: string;
+    interview_type?: string;
+    target_role?: string;
+    difficulty?: string;
+    status?: string;
+    started_at?: string;
+    ended_at?: string | null;
+  };
+  total_questions: number;
+  question?: { id: number; sequence_no: number; question_text: string } | null;
+}
+
+export interface InterviewFinishResponse {
+  session_id: number;
+  status: "completed" | "abandoned";
+  ended_at: string;
+  answered_questions: number;
+  total_questions: number;
+  report_status: "pending" | "not_available";
+}
+
 export const interviewsApi = {
   start: (payload: { interview_type: string; target_role: string; difficulty: string; number_of_questions?: number }) =>
-    api.post<any>("/interview/start", { body: payload }),
+    api.post<InterviewStartResponse>("/interview/start", { body: payload }),
   answer: (payload: { session_id: number; question_id: number; answer_text: string }) =>
-    api.post<any>("/interview/answer", { body: payload }),
+    api.post<InterviewAnswerResponse>("/interview/answer", { body: payload }),
   get: (sessionId: number) => api.get<any>(`/interview/${sessionId}`),
-  finish: (sessionId: number) => api.post<any>(`/interview/${sessionId}/finish`),
+  finish: (sessionId: number, reason: "completed" | "abandoned" = "completed") =>
+    api.post<InterviewFinishResponse>(`/interview/${sessionId}/finish`, { body: { reason } }),
   history: () => api.get<any[]>("/interview/history"),
   createSession: (payload: InterviewSessionPayload) =>
     api.post<any>("/interviews/sessions", { body: payload }),

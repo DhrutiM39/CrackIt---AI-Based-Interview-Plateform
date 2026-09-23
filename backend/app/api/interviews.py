@@ -6,8 +6,6 @@ POST /interviews/sessions/{id}/answers     — save Q&A for a session
 POST /interviews/sessions/{id}/end         — mark session completed
 GET  /interviews/sessions                  — list user's sessions
 """
-from typing import List
-
 from fastapi import APIRouter, Depends, status
 
 from app.core.security import get_current_user
@@ -18,6 +16,9 @@ from app.schemas.interview import (
     QuestionAnswerResponse,
     InterviewStartRequest,
     InterviewAnswerRequest,
+    InterviewAnswerResponse,
+    FinishInterviewRequest,
+    FinishInterviewResponse,
 )
 from app.services import interview_service
 
@@ -40,7 +41,7 @@ def start_interview(
     )
 
 
-@ai_router.post("/answer")
+@ai_router.post("/answer", response_model=InterviewAnswerResponse)
 def answer_interview(
     body: InterviewAnswerRequest,
     current_user: dict = Depends(get_current_user),
@@ -63,9 +64,13 @@ def get_interview(session_id: int, current_user: dict = Depends(get_current_user
     return interview_service.get_session(session_id, current_user["sub"])
 
 
-@ai_router.post("/{session_id}/finish")
-def finish_interview(session_id: int, current_user: dict = Depends(get_current_user)):
-    return interview_service.end_session(session_id, current_user["sub"])
+@ai_router.post("/{session_id}/finish", response_model=FinishInterviewResponse)
+def finish_interview(
+    session_id: int,
+    body: FinishInterviewRequest = FinishInterviewRequest(),
+    current_user: dict = Depends(get_current_user),
+):
+    return interview_service.end_session(session_id, current_user["sub"], body.reason.value)
 
 
 @router.post(
@@ -100,6 +105,7 @@ def save_answer(
     """Store one Q&A pair linked to the session."""
     return interview_service.save_question_answer(
         session_id=session_id,
+        user_id=current_user["sub"],
         question_text=body.question_text,
         sequence_no=body.sequence_no,
         answer_text=body.answer_text,
@@ -114,11 +120,12 @@ def save_answer(
 )
 def end_session(
     session_id: int,
+    body: FinishInterviewRequest = FinishInterviewRequest(),
     current_user: dict = Depends(get_current_user),
 ):
     """Update status=completed and set ended_at for the session."""
     user_id: str = current_user["sub"]
-    return interview_service.end_session(session_id=session_id, user_id=user_id)
+    return interview_service.end_session(session_id=session_id, user_id=user_id, reason=body.reason.value)
 
 
 @router.get(

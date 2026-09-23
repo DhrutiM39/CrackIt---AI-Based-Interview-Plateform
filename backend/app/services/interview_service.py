@@ -74,11 +74,23 @@ def start_ai_session(
             questions.append(result.data[0])
         if not questions:
             raise HTTPException(502, "AI generated no interview questions")
-        return {"session": session, "question": questions[0]}
+        return {
+            "session": session,
+            "total_questions": len(questions),
+            "question": questions[0],
+        }
     except HTTPException:
+        try:
+            supabase.table("interview_sessions").update({"status": "abandoned", "ended_at": datetime.now(timezone.utc).isoformat()}).eq("id", session["id"]).eq("user_id", user_id).execute()
+        except Exception:
+            logger.exception("Unable to mark failed interview session as abandoned")
         raise
     except Exception as exc:
         logger.error("start_ai_session error: %s", exc)
+        try:
+            supabase.table("interview_sessions").update({"status": "abandoned", "ended_at": datetime.now(timezone.utc).isoformat()}).eq("id", session["id"]).eq("user_id", user_id).execute()
+        except Exception:
+            logger.exception("Unable to mark failed interview session as abandoned")
         raise HTTPException(status_code=502, detail="Unable to generate interview questions") from exc
 
 
@@ -92,22 +104,31 @@ def evaluate_session_answer(
     session_result = supabase.table("interview_sessions").select("*").eq("id", session_id).eq("user_id", user_id).execute()
     if not session_result.data:
         raise HTTPException(404, "Interview session not found")
+    session = session_result.data[0]
+    if session.get("status") != "in_progress":
+        raise HTTPException(409, "This interview is no longer accepting answers")
 
     question_result = supabase.table("interview_questions").select("*").eq("id", question_id).eq("session_id", session_id).execute()
     if not question_result.data:
         raise HTTPException(404, "Interview question not found")
     question = question_result.data[0]
 
+    existing_answer = supabase.table("interview_answers").select("id").eq("question_id", question_id).limit(1).execute()
+    if existing_answer.data:
+        raise HTTPException(409, "This question has already been answered")
+
     evaluation = gemini_service.evaluate_answer(
         question=question["question_text"],
         answer=answer_text,
-        difficulty=session_result.data[0].get("difficulty", "Medium"),
+        difficulty=session.get("difficulty", "Medium"),
+        interview_type=session.get("interview_type", "Technical"),
+        category=session.get("interview_type", "Technical"),
     )
     answer_result = supabase.table("interview_answers").insert({
         "question_id": question_id,
         "answer_type": "text",
         "answer_text": answer_text,
-        "ai_score": evaluation.score,
+        "ai_score": evaluation.overall_score,
         "ai_feedback": evaluation.model_dump_json(),
     }).execute()
     if not answer_result.data:
@@ -119,16 +140,21 @@ def evaluate_session_answer(
     answered_ids = {item["question_id"] for item in answered}
     next_question = next((item for item in all_questions if item["id"] not in answered_ids), None)
 
+    evaluation_payload = {
+        "overall_score": evaluation.overall_score,
+        "rubric": evaluation.rubric.model_dump(),
+        "strengths": evaluation.strengths,
+        "missing_points": evaluation.missing_points,
+        "incorrect_or_unclear_points": evaluation.incorrect_or_unclear_points,
+        "improvement_suggestions": evaluation.improvement_suggestions,
+        "improved_answer_outline": evaluation.improved_answer_outline,
+        "recommended_topics": evaluation.recommended_topics,
+        "feedback_summary": evaluation.feedback_summary,
+    }
     return {
         "question_id": question_id,
         "answer_id": answer["id"],
-        "score": evaluation.score,
-        "correctness": evaluation.correctness,
-        "relevance": evaluation.relevance,
-        "clarity": evaluation.clarity,
-        "feedback": evaluation.feedback,
-        "missing_points": evaluation.missing_points,
-        "suggestions": evaluation.suggestions,
+        "evaluation": evaluation_payload,
         "next_question": next_question,
         "completed": next_question is None,
     }
@@ -140,6 +166,7 @@ def get_session(session_id: int, user_id: str) -> Dict[str, Any]:
 
 def save_question_answer(
     session_id: int,
+    user_id: str,
     question_text: str,
     sequence_no: int,
     answer_text: Optional[str] = None,
@@ -151,6 +178,17 @@ def save_question_answer(
     Returns a dict with question_id, answer_id (or None).
     """
     try:
+        # Verify ownership before inserting any question or answer rows.
+        session_result = (
+            supabase.table("interview_sessions")
+            .select("id")
+            .eq("id", session_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if not session_result.data:
+            raise HTTPException(404, "Interview session not found")
+
         # 1. Insert question
         q_result = (
             supabase.table("interview_questions")
@@ -198,13 +236,28 @@ def save_question_answer(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def end_session(session_id: int, user_id: str) -> Dict[str, Any]:
-    """Mark a session as completed and record ended_at timestamp."""
+def end_session(session_id: int, user_id: str, reason: str = "completed") -> Dict[str, Any]:
+    """Mark an owned in-progress session completed or abandoned."""
     try:
+        if reason not in {"completed", "abandoned"}:
+            raise HTTPException(422, "Invalid interview finish reason")
+
+        session_result = (
+            supabase.table("interview_sessions")
+            .select("id,status")
+            .eq("id", session_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if not session_result.data:
+            raise HTTPException(404, "Interview session not found")
+        if session_result.data[0].get("status") != "in_progress":
+            raise HTTPException(409, "This interview has already been finished")
+
         result = (
             supabase.table("interview_sessions")
             .update({
-                "status": "completed",
+                "status": reason,
                 "ended_at": datetime.now(timezone.utc).isoformat(),
             })
             .eq("id", session_id)
@@ -212,8 +265,18 @@ def end_session(session_id: int, user_id: str) -> Dict[str, Any]:
             .execute()
         )
         if not result.data:
-            raise HTTPException(404, "Session not found or not owned by user")
-        return result.data[0]
+            raise HTTPException(409, "Interview could not be finished")
+        total_result = supabase.table("interview_questions").select("id", count="exact").eq("session_id", session_id).execute()
+        question_ids = [row["id"] for row in (supabase.table("interview_questions").select("id").eq("session_id", session_id).execute().data or [])]
+        answered_result = supabase.table("interview_answers").select("id", count="exact").in_("question_id", question_ids).execute() if question_ids else None
+        return {
+            "session_id": session_id,
+            "status": reason,
+            "ended_at": result.data[0].get("ended_at"),
+            "answered_questions": answered_result.count if answered_result else 0,
+            "total_questions": total_result.count or 0,
+            "report_status": "pending" if reason == "completed" else "not_available",
+        }
     except HTTPException:
         raise
     except Exception as e:

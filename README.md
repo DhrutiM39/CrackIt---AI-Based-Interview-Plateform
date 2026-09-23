@@ -107,6 +107,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
+ENVIRONMENT=development
 
 FRONTEND_URL=http://localhost:5173
 
@@ -115,6 +116,7 @@ GEMINI_MODEL=gemini-2.0-flash
 ```
 
 Never commit `backend/.env` or expose the Supabase service-role key in the frontend.
+Set `ENVIRONMENT=production` or `staging` outside local development and provide a unique `JWT_SECRET`.
 
 ### Frontend
 
@@ -134,6 +136,8 @@ Run the SQL files in the Supabase SQL editor in this order:
 2. `database/indexes.sql`
 3. `database/rls.sql`
 4. `database/seed.sql` for development data only
+
+For an existing database, apply migrations from `database/migrations/` after the base schema. The interview lifecycle migration adds duplicate-answer protection, question sequence protection, score validation, and interview query indexes.
 
 Review Row-Level Security policies before deployment. Use the Supabase service-role key only on the backend.
 

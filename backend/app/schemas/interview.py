@@ -1,14 +1,32 @@
 from pydantic import BaseModel, Field
+from enum import Enum
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 
 # ── Session ───────────────────────────────────────────────────────────────────
 
+class InterviewType(str, Enum):
+    HR = "HR"
+    TECHNICAL = "Technical"
+    BEHAVIORAL = "Behavioral"
+
+
+class InterviewDifficulty(str, Enum):
+    EASY = "Easy"
+    MEDIUM = "Medium"
+    HARD = "Hard"
+
+
+class FinishReason(str, Enum):
+    COMPLETED = "completed"
+    ABANDONED = "abandoned"
+
+
 class InterviewSessionCreate(BaseModel):
-    interview_type: str = Field(..., description="HR | Technical | Behavioral")
-    target_role: str
-    difficulty: str = Field(..., description="Easy | Medium | Hard")
+    interview_type: InterviewType
+    target_role: str = Field(..., min_length=2, max_length=100)
+    difficulty: InterviewDifficulty
 
 
 class InterviewSessionResponse(BaseModel):
@@ -34,9 +52,9 @@ class SaveQuestionAnswerRequest(BaseModel):
 
 
 class InterviewStartRequest(BaseModel):
-    interview_type: str = Field("Technical", description="HR | Technical | Behavioral")
+    interview_type: InterviewType = InterviewType.TECHNICAL
     target_role: str = Field(..., min_length=2, max_length=100)
-    difficulty: str = Field("Medium", description="Easy | Medium | Hard")
+    difficulty: InterviewDifficulty = InterviewDifficulty.MEDIUM
     number_of_questions: int = Field(5, ge=1, le=15)
 
 
@@ -49,13 +67,42 @@ class InterviewAnswerRequest(BaseModel):
 class InterviewAnswerResult(BaseModel):
     question_id: int
     answer_id: int
-    score: float
-    correctness: float
-    relevance: float
-    clarity: float
-    feedback: str
+    evaluation: Dict[str, Any]
+    next_question: Optional[Dict[str, Any]] = None
+    completed: bool = False
+
+
+class FinishInterviewRequest(BaseModel):
+    reason: FinishReason = FinishReason.COMPLETED
+
+
+class FinishInterviewResponse(BaseModel):
+    session_id: int
+    status: FinishReason
+    ended_at: datetime
+    answered_questions: int
+    total_questions: int
+    report_status: str
+
+
+class AnswerEvaluationResponse(BaseModel):
+    overall_score: int = Field(..., ge=0, le=100)
+    rubric: Dict[str, int]
+    strengths: List[str]
     missing_points: List[str]
-    suggestions: List[str]
+    incorrect_or_unclear_points: List[str]
+    improvement_suggestions: List[str]
+    improved_answer_outline: List[str]
+    recommended_topics: List[str]
+    feedback_summary: str
+
+
+class InterviewAnswerResponse(BaseModel):
+    question_id: int
+    answer_id: int
+    evaluation: AnswerEvaluationResponse
+    next_question: Optional[Dict[str, Any]] = None
+    completed: bool = False
 
 
 class InterviewStartResponse(BaseModel):
@@ -127,6 +174,7 @@ class ReportResponse(BaseModel):
     recommended_topics: Optional[List[str]]
     summary: Optional[str]
     next_steps: Optional[List[str]]
+    fallback_used: bool = False
 
     # Per-question detail
     question_performance: Optional[List[QuestionPerformance]]

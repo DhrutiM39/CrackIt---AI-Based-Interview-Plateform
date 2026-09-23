@@ -1896,6 +1896,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
   // â”€â”€ Session tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const sessionIdRef = useRef<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Create session on mount
@@ -1911,6 +1912,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
       number_of_questions: 5,
     }).then(result => {
       sessionIdRef.current = result.session.id;
+      setTotalQuestions(result.total_questions ?? 5);
       setAiQuestions(result.question ? [result.question] : []);
       setMessages([{ role: "ai", text: result.question?.question_text ?? "No question was generated." }]);
     }).catch(err => {
@@ -1919,21 +1921,22 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
   }, []);
 
   const currentQ = aiQuestions[qIndex] ?? { question_text: "Waiting for the AI interviewer...", question_type: "Technical" };
-  const totalQuestions = 5;
+  const [totalQuestions, setTotalQuestions] = useState(5);
   const typeInfo = INTERVIEW_TYPES.find(t => t.id === cfg.type) || INTERVIEW_TYPES[1];
 
   const sendMsg = async () => {
-    if (!inputMsg.trim()) return;
+    if (!inputMsg.trim() || submittingAnswer) return;
     const text = inputMsg;
     setMessages(m => [...m, { role: "user", text }]);
     setInputMsg("");
     const sessionId = sessionIdRef.current;
     const questionId = currentQ.id;
     if (!sessionId || !questionId) return;
+    setSubmittingAnswer(true);
     setSpeaking(true);
     try {
       const result = await interviewsApi.answer({ session_id: sessionId, question_id: questionId, answer_text: text });
-      setMessages(m => [...m, { role: "ai", text: result.feedback }]);
+      setMessages(m => [...m, { role: "ai", text: result.evaluation.feedback_summary }]);
       if (result.next_question) {
         setAiQuestions(q => [...q, result.next_question]);
         setQIndex(i => i + 1);
@@ -1942,6 +1945,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
     } catch (err: any) {
       setSaveError(err?.message ?? "Answer evaluation failed.");
     } finally {
+      setSubmittingAnswer(false);
       setSpeaking(false);
     }
   };
@@ -2186,10 +2190,10 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                     style={{ background: micOn ? "rgba(168,85,247,.15)" : C.surface, border: `1px solid ${micOn ? C.purple + "50" : C.border}` }}>
                     <Mic size={14} style={{ color: micOn ? C.purple : C.muted }} />
                   </button>
-                  <button onClick={sendMsg}
+                  <button onClick={sendMsg} disabled={submittingAnswer || !inputMsg.trim()}
                     className="px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 flex-shrink-0"
-                    style={{ background: C.grad }}>
-                    <ArrowRight size={12} /> Send
+                    style={{ background: submittingAnswer || !inputMsg.trim() ? C.border : C.grad, cursor: submittingAnswer || !inputMsg.trim() ? "not-allowed" : "pointer" }}>
+                    <ArrowRight size={12} /> {submittingAnswer ? "Evaluating..." : "Send"}
                   </button>
                 </div>
               </Card>
