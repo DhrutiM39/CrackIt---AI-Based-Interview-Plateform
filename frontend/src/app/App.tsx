@@ -3026,11 +3026,11 @@ const NOTIFICATIONS_DATA = [
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function ProgressDashboardPage() {
   const [range, setRange] = useState<"week" | "month" | "all">("week");
-  const overallPct = 68; const streak = 14;
+  const overallPct = 68;
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
@@ -3058,105 +3058,28 @@ function ProgressDashboardPage() {
           </div>
         </div>
 
-        {/* Top stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Only the few numbers needed to orient the user */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Overall Progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Across all modules", badge: "+8% this week", trend: "+8%" },
-            { label: "Mock Interviews", value: "6 done", icon: <Mic size={16} />, color: C.cyan, sub: "Avg score: 74/100", badge: "Last: 81", trend: "+12pts" },
-            { label: "Study Streak", value: `${streak} days`, icon: <Flame size={16} />, color: C.amber, sub: "Personal best: 14 days", badge: "ðŸ”¥ On fire!", trend: "Active" },
-            { label: "Goals Completed", value: "7 / 10", icon: <Target size={16} />, color: C.green, sub: "70% completion rate", badge: "3 upcoming", trend: "70%" },
+            { label: "Overall progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Across your preparation" },
+            { label: "Mock interviews", value: "6", icon: <Mic size={16} />, color: C.cyan, sub: "Average score 74" },
+            { label: "Study streak", value: "14 days", icon: <Flame size={16} />, color: C.amber, sub: "Keep it going" },
+            { label: "Next goal", value: "3 tasks", icon: <Target size={16} />, color: C.green, sub: "Due this week" },
           ].map(s => (
-            <Card key={s.label} className="p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-5"
-                style={{ background: s.color, transform: "translate(30%, -30%)" }} />
-              <div className="flex items-start justify-between mb-3">
+            <Card key={s.label} className="p-4">
+              <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18`, color: s.color }}>{s.icon}</div>
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: `${s.color}15`, color: s.color }}>{s.badge}</span>
               </div>
-              <div className="text-3xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-2xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
               <div className="text-xs font-bold text-white mb-1">{s.label}</div>
               <div className="text-xs" style={{ color: C.muted }}>{s.sub}</div>
-              <div className="mt-3 h-1 rounded-full" style={{ background: C.border }}>
-                <div className="h-full rounded-full" style={{ width: s.trend.includes("%") ? s.trend : "60%", background: s.color, maxWidth: "100%" }} />
-              </div>
             </Card>
           ))}
         </div>
 
-        {/* Goal Completion Percentage â€” prominent visual */}
-        <Card className="p-5"
-          style={{ background: "linear-gradient(135deg,rgba(168,85,247,.07),rgba(34,211,238,.04))", border: "1px solid rgba(168,85,247,.22)" }}>
-          <div className="flex items-center justify-between mb-4">
-            <SecHead icon={<Target size={16} />} title="Goal Completion" sub="Progress across all 10 active goals" />
-            <Pill label="7 / 10 Done" color={C.green} />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[
-              { goal: "Complete DSA Module", pct: 100, done: true, color: C.green },
-              { goal: "Take 5 Mock Interviews", pct: 100, done: true, color: C.green },
-              { goal: "Resume Score 80+", pct: 100, done: true, color: C.green },
-              { goal: "LinkedIn Score 70+", pct: 100, done: true, color: C.green },
-              { goal: "System Design Basics", pct: 100, done: true, color: C.green },
-              { goal: "3 Portfolio Projects", pct: 100, done: true, color: C.green },
-              { goal: "HR Interview Practice", pct: 100, done: true, color: C.green },
-              { goal: "Advanced DP Patterns", pct: 55, done: false, color: C.purple },
-              { goal: "10 Mock Interviews", pct: 60, done: false, color: C.cyan },
-              { goal: "Final System Design", pct: 20, done: false, color: C.amber },
-            ].map((g, i) => (
-              <div key={i} className="p-3 rounded-xl flex flex-col gap-2"
-                style={{ background: g.done ? "rgba(52,211,153,.06)" : C.surface, border: `1px solid ${g.done ? C.green + "30" : C.border}` }}>
-                <div className="flex items-center gap-1.5">
-                  {g.done
-                    ? <CheckCircle2 size={12} style={{ color: C.green, flexShrink: 0 }} />
-                    : <div className="w-3 h-3 rounded-full border-2 flex-shrink-0" style={{ borderColor: g.color }} />}
-                  <span className="text-xs font-medium leading-tight" style={{ color: g.done ? C.green : C.text }}>{g.goal}</span>
-                </div>
-                {!g.done && (
-                  <>
-                    <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${g.pct}%`, background: g.color }} />
-                    </div>
-                    <div className="text-xs font-bold" style={{ color: g.color }}>{g.pct}%</div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Ring progress + weekly activity */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <Card className="p-5 flex flex-col items-center gap-4"
-            style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
-            <div className="relative" style={{ width: 136, height: 136 }}>
-              <svg width={136} height={136} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={68} cy={68} r={52} fill="none" stroke={C.border} strokeWidth={12} />
-                <circle cx={68} cy={68} r={52} fill="none" stroke="url(#pd_ringGrad)" strokeWidth={12}
-                  strokeLinecap="round" strokeDasharray={`${(overallPct / 100) * 2 * Math.PI * 52} ${2 * Math.PI * 52}`} />
-                <defs>
-                  <linearGradient id="pd_ringGrad" x1="1" y1="0" x2="0" y2="1">
-                    <stop stopColor={C.purple} /><stop offset="1" stopColor={C.cyan} />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-3xl font-black" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{overallPct}%</div>
-                <div className="text-xs" style={{ color: C.muted }}>Overall</div>
-              </div>
-            </div>
-            <div className="text-sm font-bold text-white text-center">Overall Learning Progress</div>
-            <div className="w-full space-y-2">
-              {[["DSA & Algo", 68, C.purple], ["Domain Skills", 44, C.cyan], ["Interview Prep", 81, C.green]].map(([l, p, c]) => (
-                <div key={l as string}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{l}</span><span className="font-bold" style={{ color: c as string }}>{p}%</span></div>
-                  <div className="h-1.5 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${p}%`, background: c as string }} /></div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<BarChart3 size={16} />} title="Weekly Activity" sub="Topics studied vs mock interviews per day" />
+        {/* One chart is enough to show movement without turning the dashboard into analytics */}
+        <Card className="p-5">
+            <SecHead icon={<BarChart3 size={16} />} title="Weekly activity" sub="Topics studied and mock interviews" />
             <ResponsiveContainer width="100%" height={210}>
               <BarChart id="pd-activity-bar" data={WEEK_ACTIVITY} margin={{ top: 4, right: 4, left: -22, bottom: 0 }} barSize={20} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
@@ -3174,63 +3097,19 @@ function ProgressDashboardPage() {
                 </div>
               ))}
             </div>
-          </Card>
-        </div>
+        </Card>
 
-        {/* Skills growth + monthly progress */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-          <Card className="md:col-span-3 p-5">
-            <SecHead icon={<TrendingUp size={16} />} title="Skills Growth Timeline" sub="6-month proficiency improvement per subject" />
-            <ResponsiveContainer width="100%" height={210}>
-              <AreaChart id="pd-skills-area" data={SKILLS_GROWTH} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-                <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Area type="monotone" dataKey="DSA" stroke={C.purple} fill={C.purple} fillOpacity={0.14} strokeWidth={2} name="DSA" />
-                <Area type="monotone" dataKey="System" stroke={C.cyan} fill={C.cyan} fillOpacity={0.14} strokeWidth={2} name="System Design" />
-                <Area type="monotone" dataKey="OOP" stroke={C.green} fill={C.green} fillOpacity={0.14} strokeWidth={2} name="OOP" />
-                <Area type="monotone" dataKey="SQL" stroke={C.amber} fill={C.amber} fillOpacity={0.14} strokeWidth={2} name="SQL" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 flex-wrap mt-1">
-              {([["DSA", C.purple], ["System Design", C.cyan], ["OOP", C.green], ["SQL", C.amber]] as [string, string][]).map(([l, c]) => (
-                <div key={l} className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />{l}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<Calendar size={16} />} title="Monthly Progress" sub="Weekly targets vs achieved" />
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart id="pd-monthly-bar" data={MONTHLY_PROG} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barSize={20} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                <XAxis dataKey="week" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="target" name="Target" radius={[4, 4, 0, 0]} fill={C.border} />
-                <Bar dataKey="progress" name="Achieved" radius={[4, 4, 0, 0]}>
-                  {MONTHLY_PROG.map((_, i) => <Cell key={`mp-cell-${i}`} fill={i === 3 ? C.green : C.purple} fillOpacity={0.85} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* History columns + recent activity */}
+        {/* The two lists that help users decide what to do next */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Interview history */}
           <Card className="p-5">
             <SecHead icon={<Mic size={15} />} title="Interview History" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
             <div className="space-y-2">
-              {[
+                {[
                 { type: "Technical", score: 81, date: "Aug 1", grade: "Aâˆ’", color: C.cyan },
                 { type: "Behavioral", score: 76, date: "Jul 28", grade: "B+", color: C.green },
                 { type: "Mixed", score: 71, date: "Jul 22", grade: "B", color: C.purple },
                 { type: "HR Interview", score: 84, date: "Jul 15", grade: "A", color: C.amber },
-                { type: "Coding Round", score: 67, date: "Jul 8", grade: "C+", color: C.red },
               ].map((h, i) => (
                 <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${h.color}18`, color: h.color }}><Mic size={12} /></div>
@@ -3290,8 +3169,8 @@ function ProgressDashboardPage() {
           </Card>
         </div>
 
-        {/* Subject / Domain completion + Streak calendar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Compact preparation summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Card className="p-5">
             <SecHead icon={<BookOpen size={15} />} title="Subject Completion" sub="8 core subjects" />
             <div className="space-y-2.5">
@@ -3306,94 +3185,27 @@ function ProgressDashboardPage() {
           </Card>
 
           <Card className="p-5">
-            <SecHead icon={<GraduationCap size={15} />} title="Domain Completion" sub="8 career domains" />
+            <SecHead icon={<GraduationCap size={15} />} title="Preparation progress" sub="Your main study areas" />
+            <div className="space-y-3">
+              {[['Subjects', 68, C.purple], ['Domain skills', 44, C.cyan], ['Interview practice', 81, C.green]].map(([label, progress, color]) => (
+                <div key={label as string}>
+                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{label}</span><span className="font-bold" style={{ color: color as string }}>{progress}%</span></div>
+                  <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${progress}%`, background: color as string }} /></div>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <SecHead icon={<Target size={15} />} title="Next actions" sub="A short list to keep momentum" />
             <div className="space-y-2.5">
-              {DOMAINS.slice(0, 5).map(d => (
-                <div key={d.id}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{d.name.split(" ")[0]}</span><span className="font-bold" style={{ color: d.color }}>{d.progress}%</span></div>
-                  <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${d.progress}%`, background: d.color, boxShadow: `0 0 6px ${d.color}50` }} /></div>
-                </div>
-              ))}
-              <button className="w-full mt-1 py-2 rounded-xl text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>View all 8 domains</button>
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SecHead icon={<Flame size={15} />} title="Study Streak" sub="Daily activity â€” last 28 days" />
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-4xl font-black" style={{ color: C.amber }}>{streak}</div>
-              <div><div className="text-xs font-bold text-white">day streak</div><div className="text-xs" style={{ color: C.muted }}>Personal best: {streak}</div></div>
-            </div>
-            <div className="grid gap-1.5 mb-2" style={{ gridTemplateColumns: "repeat(7, 1fr)" }}>
-              {Array.from({ length: 28 }, (_, i) => {
-                const active = i >= 14; const today = i === 27;
-                return (
-                  <div key={i} className="rounded aspect-square"
-                    style={{ background: today ? C.amber : active ? `rgba(245,158,11,${0.25 + (i - 14) * 0.05})` : C.surface, border: today ? `1px solid ${C.amber}` : "1px solid transparent" }} />
-                );
-              })}
-            </div>
-            <div className="flex justify-between text-xs" style={{ color: C.muted }}><span>4 weeks ago</span><span>Today</span></div>
-          </Card>
-        </div>
-
-        {/* Achievements + AI Insights + Upcoming Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Card className="p-5">
-            <SecHead icon={<Award size={15} />} title="Achievement Badges"
-              sub={`${ACHIEVEMENTS_LIST.filter(a => a.earned).length} earned | ${ACHIEVEMENTS_LIST.filter(a => !a.earned).length} locked`} />
-            <div className="grid grid-cols-4 gap-3">
-              {ACHIEVEMENTS_LIST.map((a, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-xl text-center"
-                  style={{ background: a.earned ? "rgba(168,85,247,.08)" : C.surface, border: `1px solid ${a.earned ? "rgba(168,85,247,.22)" : C.border}`, opacity: a.earned ? 1 : 0.55 }}>
-                  <div className="text-sm font-bold tracking-tight" style={{ filter: a.earned ? "none" : "grayscale(1)", color: a.earned ? C.purple : C.muted }}>{a.icon}</div>
-                  <div className="text-xs font-semibold leading-tight" style={{ color: a.earned ? C.text : C.muted }}>{a.title}</div>
-                  <div className="text-xs" style={{ color: C.muted }}>{a.earned ? a.date : "Locked"}</div>
+              {['Complete DSA: Binary Trees module', 'Take one technical mock interview', 'Upload your latest resume'].map((action, index) => (
+                <div key={action} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${C.purple}18`, color: C.purple }}>{index + 1}</div>
+                  <span className="text-xs font-medium text-white">{action}</span>
                 </div>
               ))}
             </div>
           </Card>
-
-          <div className="space-y-5">
-            <Card className="p-5" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
-              <SecHead icon={<Sparkles size={15} />} title="AI Performance Insights" sub="Personalised weekly analysis" />
-              <div className="space-y-2.5">
-                {[
-                  { text: "You perform 34% better in Technical vs Behavioral rounds â€” invest more in STAR stories.", color: C.amber },
-                  { text: "DSA score improved +30% over 6 months â€” excellent consistency!", color: C.green },
-                  { text: "System Design is weakest at 45%. Target 2 HLD problems daily for the next week.", color: C.purple },
-                ].map((ins, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${ins.color}08`, border: `1px solid ${ins.color}20` }}>
-                    <Sparkles size={12} style={{ color: ins.color, flexShrink: 0, marginTop: 1 }} />
-                    <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{ins.text}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-5">
-              <SecHead icon={<Target size={15} />} title="Upcoming Goals" sub="7/10 completed"
-                action={<button className="text-xs flex items-center gap-1" style={{ color: C.purple }}><Plus size={11} /> Add</button>} />
-              <div className="space-y-2.5">
-                {[
-                  { goal: "Complete DSA: Binary Trees module", due: "Aug 5", pct: 70, color: C.purple },
-                  { goal: "Take 2 Mock Interviews this week", due: "Aug 7", pct: 50, color: C.cyan },
-                  { goal: "Upload updated Resume v4", due: "Aug 10", pct: 0, color: C.amber },
-                ].map((g, i) => (
-                  <div key={i} className="p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                    <div className="flex items-start justify-between mb-2">
-                      <span className="text-xs font-medium text-white flex-1 mr-3 leading-snug">{g.goal}</span>
-                      <div className="flex items-center gap-1 flex-shrink-0" style={{ color: C.muted }}><Clock size={10} /><span className="text-xs">{g.due}</span></div>
-                    </div>
-                    <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${g.pct}%`, background: g.color }} />
-                    </div>
-                    <div className="text-xs mt-1 font-semibold" style={{ color: g.pct === 0 ? C.muted : g.color }}>{g.pct === 0 ? "Not started" : `${g.pct}% complete`}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@
 import { clearAuth, getToken } from "./auth";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const FALLBACK_BASE_URL = BASE_URL.replace("localhost", "127.0.0.1");
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -41,7 +42,18 @@ async function request<T>(
       body: isFormData ? (options.body as FormData) : (options.body ? JSON.stringify(options.body) : undefined),
     });
   } catch {
-    throw new Error(`Unable to reach the CrackIt backend at ${BASE_URL}. Start FastAPI and try again.`);
+    if (FALLBACK_BASE_URL === BASE_URL) {
+      throw new Error(`Unable to reach the CrackIt backend at ${BASE_URL}. Start FastAPI and try again.`);
+    }
+    try {
+      res = await fetch(`${FALLBACK_BASE_URL}${path}`, {
+        method,
+        headers,
+        body: isFormData ? (options.body as FormData) : (options.body ? JSON.stringify(options.body) : undefined),
+      });
+    } catch {
+      throw new Error(`Unable to reach the CrackIt backend at ${BASE_URL}. Start FastAPI and try again.`);
+    }
   }
 
   // 401 → clear auth and redirect to login
