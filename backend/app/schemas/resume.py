@@ -1,0 +1,75 @@
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class SectionDetail(BaseModel):
+    score: float = Field(..., ge=0, le=100)
+    tips: List[str] = Field(default_factory=list)
+
+
+class DetectedSkill(BaseModel):
+    skill: str
+    category: Optional[str] = "Technical"
+    confidence: Optional[float] = Field(default=85.0, ge=0, le=100)
+
+
+class PriorityActionItem(BaseModel):
+    section: str
+    action: str
+    potential_gain: int = 5
+    impact: str = "High"
+
+
+class ResumeAnalysisDetail(BaseModel):
+    overall_score: float = Field(..., ge=0, le=100)
+    ats_score: float = Field(..., ge=0, le=100)
+    readability_score: float = Field(default=80.0, ge=0, le=100)
+    keyword_match_score: float = Field(default=70.0, ge=0, le=100)
+    summary_feedback: str
+    sections: Dict[str, Any]
+    detected_skills: List[Dict[str, Any]] = Field(default_factory=list)
+    missing_keywords: List[str] = Field(default_factory=list)
+    found_keywords: List[str] = Field(default_factory=list)
+    priority_action_plan: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class ResumeAnalysisResponse(BaseModel):
+    success: bool = True
+    resume_id: Optional[int] = None
+    ats_score: Optional[float] = Field(default=None, ge=0, le=100)
+    overall_score: Optional[float] = Field(default=None, ge=0, le=100)
+    ai_feedback: Optional[str] = None
+    full_analysis: Dict[str, Any]
+    persisted: bool = False
+    message: Optional[str] = None
+
+
+class SectionScore(BaseModel):
+    name: str
+    score: int
+    tips: List[str]
+
+
+class KeywordMatch(BaseModel):
+    word: str
+    found: bool
+
+
+class ResumeAnalysisResult(BaseModel):
+    overall_score: int = Field(..., ge=0, le=100, description="Overall resume score out of 100")
+    ats_score: int = Field(..., ge=0, le=100, description="ATS compatibility score out of 100")
+    job_role_match: int = Field(..., ge=0, le=100, description="Job role match score out of 100")
+    readability_score: int = Field(..., ge=0, le=100, description="Readability and formatting score out of 100")
+
+    summary: str = Field(..., description="A brief summary of the resume's quality")
+    strengths: List[str] = Field(..., description="Key strengths found in the resume")
+    weaknesses: List[str] = Field(..., description="Key weaknesses found in the resume")
+
+    skills: List[str] = Field(..., description="Skills detected in the resume")
+    missing_skills: List[str] = Field(..., description="Important skills missing based on the target role")
+
+    formatting_issues: List[str] = Field(..., description="Any formatting issues detected")
+    improvements: List[str] = Field(..., description="Actionable improvements for the resume")
+
+    sections: List[SectionScore] = Field(..., description="Detailed breakdown of each resume section")
+    keywords: List[KeywordMatch] = Field(..., description="Keyword analysis showing found vs missing keywords")

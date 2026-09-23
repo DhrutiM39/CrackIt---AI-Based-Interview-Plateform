@@ -1239,3 +1239,63 @@ FOR ALL
 TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+-- ==========================================
+-- AUTOMATION & OPTIMIZATION IMPROVEMENTS
+-- ==========================================
+
+-- 1. Automate User Profile Synchronization from Supabase Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.users (id, full_name, email, profile_photo)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', ''),
+    new.email,
+    new.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- 2. Trigger Function to auto-update the 'updated_at' timestamp on update
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Dynamic script to add the trigger to every table in 'public' containing 'updated_at'
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOR t IN 
+    SELECT table_name 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND column_name = 'updated_at'
+  LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS update_%I_updated_at ON public.%I;', t, t);
+    EXECUTE format('
+      CREATE TRIGGER update_%I_updated_at
+      BEFORE UPDATE ON public.%I
+      FOR EACH ROW
+      EXECUTE FUNCTION public.update_updated_at_column();', t, t);
+  END LOOP;
+END;
+$$;
+
+
+-- 3. Create a GIN index on public.linkedin_analysis profile_data JSONB column
+CREATE INDEX IF NOT EXISTS idx_linkedin_analysis_profile_data_gin 
+ON public.linkedin_analysis USING gin (profile_data);

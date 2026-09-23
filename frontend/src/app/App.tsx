@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "./AuthContext";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import {
   Brain, ChevronRight, Check, ArrowRight, Menu, Bell, Search,
   Mic, Target, TrendingUp, Award, Sparkles, BookOpen, Code2,
@@ -12,7 +15,7 @@ import {
   GitBranch, Package, Terminal, TrendingDown,
   Filter, Camera, Mail, Trash2, Pencil, Link, Palette, Moon,
   BellOff, SlidersHorizontal, MessageSquare, ExternalLink,
-  UserCheck, Bookmark, CheckSquare,
+  UserCheck, Bookmark, CheckSquare, Loader2,
 } from "lucide-react";
 
 const Rocket = Zap;
@@ -22,27 +25,29 @@ import {
   ResponsiveContainer, Cell, LineChart, Line, AreaChart, Area,
   PieChart as RePieChart, Pie,
 } from "recharts";
+import { subjectsApi, domainsApi, aiPrepApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi, roadmapApi } from "../lib/api";
+import type { Report, ReportSummary, DashboardMetrics } from "../lib/api";
 
-// ─── Tokens ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
-  bg: "#0B1120", card: "#111827", surface: "#1F2937",
-  border: "#374151", muted: "#9CA3AF", text: "#F9FAFB",
-  purple: "#A855F7", cyan: "#22D3EE", green: "#34D399",
-  amber: "#F59E0B", pink: "#F472B6", red: "#EF4444",
-  indigo: "#818CF8", blue: "#60A5FA", teal: "#2DD4BF",
-  grad: "linear-gradient(135deg, #A855F7 0%, #22D3EE 100%)",
-  gradSubtle: "linear-gradient(135deg,rgba(168,85,247,.15) 0%,rgba(34,211,238,.1) 100%)",
+  bg: "#0D1724", card: "#132131", surface: "#1A2B3D",
+  border: "#2A3D52", muted: "#9EACBA", text: "#EDF2F4",
+  purple: "#5F8B89", cyan: "#7E9BB5", green: "#9BAF9C",
+  amber: "#C6A574", pink: "#9D8791", red: "#C96B68",
+  indigo: "#7E9BB5", blue: "#7894A8", teal: "#6D9995",
+  grad: "linear-gradient(135deg, #31536D 0%, #477773 100%)",
+  gradSubtle: "linear-gradient(135deg,rgba(95,139,137,.14) 0%,rgba(49,83,109,.14) 100%)",
 };
 
-// ─── Primitives ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Grad = ({ children }: { children: React.ReactNode }) => (
   <span style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{children}</span>
 );
 const Card = ({ children, className = "", style = {}, onClick }: {
   children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void;
 }) => (
-  <div className={className} onClick={onClick}
-    style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, ...style }}>{children}</div>
+  <div className={`crackit-card-enter ${className}`} onClick={onClick}
+    style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, boxShadow: "0 12px 30px rgba(3, 12, 22, .18)", ...style }}>{children}</div>
 );
 const ChartTip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -60,14 +65,14 @@ const Pill = ({ label, color }: { label: string; color: string }) => (
 const SecHead = ({ icon, title, sub, action }: { icon: React.ReactNode; title: string; sub?: string; action?: React.ReactNode }) => (
   <div className="flex items-start justify-between mb-5">
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.12)", color: C.purple }}>{icon}</div>
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(95,139,137,.13)", color: C.purple }}>{icon}</div>
       <div><div className="text-sm font-bold text-white">{title}</div>{sub && <div className="text-xs mt-0.5" style={{ color: C.muted }}>{sub}</div>}</div>
     </div>
     {action}
   </div>
 );
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "resume", label: "Resume Analyzer", icon: FileText },
@@ -86,6 +91,7 @@ const NAV2 = [
 ];
 
 function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: string; onNav: (id: string) => void; onToggle: () => void }) {
+  const { user } = useAuth();
   return (
     <aside className="flex flex-col h-full transition-all duration-300 flex-shrink-0"
       style={{ width: col ? 64 : 240, background: C.card, borderRight: `1px solid ${C.border}` }}>
@@ -111,8 +117,8 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
           const Icon = item.icon; const isA = active === item.id;
           return (
             <button key={item.id} onClick={() => onNav(item.id)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
-              style={{ background: isA ? C.gradSubtle : "transparent", border: isA ? "1px solid rgba(168,85,247,.3)" : "1px solid transparent" }}>
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${isA ? "sidebar-active" : ""}`}
+              style={{ background: isA ? C.gradSubtle : "transparent", border: "1px solid transparent" }}>
               <Icon size={16} style={{ color: isA ? C.purple : C.muted, flexShrink: 0 }} />
               {!col && <span className="text-sm font-medium truncate" style={{ color: isA ? C.text : C.muted }}>{item.label}</span>}
             </button>
@@ -124,19 +130,21 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
           const Icon = item.icon; const isA = active === item.id;
           return (
             <button key={item.id} onClick={() => onNav(item.id)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${isA ? "sidebar-active" : ""}`}
               style={{ background: isA ? C.gradSubtle : "transparent" }}>
               <Icon size={16} style={{ color: isA ? C.purple : C.muted, flexShrink: 0 }} />
               {!col && <span className="text-sm font-medium" style={{ color: isA ? C.text : C.muted }}>{item.label}</span>}
             </button>
           );
         })}
-        {!col && (
+        {!col && user && (
           <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-xl" style={{ background: C.surface }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: C.grad }}>DS</div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: C.grad }}>
+              {user.full_name?.charAt(0).toUpperCase() || "U"}
+            </div>
             <div className="flex-1 overflow-hidden">
-              <div className="text-xs font-semibold text-white truncate">Dhruti Shah</div>
-              <div className="text-xs truncate" style={{ color: C.muted }}>Pro Plan</div>
+              <div className="text-xs font-semibold text-white truncate">{user.full_name}</div>
+              <div className="text-xs truncate" style={{ color: C.muted }}>{user.target_job_role || "Student"}</div>
             </div>
             <div className="w-2 h-2 rounded-full" style={{ background: C.green }} />
           </div>
@@ -146,25 +154,27 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
   );
 }
 
-// ─── Topbar ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Topbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Topbar({ onToggle }: { onToggle: () => void }) {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
   return (
     <header className="flex items-center gap-4 px-6 py-3.5 flex-shrink-0"
       style={{ background: "rgba(17,24,39,.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, zIndex: 20 }}>
       <button className="lg:hidden" onClick={onToggle} style={{ color: C.muted }}><Menu size={20} /></button>
       <div className="flex-1 max-w-md relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
-        <input placeholder="Search subjects, topics, questions…"
+        <input placeholder="Search subjects, topics, questions..."
           className="w-full pl-9 pr-4 py-2 rounded-xl text-sm outline-none"
           style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded" style={{ background: C.border, color: C.muted }}>⌘K</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded" style={{ background: C.border, color: C.muted }}>Ctrl K</span>
       </div>
       <div className="flex items-center gap-2 ml-auto">
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
           style={{ background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.3)" }}>
           <Flame size={14} style={{ color: C.amber }} />
-          <span className="text-xs font-bold" style={{ color: C.amber }}>14 day streak</span>
+          <span className="text-xs font-bold" style={{ color: C.amber }}>{user?.streak_count || 0} day streak</span>
         </div>
         <div className="relative">
           <button onClick={() => setOpen(!open)} className="relative w-9 h-9 rounded-xl flex items-center justify-center"
@@ -187,59 +197,70 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer"
-          style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: C.grad }}>DS</div>
-          <span className="hidden sm:block text-sm font-medium text-white">Dhruti</span>
-          <ChevronDown size={14} style={{ color: C.muted }} />
+        <div className="relative">
+          <div onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer"
+            style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: C.grad }}>
+              {user?.full_name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <span className="hidden sm:block text-sm font-medium text-white">{user?.full_name?.split(" ")[0] || "User"}</span>
+            <ChevronDown size={14} style={{ color: C.muted }} />
+          </div>
+          {profileOpen && (
+            <div className="absolute right-0 top-12 w-48 rounded-xl p-2 z-50" style={{ background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 10px 40px rgba(0,0,0,.5)" }}>
+              <button onClick={() => { setProfileOpen(false); logout(); }} className="w-full text-left px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2">
+                <Lock size={14} /> Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 1: SUBJECT-WISE PREPARATION
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const SUBJECTS = [
   {
-    id: "dsa", name: "Data Structures & Algorithms", icon: "⚡", color: C.purple,
+    id: "dsa", name: "Data Structures & Algorithms", icon: "DSA", color: C.purple,
     progress: 68, difficulty: "Hard", total: 120, done: 82, streak: 7,
     tags: ["Arrays", "Trees", "Graphs", "DP"],
   },
   {
-    id: "dbms", name: "DBMS", icon: "🗄️", color: C.cyan,
+    id: "dbms", name: "DBMS", icon: "DB", color: C.cyan,
     progress: 55, difficulty: "Medium", total: 80, done: 44, streak: 3,
     tags: ["Normalization", "Transactions", "Indexing"],
   },
   {
-    id: "os", name: "Operating Systems", icon: "🖥️", color: C.green,
+    id: "os", name: "Operating Systems", icon: "OS", color: C.green,
     progress: 72, difficulty: "Hard", total: 95, done: 68, streak: 5,
     tags: ["Processes", "Memory", "Scheduling"],
   },
   {
-    id: "cn", name: "Computer Networks", icon: "🌐", color: C.amber,
+    id: "cn", name: "Computer Networks", icon: "NET", color: C.amber,
     progress: 41, difficulty: "Medium", total: 75, done: 31, streak: 0,
     tags: ["OSI Model", "TCP/IP", "DNS"],
   },
   {
-    id: "oop", name: "Object-Oriented Programming", icon: "🔷", color: C.indigo,
+    id: "oop", name: "Object-Oriented Programming", icon: "OOP", color: C.indigo,
     progress: 88, difficulty: "Easy", total: 60, done: 53, streak: 12,
     tags: ["Polymorphism", "Inheritance", "SOLID"],
   },
   {
-    id: "sql", name: "SQL", icon: "📊", color: C.teal,
+    id: "sql", name: "SQL", icon: "SQL", color: C.teal,
     progress: 61, difficulty: "Medium", total: 70, done: 43, streak: 2,
     tags: ["Joins", "Aggregations", "Indexes"],
   },
   {
-    id: "apt", name: "Aptitude", icon: "🧮", color: C.pink,
+    id: "apt", name: "Aptitude", icon: "APT", color: C.pink,
     progress: 45, difficulty: "Easy", total: 100, done: 45, streak: 1,
     tags: ["Quant", "Logical", "Verbal"],
   },
   {
-    id: "hr", name: "HR Interview", icon: "🤝", color: C.amber,
+    id: "hr", name: "HR Interview", icon: "HR", color: C.amber,
     progress: 79, difficulty: "Easy", total: 50, done: 39, streak: 8,
     tags: ["STAR Method", "Behavioral", "Situational"],
   },
@@ -315,15 +336,32 @@ function SubjectCard({ s, onSelect, selected }: { s: typeof SUBJECTS[0]; onSelec
 }
 
 function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
-  const topics = [
-    { name: "Arrays & Strings", done: true, q: 24 },
-    { name: "Linked Lists", done: true, q: 18 },
-    { name: "Binary Trees", done: true, q: 21 },
+  const [topics, setTopics] = useState([
+    { name: "Arrays & Strings", done: true, q: 24, current: false },
+    { name: "Linked Lists", done: true, q: 18, current: false },
+    { name: "Binary Trees", done: true, q: 21, current: false },
     { name: "Binary Search Trees", done: false, q: 15, current: true },
-    { name: "Heaps & Priority Queues", done: false, q: 12 },
-    { name: "Graphs (BFS/DFS)", done: false, q: 20 },
-    { name: "Dynamic Programming", done: false, q: 28 },
-  ];
+    { name: "Heaps & Priority Queues", done: false, q: 12, current: false },
+    { name: "Graphs (BFS/DFS)", done: false, q: 20, current: false },
+    { name: "Dynamic Programming", done: false, q: 28, current: false },
+  ]);
+  const [questions, setQuestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!s || !s.id || isNaN(Number(s.id))) return;
+    subjectsApi.getDetail(s.id).then(res => {
+      if (res && res.topics && res.topics.length > 0) {
+        setTopics(res.topics);
+      }
+    }).catch(err => console.error(err));
+
+    subjectsApi.getQuestions(s.id).then(res => {
+      if (res && res.length > 0) {
+        setQuestions(res);
+      }
+    }).catch(err => console.error(err));
+  }, [s]);
+
   const mockScores = [
     { test: "Mock 1", score: 62 }, { test: "Mock 2", score: 71 },
     { test: "Mock 3", score: 68 }, { test: "Mock 4", score: 79 }, { test: "Mock 5", score: 84 },
@@ -333,11 +371,13 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
     { area: "Dynamic Programming", score: 55, color: C.amber },
     { area: "Segment Trees", score: 38, color: C.red },
   ];
-  const importantQs = [
-    { q: "What is the time complexity of Quicksort in best, average and worst case?", freq: "Very High", tag: "Complexity" },
-    { q: "Explain the difference between DFS and BFS with use cases.", freq: "High", tag: "Graphs" },
-    { q: "How does a HashMap work internally in Java?", freq: "Very High", tag: "Hashing" },
-    { q: "Describe the process of cycle detection in a directed graph.", freq: "Medium", tag: "Graphs" },
+  const importantQs = questions.length > 0 ? questions.slice(0, 4).map(q => ({
+    q: q.question, freq: q.difficulty === "Hard" ? "Very High" : "Medium", tag: "Interview", id: q.id, completed: q.completed
+  })) : [
+    { q: "What is the time complexity of Quicksort in best, average and worst case?", freq: "Very High", tag: "Complexity", id: 1, completed: false },
+    { q: "Explain the difference between DFS and BFS with use cases.", freq: "High", tag: "Graphs", id: 2, completed: false },
+    { q: "How does a HashMap work internally in Java?", freq: "Very High", tag: "Hashing", id: 3, completed: false },
+    { q: "Describe the process of cycle detection in a directed graph.", freq: "Medium", tag: "Graphs", id: 4, completed: false },
   ];
 
   return (
@@ -359,7 +399,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
 
       {/* Topic progress tracker */}
       <Card className="p-5">
-        <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} — chapter by chapter`} />
+        <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} â€” chapter by chapter`} />
         <div className="space-y-2">
           {topics.map(t => (
             <div key={t.name} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
@@ -373,7 +413,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
               </span>
               {t.current && <Pill label="In Progress" color={s.color} />}
               <span className="text-xs" style={{ color: C.muted }}>{t.q} questions</span>
-              {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>✓ Done</span>}
+              {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>âœ“ Done</span>}
             </div>
           ))}
         </div>
@@ -449,8 +489,18 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                   </span>
                 </div>
               </div>
-              <button className="text-xs flex-shrink-0 px-2.5 py-1 rounded-lg"
-                style={{ background: `${s.color}15`, color: s.color }}>Answer</button>
+              <button 
+                onClick={() => {
+                  if (q.id) {
+                    subjectsApi.submitAnswer(q.id, "Mock valid answer").then(() => {
+                      alert("Answer submitted and evaluated!");
+                    }).catch(e => console.error(e));
+                  }
+                }}
+                className="text-xs flex-shrink-0 px-2.5 py-1 rounded-lg"
+                style={{ background: q.completed ? `${C.green}15` : `${s.color}15`, color: q.completed ? C.green : s.color }}>
+                {q.completed ? "Done" : "Answer"}
+              </button>
             </div>
           ))}
         </div>
@@ -487,9 +537,9 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
             sub="Based on your weak areas and exam patterns" />
           <div className="space-y-2.5">
             {[
-              { topic: "Kruskal's & Prim's Algorithm", reason: "Frequently asked, not practiced yet", icon: "🔗" },
-              { topic: "Fenwick Tree (BIT)", reason: "Common in competitive coding rounds", icon: "🌲" },
-              { topic: "Trie Data Structure", reason: "Appears in 67% of string-related FAANG questions", icon: "📚" },
+              { topic: "Kruskal's & Prim's Algorithm", reason: "Frequently asked, not practiced yet", icon: "ALGO" },
+              { topic: "Fenwick Tree (BIT)", reason: "Common in competitive coding rounds", icon: "TREE" },
+              { topic: "Trie Data Structure", reason: "Appears in 67% of string-related FAANG questions", icon: "READ" },
             ].map(r => (
               <div key={r.topic} className="flex items-start gap-2.5 p-3 rounded-xl"
                 style={{ background: "rgba(168,85,247,.07)", border: "1px solid rgba(168,85,247,.2)" }}>
@@ -515,7 +565,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                 <Flame size={18} style={{ color: C.amber }} />
                 <span className="text-sm font-bold text-white">Study Streak</span>
               </div>
-              <div className="text-xs" style={{ color: C.muted }}>Keep it going — consistency beats intensity</div>
+              <div className="text-xs" style={{ color: C.muted }}>Keep it going â€” consistency beats intensity</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-black" style={{ color: C.amber }}>{s.streak}</div>
@@ -528,7 +578,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                 style={{ background: i < s.streak ? C.amber : C.border, opacity: i < s.streak ? 0.7 + i * 0.02 : 1 }} />
             ))}
           </div>
-          <div className="text-xs mt-2" style={{ color: C.muted }}>Last 14 days — {s.streak} active</div>
+          <div className="text-xs mt-2" style={{ color: C.muted }}>Last 14 days â€” {s.streak} active</div>
         </Card>
 
         {/* Daily Goal */}
@@ -568,10 +618,10 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
           sub={`Key concepts for ${s.name}`} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
-            { title: "Big O Cheat Sheet", preview: "O(1) < O(log n) < O(n) < O(n log n) < O(n²)...", tag: "Complexity" },
+            { title: "Big O Cheat Sheet", preview: "O(1) < O(log n) < O(n) < O(n log n) < O(nÂ²)...", tag: "Complexity" },
             { title: "Sorting Algorithms", preview: "QuickSort avg O(n log n), MergeSort stable O(n log n), HeapSort...", tag: "Sorting" },
             { title: "Tree Traversals", preview: "Inorder (LNR), Preorder (NLR), Postorder (LRN). BFS uses queue...", tag: "Trees" },
-            { title: "Graph Representations", preview: "Adjacency matrix: O(V²) space. Adjacency list: O(V+E) space...", tag: "Graphs" },
+            { title: "Graph Representations", preview: "Adjacency matrix: O(VÂ²) space. Adjacency list: O(V+E) space...", tag: "Graphs" },
           ].map(n => (
             <div key={n.title} className="p-3.5 rounded-xl cursor-pointer hover:border-purple-500/40 transition-colors"
               style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -589,14 +639,37 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
 }
 
 function SubjectPrepPage() {
+  const [subjectsList, setSubjectsList] = useState<any[]>(SUBJECTS);
   const [selected, setSelected] = useState("dsa");
-  const selectedSubject = SUBJECTS.find(s => s.id === selected)!;
 
-  const overallProgress = Math.round(SUBJECTS.reduce((a, s) => a + s.progress, 0) / SUBJECTS.length);
-  const totalDone = SUBJECTS.reduce((a, s) => a + s.done, 0);
-  const totalTopics = SUBJECTS.reduce((a, s) => a + s.total, 0);
+  useEffect(() => {
+    subjectsApi.getAll().then(res => {
+      if (res && res.length > 0) {
+        const mapped = res.map((s: any, i: number) => ({
+          id: String(s.id),
+          name: s.subject_name,
+          icon: s.icon || "ðŸ“š",
+          color: [C.purple, C.cyan, C.green, C.amber, C.indigo, C.teal, C.pink, C.amber][i % 8],
+          progress: s.progress,
+          difficulty: s.difficulty || "Medium",
+          total: s.total_topics || 1,
+          done: s.done_topics || 0,
+          streak: s.streak || 0,
+          tags: s.tags || []
+        }));
+        setSubjectsList(mapped);
+        setSelected(mapped[0].id);
+      }
+    }).catch(err => console.error("Error fetching subjects:", err));
+  }, []);
 
-  const radarData = SUBJECTS.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
+  const selectedSubject = subjectsList.find(s => s.id === selected) || subjectsList[0];
+
+  const overallProgress = subjectsList.length > 0 ? Math.round(subjectsList.reduce((a, s) => a + s.progress, 0) / subjectsList.length) : 0;
+  const totalDone = subjectsList.reduce((a, s) => a + s.done, 0);
+  const totalTopics = subjectsList.reduce((a, s) => a + s.total, 0);
+
+  const radarData = subjectsList.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -633,7 +706,7 @@ function SubjectPrepPage() {
             { label: "Overall Progress", value: `${overallProgress}%`, icon: <TrendingUp size={16} />, color: C.purple },
             { label: "Topics Completed", value: `${totalDone}/${totalTopics}`, icon: <Check size={16} />, color: C.cyan },
             { label: "Current Streak", value: "14 days", icon: <Flame size={16} />, color: C.amber },
-            { label: "Subjects Active", value: `${SUBJECTS.filter(s => s.progress > 0).length}/8`, icon: <BookOpen size={16} />, color: C.green },
+            { label: "Subjects Active", value: `${subjectsList.filter(s => s.progress > 0).length}/${subjectsList.length}`, icon: <BookOpen size={16} />, color: C.green },
           ].map(s => (
             <Card key={s.label} className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -648,7 +721,7 @@ function SubjectPrepPage() {
 
         {/* Subject cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {SUBJECTS.map(s => (
+          {subjectsList.map(s => (
             <SubjectCard key={s.id} s={s} selected={selected === s.id} onSelect={() => setSelected(s.id)} />
           ))}
         </div>
@@ -703,7 +776,7 @@ function SubjectPrepPage() {
           <div>
             <div className="text-sm font-bold text-white">Detailed View: {selectedSubject.name}</div>
             <div className="text-xs" style={{ color: C.muted }}>
-              {selectedSubject.progress}% complete · {selectedSubject.done}/{selectedSubject.total} topics
+              {selectedSubject.progress}% complete Â· {selectedSubject.done}/{selectedSubject.total} topics
             </div>
           </div>
           <div className="ml-auto">
@@ -716,58 +789,58 @@ function SubjectPrepPage() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 2: DOMAIN-WISE PREPARATION
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const DOMAINS = [
   {
-    id: "web", name: "Web Development", icon: "🌐", color: C.purple,
+    id: "web", name: "Web Development", icon: "WEB", color: C.purple,
     progress: 72, difficulty: "Intermediate", time: "8 weeks left",
     skills: ["React", "Node.js", "TypeScript", "CSS", "REST APIs"],
-    demand: 96, salary: "₹18–35 LPA",
+    demand: 96, salary: "â‚¹18â€“35 LPA",
   },
   {
-    id: "ai", name: "AI / Machine Learning", icon: "🤖", color: C.cyan,
+    id: "ai", name: "AI / Machine Learning", icon: "AI", color: C.cyan,
     progress: 38, difficulty: "Advanced", time: "14 weeks left",
     skills: ["Python", "PyTorch", "Transformers", "MLOps"],
-    demand: 99, salary: "₹25–60 LPA",
+    demand: 99, salary: "â‚¹25â€“60 LPA",
   },
   {
-    id: "ds", name: "Data Science", icon: "📊", color: C.green,
+    id: "ds", name: "Data Science", icon: "DATA", color: C.green,
     progress: 51, difficulty: "Intermediate", time: "10 weeks left",
     skills: ["Python", "SQL", "Pandas", "Statistics", "Power BI"],
-    demand: 94, salary: "₹15–30 LPA",
+    demand: 94, salary: "â‚¹15â€“30 LPA",
   },
   {
-    id: "cloud", name: "Cloud Computing", icon: "☁️", color: C.blue,
+    id: "cloud", name: "Cloud Computing", icon: "CLOUD", color: C.blue,
     progress: 29, difficulty: "Intermediate", time: "12 weeks left",
     skills: ["AWS", "GCP", "Terraform", "Docker", "Kubernetes"],
-    demand: 92, salary: "₹20–45 LPA",
+    demand: 92, salary: "â‚¹20â€“45 LPA",
   },
   {
-    id: "cyber", name: "Cybersecurity", icon: "🔒", color: C.red,
+    id: "cyber", name: "Cybersecurity", icon: "SEC", color: C.red,
     progress: 18, difficulty: "Advanced", time: "16 weeks left",
     skills: ["Penetration Testing", "SIEM", "Cryptography", "OWASP"],
-    demand: 88, salary: "₹20–50 LPA",
+    demand: 88, salary: "â‚¹20â€“50 LPA",
   },
   {
-    id: "devops", name: "DevOps", icon: "⚙️", color: C.amber,
+    id: "devops", name: "DevOps", icon: "OPS", color: C.amber,
     progress: 44, difficulty: "Intermediate", time: "9 weeks left",
     skills: ["CI/CD", "Docker", "Kubernetes", "Ansible", "Monitoring"],
-    demand: 91, salary: "₹18–40 LPA",
+    demand: 91, salary: "â‚¹18â€“40 LPA",
   },
   {
-    id: "mobile", name: "Mobile App Development", icon: "📱", color: C.pink,
+    id: "mobile", name: "Mobile App Development", icon: "MOB", color: C.pink,
     progress: 63, difficulty: "Intermediate", time: "7 weeks left",
     skills: ["React Native", "Flutter", "Swift", "Kotlin"],
-    demand: 84, salary: "₹15–28 LPA",
+    demand: 84, salary: "â‚¹15â€“28 LPA",
   },
   {
-    id: "test", name: "Software Testing", icon: "🧪", color: C.teal,
+    id: "test", name: "Software Testing", icon: "QA", color: C.teal,
     progress: 57, difficulty: "Beginner", time: "6 weeks left",
     skills: ["Selenium", "Jest", "Cypress", "Postman", "JUnit"],
-    demand: 79, salary: "₹10–22 LPA",
+    demand: 79, salary: "â‚¹10â€“22 LPA",
   },
 ];
 
@@ -835,17 +908,17 @@ function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect:
 
 function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
   const roadmap = [
-    { phase: "Foundation", topics: ["Core concepts", "Setup & tooling", "First project"], done: true, weeks: "Weeks 1–2" },
-    { phase: "Core Skills", topics: ["Key frameworks", "Best practices", "Mini projects"], done: true, weeks: "Weeks 3–5" },
-    { phase: "Advanced", topics: ["Architecture patterns", "Performance", "Real-world projects"], done: false, current: true, weeks: "Weeks 6–9" },
-    { phase: "Portfolio", topics: ["Capstone project", "Deployment", "Documentation"], done: false, weeks: "Weeks 10–12" },
-    { phase: "Interview Prep", topics: ["Domain questions", "Mock interviews", "Case studies"], done: false, weeks: "Weeks 13–14" },
+    { phase: "Foundation", topics: ["Core concepts", "Setup & tooling", "First project"], done: true, weeks: "Weeks 1â€“2" },
+    { phase: "Core Skills", topics: ["Key frameworks", "Best practices", "Mini projects"], done: true, weeks: "Weeks 3â€“5" },
+    { phase: "Advanced", topics: ["Architecture patterns", "Performance", "Real-world projects"], done: false, current: true, weeks: "Weeks 6â€“9" },
+    { phase: "Portfolio", topics: ["Capstone project", "Deployment", "Documentation"], done: false, weeks: "Weeks 10â€“12" },
+    { phase: "Interview Prep", topics: ["Domain questions", "Mock interviews", "Case studies"], done: false, weeks: "Weeks 13â€“14" },
   ];
 
   const courses = [
     { name: "The Complete Guide to " + d.name.split(" ")[0], platform: "Udemy", rating: 4.8, students: "124K", free: false },
     { name: d.name + " Fundamentals", platform: "Coursera", rating: 4.7, students: "89K", free: false },
-    { name: "Official " + d.skills[0] + " Documentation", platform: "Official Docs", rating: 5.0, students: "—", free: true },
+    { name: "Official " + d.skills[0] + " Documentation", platform: "Official Docs", rating: 5.0, students: "â€”", free: true },
   ];
 
   const companies = [
@@ -956,7 +1029,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-white leading-snug truncate">{c.name}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
+                    <span className="text-xs" style={{ color: C.amber }}>â˜… {c.rating}</span>
                     <span className="text-xs" style={{ color: C.muted }}>{c.students} students</span>
                     {c.free && <Pill label="Free" color={C.green} />}
                   </div>
@@ -1042,7 +1115,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
               );
             })()}
             <div className="text-xs text-center" style={{ color: C.muted }}>
-              {d.demand >= 90 ? "🔥 Extremely high demand" : d.demand >= 80 ? "📈 High demand" : "📊 Moderate demand"}
+              {d.demand >= 90 ? "ðŸ”¥ Extremely high demand" : d.demand >= 80 ? "ðŸ“ˆ High demand" : "ðŸ“Š Moderate demand"}
             </div>
             <div className="w-full space-y-2">
               {[{ l: "Job Postings", v: d.demand }, { l: "Salary Growth", v: 78 }, { l: "Future Outlook", v: 88 }].map(m => (
@@ -1111,7 +1184,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                 <div className="flex justify-between text-xs mb-2">
                   <span className="font-medium text-white">{sg.skill}</span>
                   <span style={{ color: C.muted }}>
-                    <span style={{ color: sg.color }}>{sg.current}%</span> → <span style={{ color: C.green }}>{sg.target}%</span>
+                    <span style={{ color: sg.color }}>{sg.current}%</span> â†’ <span style={{ color: C.green }}>{sg.target}%</span>
                   </span>
                 </div>
                 <div className="relative h-2.5 rounded-full" style={{ background: C.border }}>
@@ -1155,8 +1228,52 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
 }
 
 function DomainPrepPage() {
+  const [domainsList, setDomainsList] = useState<any[]>(DOMAINS);
   const [selected, setSelected] = useState("web");
-  const dom = DOMAINS.find(d => d.id === selected)!;
+  const [genLoading, setGenLoading] = useState(false);
+  const [genQuestions, setGenQuestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    domainsApi.getAll().then(res => {
+      if (res && res.length > 0) {
+        const mapped = res.map((d: any, i: number) => ({
+          id: String(d.id),
+          name: d.domain_name,
+          icon: d.icon || ["ðŸŒ","ðŸ¤–","ðŸ“Š","â˜ï¸","ðŸ”’","âš™ï¸","ðŸ“±","ðŸ§ª"][i % 8],
+          color: [C.purple, C.cyan, C.green, C.blue, C.red, C.amber, C.pink, C.teal][i % 8],
+          progress: d.progress,
+          difficulty: "Intermediate",
+          time: "10 weeks left",
+          skills: ["Core Skills"],
+          demand: 90,
+          salary: "â‚¹15â€“35 LPA",
+        }));
+        setDomainsList(mapped);
+        setSelected(mapped[0].id);
+      }
+    }).catch(err => console.error("Error fetching domains:", err));
+  }, []);
+
+  const dom = domainsList.find(d => d.id === selected) || domainsList[0];
+
+  const handleGenerateQuestions = async () => {
+    if (!dom) return;
+    setGenLoading(true);
+    try {
+      const result = await aiPrepApi.generateQuestions({
+        domain: dom.name,
+        skills: dom.skills,
+        difficulty: "Medium",
+        number_of_questions: 5,
+        category: "Technical"
+      });
+      setGenQuestions(result?.questions || []);
+    } catch(e) {
+      console.error("AI generation failed:", e);
+    } finally {
+      setGenLoading(false);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -1190,7 +1307,7 @@ function DomainPrepPage() {
         {/* Domain summary stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Domains Enrolled", value: "3/8", icon: <Boxes size={16} />, color: C.purple },
+            { label: "Domains Enrolled", value: `${domainsList.filter(d => d.progress > 0).length}/${domainsList.length}`, icon: <Boxes size={16} />, color: C.purple },
             { label: "Skills In Progress", value: "12", icon: <Code2 size={16} />, color: C.cyan },
             { label: "Certifications", value: "1 earned", icon: <Award size={16} />, color: C.amber },
             { label: "AI Match Score", value: "84%", icon: <Sparkles size={16} />, color: C.green },
@@ -1208,36 +1325,74 @@ function DomainPrepPage() {
 
         {/* Domain cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {DOMAINS.map(d => (
+          {domainsList.map(d => (
             <DomainCard key={d.id} d={d} selected={selected === d.id} onSelect={() => setSelected(d.id)} />
           ))}
         </div>
 
-        {/* Selected domain header */}
-        <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
-          style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>
-          <span className="text-2xl">{dom.icon}</span>
-          <div>
-            <div className="text-sm font-bold text-white">{dom.name} — Detailed Learning Path</div>
-            <div className="text-xs" style={{ color: C.muted }}>
-              {dom.progress}% complete · {dom.time} to finish · {dom.skills.length} core skills
+        {/* AI Question Generation Panel */}
+        {dom && (
+          <Card className="p-5 mb-6" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.3)" }}>
+            <div className="flex items-start justify-between">
+              <SecHead icon={<Sparkles size={16} />} title="AI Question Generator" sub={`Generate personalized ${dom.name} interview questions`} />
+              <button
+                onClick={handleGenerateQuestions}
+                disabled={genLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                style={{ background: C.grad }}>
+                {genLoading ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                {genLoading ? "Generating..." : "Generate Questions"}
+              </button>
             </div>
-          </div>
-          <div className="ml-auto flex gap-2">
-            <Pill label={dom.difficulty} color={diffColor(dom.difficulty)} />
-            <Pill label={dom.salary} color={C.green} />
-          </div>
-        </div>
+            {genQuestions.length > 0 && (
+              <div className="space-y-2.5 mt-4">
+                {genQuestions.map((q: any, i: number) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: C.grad }}>Q{i + 1}</div>
+                    <div className="flex-1">
+                      <div className="text-xs text-white leading-relaxed">{q.question}</div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Pill label={q.category} color={C.purple} />
+                        <Pill label={q.difficulty} color={q.difficulty === "Hard" ? C.red : q.difficulty === "Medium" ? C.amber : C.green} />
+                        <span className="text-xs" style={{ color: C.muted }}>{q.topic}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
 
-        <DomainDetailPanel d={dom} />
+        {/* Selected domain header */}
+        {dom && (
+          <>
+            <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
+              style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>
+              <span className="text-2xl">{dom.icon}</span>
+              <div>
+                <div className="text-sm font-bold text-white">{dom.name} â€” Detailed Learning Path</div>
+                <div className="text-xs" style={{ color: C.muted }}>
+                  {dom.progress}% complete Â· {dom.time} to finish Â· {dom.skills.length} core skills
+                </div>
+              </div>
+              <div className="ml-auto flex gap-2">
+                <Pill label={dom.difficulty} color={diffColor(dom.difficulty)} />
+                <Pill label={dom.salary} color={C.green} />
+              </div>
+            </div>
+            <DomainDetailPanel d={dom} />
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 3: AI MOCK INTERVIEW
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function useTimer(running: boolean) {
   const [secs, setSecs] = useState(0);
@@ -1293,11 +1448,11 @@ function Waveform({ active, bars = 22 }: { active: boolean; bars?: number }) {
 }
 
 const INTERVIEW_TYPES = [
-  { id: "hr", label: "HR Interview", icon: "🤝", desc: "Behavioural & cultural fit", color: C.purple },
-  { id: "technical", label: "Technical", icon: "💻", desc: "DSA, system design", color: C.cyan },
-  { id: "behavioral", label: "Behavioral", icon: "🧠", desc: "STAR method & scenarios", color: C.green },
-  { id: "mixed", label: "Mixed Round", icon: "🔀", desc: "HR + Technical combined", color: C.amber },
-  { id: "coding", label: "Live Coding", icon: "⌨️", desc: "Real-time problem solving", color: C.pink },
+  { id: "hr", label: "HR Interview", icon: "HR", desc: "Behavioural & cultural fit", color: C.purple },
+  { id: "technical", label: "Technical", icon: "TECH", desc: "DSA, system design", color: C.cyan },
+  { id: "behavioral", label: "Behavioral", icon: "BEHAVIOR", desc: "STAR method & scenarios", color: C.green },
+  { id: "mixed", label: "Mixed Round", icon: "MIXED", desc: "HR + Technical combined", color: C.amber },
+  { id: "coding", label: "Live Coding", icon: "CODE", desc: "Real-time problem solving", color: C.pink },
 ];
 
 const QUESTIONS_BANK = [
@@ -1384,9 +1539,9 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
           </div>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Easy", icon: "🟢", desc: "Freshers & campus interviews", bars: 1, color: C.green },
-              { label: "Medium", icon: "🟡", desc: "1–3 years experience", bars: 2, color: C.amber },
-              { label: "Hard", icon: "🔴", desc: "Senior & FAANG level", bars: 3, color: C.red },
+              { label: "Easy", icon: "E", desc: "Freshers & campus interviews", bars: 1, color: C.green },
+              { label: "Medium", icon: "M", desc: "1-3 years experience", bars: 2, color: C.amber },
+              { label: "Hard", icon: "H", desc: "Senior & FAANG level", bars: 3, color: C.red },
             ].map(d => (
               <button key={d.label} onClick={() => setDiff(d.label)}
                 className="flex flex-col gap-3 p-5 rounded-2xl text-left transition-all"
@@ -1428,7 +1583,7 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
               },
               {
                 label: "Experience Level", val: exp, onChange: setExp,
-                options: ["Fresher", "0–1 year", "1–2 years", "2–4 years", "4–7 years", "7+ years"],
+                options: ["Fresher", "0â€“1 year", "1â€“2 years", "2â€“4 years", "4â€“7 years", "7+ years"],
               },
               {
                 label: "Duration", val: duration, onChange: setDuration,
@@ -1470,14 +1625,14 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
 const CODING_PROBLEM = {
   title: "Two Sum",
   difficulty: "Easy",
-  tag: "Arrays · Hash Map",
+  tag: "Arrays Â· Hash Map",
   timeLimit: "30 min",
   description:
     "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
   constraints: [
-    "2 ≤ nums.length ≤ 10⁴",
-    "-10⁹ ≤ nums[i] ≤ 10⁹",
-    "-10⁹ ≤ target ≤ 10⁹",
+    "2 â‰¤ nums.length â‰¤ 10â´",
+    "-10â¹ â‰¤ nums[i] â‰¤ 10â¹",
+    "-10â¹ â‰¤ target â‰¤ 10â¹",
     "Only one valid answer exists.",
   ],
   examples: [
@@ -1541,7 +1696,7 @@ function CodingChallengePanel() {
 
       {/* Split pane: Problem + Editor */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left — problem description */}
+        {/* Left â€” problem description */}
         <div className="w-2/5 overflow-y-auto p-4 space-y-4 flex-shrink-0"
           style={{ borderRight: `1px solid ${C.border}`, scrollbarWidth: "none" }}>
           <div>
@@ -1590,7 +1745,7 @@ function CodingChallengePanel() {
           </div>
         </div>
 
-        {/* Right — code editor */}
+        {/* Right â€” code editor */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Editor toolbar */}
           <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0"
@@ -1658,7 +1813,7 @@ function CodingChallengePanel() {
                       </div>
                       <div className="flex-1 font-mono">
                         <span style={{ color: C.muted }}>Input: </span><span style={{ color: C.text }}>{tc.input}</span>
-                        <span className="mx-2" style={{ color: C.border }}>→</span>
+                        <span className="mx-2" style={{ color: C.border }}>â†’</span>
                         <span style={{ color: C.muted }}>Expected: </span><span style={{ color: C.cyan }}>{tc.expected}</span>
                       </div>
                       <Pill label={tc.status === "pending" ? "Not run" : tc.status} color={tc.status === "pass" ? C.green : tc.status === "fail" ? C.red : C.muted} />
@@ -1671,7 +1826,7 @@ function CodingChallengePanel() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle2 size={14} style={{ color: C.green }} />
-                        <span className="text-xs font-bold" style={{ color: C.green }}>All 2 test cases passed · Runtime: 42ms · Memory: 14.3 MB</span>
+                        <span className="text-xs font-bold" style={{ color: C.green }}>All 2 test cases passed Â· Runtime: 42ms Â· Memory: 14.3 MB</span>
                       </div>
                       {[
                         { case: "Case 1", input: "[2,7,11,15], 9", got: "[0,1]", ok: true },
@@ -1682,8 +1837,8 @@ function CodingChallengePanel() {
                           <CheckCircle2 size={12} style={{ color: C.green }} />
                           <span style={{ color: C.muted }}>{r.case}:</span>
                           <span style={{ color: C.text }}>{r.input}</span>
-                          <span style={{ color: C.border }}>→</span>
-                          <span style={{ color: C.green }}>{r.got} ✓</span>
+                          <span style={{ color: C.border }}>â†’</span>
+                          <span style={{ color: C.green }}>{r.got} âœ“</span>
                         </div>
                       ))}
                     </div>
@@ -1700,7 +1855,7 @@ function CodingChallengePanel() {
             {/* Run/Submit bar */}
             <div className="flex items-center justify-between px-3 pb-3">
               <span className="text-xs" style={{ color: C.muted }}>
-                {ran ? "✓ Passed 2/2 test cases" : "Ready to run"}
+                {ran ? "âœ“ Passed 2/2 test cases" : "Ready to run"}
               </span>
               <div className="flex gap-2">
                 <button onClick={runCode}
@@ -1722,49 +1877,131 @@ function CodingChallengePanel() {
   );
 }
 
-function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
+function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) => void }) {
   const [speaking, setSpeaking] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [qIndex, setQIndex] = useState(0);
+  const [aiQuestions, setAiQuestions] = useState<any[]>([]);
   const [showFollow, setShowFollow] = useState(false);
   const [notes, setNotes] = useState("");
   const [mainTab, setMainTab] = useState<"interview" | "coding">("interview");
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Hello! I'm your AI interviewer. Before we start coding, let me ask — can you walk me through your problem-solving approach?" },
-    { role: "user", text: "Sure! I usually start by understanding the problem clearly, then think about edge cases before writing any code." },
-    { role: "ai", text: QUESTIONS_BANK[0].q },
+  const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([
+    { role: "ai", text: "Preparing your personalized interview questions..." },
   ]);
   const [inputMsg, setInputMsg] = useState("");
   const timer = useTimer(true);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const currentQ = QUESTIONS_BANK[qIndex];
+  // â”€â”€ Session tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const sessionIdRef = useRef<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Create session on mount
+  useEffect(() => {
+    const typeMap: Record<string, string> = {
+      hr: "HR", technical: "Technical", behavioral: "Behavioral",
+      mixed: "Technical", coding: "Technical",
+    };
+    interviewsApi.start({
+      interview_type: typeMap[cfg.type] ?? "Technical",
+      target_role: cfg.role ?? "Software Engineer",
+      difficulty: cfg.difficulty ?? "Medium",
+      number_of_questions: 5,
+    }).then(result => {
+      sessionIdRef.current = result.session.id;
+      setAiQuestions(result.question ? [result.question] : []);
+      setMessages([{ role: "ai", text: result.question?.question_text ?? "No question was generated." }]);
+    }).catch(err => {
+      setSaveError(err?.message ?? "Could not start the AI interview.");
+    });
+  }, []);
+
+  const currentQ = aiQuestions[qIndex] ?? { question_text: "Waiting for the AI interviewer...", question_type: "Technical" };
+  const totalQuestions = 5;
   const typeInfo = INTERVIEW_TYPES.find(t => t.id === cfg.type) || INTERVIEW_TYPES[1];
 
-  const sendMsg = () => {
+  const sendMsg = async () => {
     if (!inputMsg.trim()) return;
-    setMessages(m => [...m, { role: "user", text: inputMsg }]);
+    const text = inputMsg;
+    setMessages(m => [...m, { role: "user", text }]);
     setInputMsg("");
-    setTimeout(() => {
-      setSpeaking(true);
-      setMessages(m => [...m, { role: "ai", text: "Great response! Let me dig a bit deeper on that point." }]);
-      setTimeout(() => setSpeaking(false), 2800);
-    }, 700);
+    const sessionId = sessionIdRef.current;
+    const questionId = currentQ.id;
+    if (!sessionId || !questionId) return;
+    setSpeaking(true);
+    try {
+      const result = await interviewsApi.answer({ session_id: sessionId, question_id: questionId, answer_text: text });
+      setMessages(m => [...m, { role: "ai", text: result.feedback }]);
+      if (result.next_question) {
+        setAiQuestions(q => [...q, result.next_question]);
+        setQIndex(i => i + 1);
+        setMessages(m => [...m, { role: "ai", text: result.next_question.question_text }]);
+      }
+    } catch (err: any) {
+      setSaveError(err?.message ?? "Answer evaluation failed.");
+    } finally {
+      setSpeaking(false);
+    }
   };
 
   const nextQuestion = () => {
-    const next = (qIndex + 1) % QUESTIONS_BANK.length;
-    setQIndex(next);
     setShowFollow(false);
-    setSpeaking(true);
-    setMessages(m => [...m, { role: "ai", text: QUESTIONS_BANK[next].q }]);
-    setTimeout(() => setSpeaking(false), 3000);
+  };
+
+  const handleEndInterview = async () => {
+    const sessionId = sessionIdRef.current;
+    if (!sessionId) {
+      // No session was created (e.g., offline), just navigate
+      onEnd(undefined);
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await interviewsApi.finish(sessionId);
+      // Generate the AI report
+      const report = await reportsApi.generate(sessionId);
+      onEnd(report.id);
+    } catch (err: any) {
+      console.error("Error saving interview session:", err);
+      setSaveError(err?.message ?? "Failed to save interview. Proceeding anyway.");
+      setTimeout(() => setSaveError(null), 2000);
+    }
   };
 
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // â”€â”€ Saving overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (saving) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-6" style={{ background: C.bg }}>
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center animate-pulse"
+          style={{ background: "rgba(168,85,247,.15)", border: "1px solid rgba(168,85,247,.3)" }}>
+          <Sparkles size={28} style={{ color: C.purple }} />
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-white mb-2">
+            {saveError ? "Almost done..." : "Generating your report..."}
+          </div>
+          <div className="text-sm" style={{ color: C.muted }}>
+            {saveError ? saveError : "AI is analyzing your interview performance"}
+          </div>
+        </div>
+        {!saveError && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
+            style={{ background: "rgba(168,85,247,.1)", border: "1px solid rgba(168,85,247,.25)" }}>
+            <Loader2 size={14} className="animate-spin" style={{ color: C.purple }} />
+            <span className="text-xs font-semibold" style={{ color: C.purple }}>Powered by Gemini AI</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
@@ -1802,8 +2039,8 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2.5">
-          <span className="text-xs hidden md:block" style={{ color: C.muted }}>{cfg.role} · {cfg.exp}</span>
-          <button onClick={onEnd}
+          <span className="text-xs hidden md:block" style={{ color: C.muted }}>{cfg.role} Â· {cfg.exp}</span>
+          <button onClick={handleEndInterview}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90"
             style={{ background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.4)", color: C.red }}>
             <XCircle size={13} /> End Interview
@@ -1813,7 +2050,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* ── INTERVIEW TAB ── */}
+        {/* â”€â”€ INTERVIEW TAB â”€â”€ */}
         {mainTab === "interview" && (
           <>
             {/* Main content */}
@@ -1836,7 +2073,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                       <div className="w-1.5 h-1.5 rounded-full transition-colors"
                         style={{ background: speaking ? C.green : C.muted }} />
                       <span className="text-xs transition-colors" style={{ color: speaking ? C.green : C.muted }}>
-                        {speaking ? "Speaking…" : "Listening"}
+                        {speaking ? "Speakingâ€¦" : "Listening"}
                       </span>
                     </div>
                   </div>
@@ -1893,8 +2130,8 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.04))", border: "1px solid rgba(168,85,247,.32)" }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Pill label={`Q${qIndex + 1} / ${QUESTIONS_BANK.length}`} color={C.purple} />
-                    <Pill label={currentQ.type} color={typeInfo.color} />
+                    <Pill label={`Q${qIndex + 1} / ${totalQuestions}`} color={C.purple} />
+                    <Pill label={currentQ.category ?? typeInfo.label} color={typeInfo.color} />
                   </div>
                   <button onClick={() => setShowFollow(v => !v)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -1902,14 +2139,14 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                     <Sparkles size={11} /> {showFollow ? "Hide" : "AI Follow-up"}
                   </button>
                 </div>
-                <p className="text-sm font-medium text-white leading-relaxed">{currentQ.q}</p>
+                <p className="text-sm font-medium text-white leading-relaxed">{currentQ.question_text}</p>
                 {showFollow && (
                   <div className="mt-3 p-3.5 rounded-xl flex items-start gap-2.5"
                     style={{ background: "rgba(34,211,238,.07)", border: "1px solid rgba(34,211,238,.2)" }}>
                     <Sparkles size={13} style={{ color: C.cyan, flexShrink: 0, marginTop: 1 }} />
                     <div>
                       <div className="text-xs font-bold mb-1" style={{ color: C.cyan }}>AI Follow-up Question</div>
-                      <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{currentQ.follow}</p>
+                      <p className="text-xs leading-relaxed" style={{ color: C.muted }}>Ask the AI interviewer for clarification or an example.</p>
                     </div>
                   </div>
                 )}
@@ -1941,7 +2178,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 <div className="flex gap-2 mt-3">
                   <input value={inputMsg} onChange={e => setInputMsg(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && sendMsg()}
-                    placeholder="Type your answer, or speak using the microphone…"
+                    placeholder="Type your answer, or speak using the microphoneâ€¦"
                     className="flex-1 px-3 py-2 rounded-xl text-xs outline-none"
                     style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   <button onClick={() => setMicOn(v => !v)}
@@ -1963,7 +2200,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                   sub="Your private notepad during the interview"
                   action={<Pill label={`${notes.split("\n").filter(Boolean).length} lines`} color={C.muted} />} />
                 <textarea value={notes} onChange={e => setNotes(e.target.value)}
-                  placeholder="• Key points to remember&#10;• Terms to research later&#10;• Follow-up topics"
+                  placeholder="â€¢ Key points to remember&#10;â€¢ Terms to research later&#10;â€¢ Follow-up topics"
                   rows={4}
                   className="w-full px-3.5 py-3 rounded-xl text-xs outline-none resize-none leading-relaxed"
                   style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
@@ -1977,15 +2214,15 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
               <Card className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-white">Question Progress</span>
-                  <span className="text-xs font-bold" style={{ color: C.purple }}>{qIndex + 1}/{QUESTIONS_BANK.length}</span>
+                  <span className="text-xs font-bold" style={{ color: C.purple }}>{qIndex + 1}/{totalQuestions}</span>
                 </div>
                 {/* Progress bar */}
                 <div className="h-2 rounded-full mb-3" style={{ background: C.border }}>
                   <div className="h-full rounded-full transition-all"
-                    style={{ width: `${((qIndex) / QUESTIONS_BANK.length) * 100}%`, background: C.grad }} />
+                    style={{ width: `${((qIndex) / totalQuestions) * 100}%`, background: C.grad }} />
                 </div>
                 <div className="space-y-1.5 mb-3">
-                  {QUESTIONS_BANK.map((q, i) => (
+                  {aiQuestions.map((q, i) => (
                     <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl"
                       style={{
                         background: i === qIndex ? "rgba(168,85,247,.1)" : i < qIndex ? "rgba(52,211,153,.06)" : C.surface,
@@ -1995,7 +2232,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                         style={{ background: i < qIndex ? C.green : i === qIndex ? C.purple : C.border, color: i <= qIndex ? "#fff" : C.muted }}>
                         {i < qIndex ? <Check size={9} /> : i + 1}
                       </div>
-                      <span className="text-xs flex-1 truncate" style={{ color: i === qIndex ? C.text : C.muted }}>{q.type}</span>
+                      <span className="text-xs flex-1 truncate" style={{ color: i === qIndex ? C.text : C.muted }}>{q.category ?? "Technical"}</span>
                       {i === qIndex && <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: C.purple }} />}
                     </div>
                   ))}
@@ -2019,10 +2256,10 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 <SecHead icon={<Lightbulb size={14} />} title="Interview Tips" />
                 <div className="space-y-2">
                   {[
-                    { tip: "Use the STAR method for behavioural answers", icon: "⭐" },
-                    { tip: "Think out loud — process matters as much as the answer", icon: "💭" },
-                    { tip: "Ask clarifying questions before jumping in", icon: "❓" },
-                    { tip: "Keep eye contact with the camera", icon: "👁️" },
+                    { tip: "Use the STAR method for behavioural answers", icon: "â­" },
+                    { tip: "Think out loud - process matters as much as the answer", icon: "THINK" },
+                    { tip: "Ask clarifying questions before jumping in", icon: "â“" },
+                    { tip: "Keep eye contact with the camera", icon: "FOCUS" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl"
                       style={{ background: "rgba(168,85,247,.06)", border: "1px solid rgba(168,85,247,.14)" }}>
@@ -2072,7 +2309,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 </div>
                 <div className="flex justify-between text-xs mt-1" style={{ color: C.muted }}>
                   <span>60</span>
-                  <span style={{ color: C.green }}>Ideal: 120–160 wpm</span>
+                  <span style={{ color: C.green }}>Ideal: 120â€“160 wpm</span>
                   <span>200</span>
                 </div>
               </Card>
@@ -2085,7 +2322,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Questions Done", value: `${qIndex}/${QUESTIONS_BANK.length}`, color: C.purple },
+                    { label: "Questions Done", value: `${qIndex}/${totalQuestions}`, color: C.purple },
                     { label: "Avg Response Time", value: "1m 42s", color: C.green },
                     { label: "Filler Words", value: "8 detected", color: C.amber },
                     { label: "AI Score (so far)", value: "74%", color: C.cyan },
@@ -2102,7 +2339,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
           </>
         )}
 
-        {/* ── CODING CHALLENGE TAB ── */}
+        {/* â”€â”€ CODING CHALLENGE TAB â”€â”€ */}
         {mainTab === "coding" && (
           <>
             <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: "none" }}>
@@ -2127,10 +2364,10 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                 <SecHead icon={<Lightbulb size={14} />} title="Coding Tips" />
                 <div className="space-y-2">
                   {[
-                    { tip: "Clarify constraints before coding", icon: "📐" },
-                    { tip: "Start with brute force, optimise later", icon: "🔄" },
-                    { tip: "Write clean, readable variable names", icon: "✏️" },
-                    { tip: "Handle edge cases explicitly", icon: "⚠️" },
+                    { tip: "Clarify constraints before coding", icon: "PLAN" },
+                    { tip: "Start with brute force, optimise later", icon: "ITERATE" },
+                    { tip: "Write clean, readable variable names", icon: "âœï¸" },
+                    { tip: "Handle edge cases explicitly", icon: "ALERT" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl"
                       style={{ background: "rgba(34,211,238,.05)", border: "1px solid rgba(34,211,238,.12)" }}>
@@ -2150,7 +2387,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
                     { label: "O(log n)", desc: "Logarithmic", color: C.cyan },
                     { label: "O(n)", desc: "Linear", color: C.purple },
                     { label: "O(n log n)", desc: "Linearithmic", color: C.amber },
-                    { label: "O(n²)", desc: "Quadratic", color: C.red },
+                    { label: "O(nÂ²)", desc: "Quadratic", color: C.red },
                   ].map(c => (
                     <div key={c.label} className="flex items-center justify-between text-xs">
                       <span className="font-mono font-bold" style={{ color: c.color }}>{c.label}</span>
@@ -2186,7 +2423,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: () => void }) {
   );
 }
 
-function MockInterviewPage({ onFinish }: { onFinish: () => void }) {
+function MockInterviewPage({ onFinish }: { onFinish: (reportId?: number) => void }) {
   const [stage, setStage] = useState<"setup" | "active">("setup");
   const [cfg, setCfg] = useState<any>(null);
   return stage === "setup"
@@ -2194,9 +2431,9 @@ function MockInterviewPage({ onFinish }: { onFinish: () => void }) {
     : <ActiveInterview cfg={cfg} onEnd={onFinish} />;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 4: AI EVALUATION & REPORTS
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function HalfGauge({ value, size, color, label }: { value: number; size: number; color: string; label: string }) {
   const r = (size / 2) - 8;
@@ -2224,7 +2461,7 @@ const SCORE_CARDS = [
   { label: "Communication", score: 88, grade: "A", color: C.green, icon: <Mic size={16} /> },
   { label: "Confidence", score: 78, grade: "B+", color: C.purple, icon: <Zap size={16} /> },
   { label: "Problem Solving", score: 73, grade: "B", color: C.amber, icon: <Brain size={16} /> },
-  { label: "Body Language", score: 82, grade: "A−", color: C.pink, icon: <User size={16} /> },
+  { label: "Body Language", score: 82, grade: "Aâˆ’", color: C.pink, icon: <User size={16} /> },
   { label: "Voice Clarity", score: 91, grade: "A+", color: C.teal, icon: <Sparkles size={16} /> },
   { label: "Logical Depth", score: 74, grade: "B", color: C.indigo, icon: <Layers size={16} /> },
   { label: "Professionalism", score: 87, grade: "A", color: C.blue, icon: <Award size={16} /> },
@@ -2242,9 +2479,331 @@ const TREND_DATA = [
   { session: "S5", score: 76 }, { session: "S6", score: 81 },
 ];
 
-function ReportsPage({ onRetake }: { onRetake: () => void }) {
-  const overallScore = 81;
+function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; initialReportId?: number }) {
+  const [reports, setReports] = useState<ReportSummary[]>([]);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
+  // Load list on mount
+  useEffect(() => {
+    setLoadingList(true);
+    reportsApi.list()
+      .then(data => { setReports(data); setListError(null); })
+      .catch(e => setListError(e.message ?? "Failed to load reports"))
+      .finally(() => setLoadingList(false));
+  }, []);
+
+  // Auto-open report if we just came from mock interview
+  useEffect(() => {
+    if (initialReportId) openReport(initialReportId);
+  }, [initialReportId]);
+
+  const openReport = (id: number) => {
+    setLoadingDetail(true);
+    setDetailError(null);
+    reportsApi.getById(id)
+      .then(r => { setSelectedReport(r); })
+      .catch(e => setDetailError(e.message ?? "Failed to load report"))
+      .finally(() => setLoadingDetail(false));
+  };
+
+  const handleDownloadPdf = async (report: Report | ReportSummary) => {
+    setDownloading(true);
+    try {
+      const role = (report.target_role ?? "interview").replace(/\s+/g, "_").toLowerCase();
+      await reportsApi.downloadPdf(report.id, `crackit_report_${report.id}_${role}.pdf`);
+    } catch (e: any) {
+      alert(`PDF download failed: ${e.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const formatDate = (d?: string) => {
+    if (!d) return "N/A";
+    try {
+      return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    } catch { return d.slice(0, 10); }
+  };
+
+  const formatDuration = (s?: number) => {
+    if (!s) return "N/A";
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
+  };
+
+  const gradeColor = (g?: string) => {
+    if (!g) return C.muted;
+    if (g.startsWith("A")) return C.green;
+    if (g.startsWith("B")) return C.cyan;
+    if (g.startsWith("C")) return C.amber;
+    return C.red;
+  };
+
+  const scoreColor = (s?: number) => {
+    if (s === undefined || s === null) return C.muted;
+    if (s >= 80) return C.green;
+    if (s >= 60) return C.amber;
+    return C.red;
+  };
+
+  // â”€â”€ Detail view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (loadingDetail) {
+    return (
+      <div className="flex-1 flex items-center justify-center" style={{ background: C.bg }}>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 size={36} className="animate-spin" style={{ color: C.purple }} />
+          <span className="text-sm font-medium" style={{ color: C.muted }}>Loading reportâ€¦</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (detailError) {
+    return (
+      <div className="flex-1 flex items-center justify-center" style={{ background: C.bg }}>
+        <Card className="p-8 text-center max-w-sm">
+          <XCircle size={32} className="mx-auto mb-3" style={{ color: C.red }} />
+          <div className="text-sm font-bold text-white mb-2">Could not load report</div>
+          <div className="text-xs mb-4" style={{ color: C.muted }}>{detailError}</div>
+          <button onClick={() => { setDetailError(null); setSelectedReport(null); }}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-white"
+            style={{ background: C.grad }}>â† Back to Reports</button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (selectedReport) {
+    const r = selectedReport;
+    const overallScore = Math.round(r.overall_score ?? 0);
+    const techScore = Math.round(r.technical_score ?? 0);
+    const commScore = Math.round(r.communication_score ?? 0);
+    const qp = r.question_performance ?? [];
+
+    return (
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <button onClick={() => setSelectedReport(null)}
+                className="flex items-center gap-2 text-xs mb-3 transition-colors hover:opacity-80"
+                style={{ color: C.muted }}>
+                <ChevronLeft size={14} /> All Reports
+              </button>
+              <div className="flex items-center gap-2.5 mb-1">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(168,85,247,.14)", color: C.purple }}>
+                  <ClipboardList size={18} />
+                </div>
+                <h1 className="text-xl font-bold text-white">Interview Evaluation Report</h1>
+              </div>
+              <p className="text-sm ml-12" style={{ color: C.muted }}>
+                AI-generated analysis for <Grad>{r.target_role ?? "your interview"}</Grad>
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDownloadPdf(r)}
+                disabled={downloading}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} PDF
+              </button>
+            </div>
+          </div>
+
+          {/* Score Banner */}
+          <div className="p-6 rounded-2xl relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg,rgba(168,85,247,.15) 0%,rgba(34,211,238,.08) 100%)", border: "1px solid rgba(168,85,247,.35)" }}>
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5"
+              style={{ background: C.grad, transform: "translate(30%,-30%)" }} />
+            <div className="flex items-center gap-8">
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                <div className="text-7xl font-black" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                  {overallScore}
+                </div>
+                <div className="text-xs font-medium" style={{ color: C.muted }}>out of 100</div>
+              </div>
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Interview Type", value: r.interview_type ?? "N/A", icon: <Code2 size={14} />, color: C.cyan },
+                  { label: "Difficulty", value: r.difficulty ?? "N/A", icon: <Target size={14} />, color: C.amber },
+                  { label: "Duration", value: formatDuration(r.duration_seconds), icon: <Clock size={14} />, color: C.purple },
+                  { label: "Questions", value: `${qp.length}`, icon: <Check size={14} />, color: C.green },
+                ].map(s => (
+                  <div key={s.label} className="p-3 rounded-xl"
+                    style={{ background: "rgba(31,41,55,.6)", border: `1px solid ${C.border}` }}>
+                    <div className="flex items-center gap-1.5 mb-1.5" style={{ color: s.color }}>{s.icon}<span className="text-xs">{s.label}</span></div>
+                    <div className="text-sm font-black text-white">{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+                <HalfGauge value={overallScore} size={110} color={C.purple} label="Overall" />
+                <HalfGauge value={commScore} size={90} color={C.green} label="Comm." />
+                <HalfGauge value={techScore} size={90} color={C.cyan} label="Tech." />
+              </div>
+            </div>
+          </div>
+
+          {/* Summary */}
+          {r.summary && (
+            <Card className="p-5">
+              <SecHead icon={<Sparkles size={16} />} title="Interview Summary" sub="AI-generated overall assessment" />
+              <p className="text-sm leading-relaxed" style={{ color: C.muted }}>{r.summary}</p>
+            </Card>
+          )}
+
+          {/* Strengths + Weaknesses */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Card className="p-5">
+              <SecHead icon={<CheckCircle2 size={16} />} title="Strengths" sub="Areas where you excelled" />
+              <div className="space-y-2.5">
+                {(r.strengths ?? []).length === 0
+                  ? <div className="text-xs" style={{ color: C.muted }}>No strengths data available.</div>
+                  : (r.strengths ?? []).map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl"
+                      style={{ background: "rgba(52,211,153,.06)", border: "1px solid rgba(52,211,153,.2)" }}>
+                      <CheckCircle2 size={14} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
+                      <div className="text-xs text-white leading-snug">{item}</div>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+            <Card className="p-5">
+              <SecHead icon={<AlertTriangle size={16} />} title="Areas to Improve" sub="Focus these before your next interview" />
+              <div className="space-y-2.5">
+                {(r.weaknesses ?? []).length === 0
+                  ? <div className="text-xs" style={{ color: C.muted }}>No weaknesses data available.</div>
+                  : (r.weaknesses ?? []).map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl"
+                      style={{ background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)" }}>
+                      <AlertTriangle size={14} style={{ color: C.red, flexShrink: 0, marginTop: 1 }} />
+                      <div className="text-xs text-white leading-snug">{item}</div>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Question-wise Performance */}
+          {qp.length > 0 && (
+            <Card className="p-5">
+              <SecHead icon={<BarChart2 size={16} />} title="Question-wise Performance" sub="Per-question breakdown with scores and feedback" />
+              <div className="space-y-3">
+                {qp.map((q, i) => (
+                  <div key={i} className="p-4 rounded-xl"
+                    style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold"
+                          style={{ background: "rgba(168,85,247,.18)", color: C.purple }}>{q.sequence_no}</div>
+                        <span className="text-xs font-bold text-white">{q.question_text}</span>
+                      </div>
+                      {q.grade && (
+                        <span className="text-xs font-black px-2 py-0.5 rounded-md flex-shrink-0 ml-2"
+                          style={{ background: `${gradeColor(q.grade)}18`, color: gradeColor(q.grade) }}>
+                          {q.grade}
+                        </span>
+                      )}
+                    </div>
+                    {q.answer_text && (
+                      <div className="text-xs mb-2 p-2 rounded-lg" style={{ background: C.bg, color: C.muted }}>
+                        <span className="font-semibold" style={{ color: C.cyan }}>Your answer: </span>
+                        {q.answer_text.length > 200 ? q.answer_text.slice(0, 200) + "â€¦" : q.answer_text}
+                      </div>
+                    )}
+                    {q.score !== undefined && q.score !== null && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex-1 h-1.5 rounded-full" style={{ background: C.border }}>
+                          <div className="h-full rounded-full" style={{ width: `${q.score}%`, background: scoreColor(q.score) }} />
+                        </div>
+                        <span className="text-xs font-bold flex-shrink-0" style={{ color: scoreColor(q.score) }}>{Math.round(q.score)}</span>
+                      </div>
+                    )}
+                    {q.feedback && (
+                      <div className="text-xs mt-1" style={{ color: C.muted }}>{q.feedback}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Missed Concepts */}
+          {(r.missed_concepts ?? []).length > 0 && (
+            <Card className="p-5">
+              <SecHead icon={<XCircle size={16} />} title="Frequently Missed Concepts" sub="Topics that need attention" />
+              <div className="flex flex-wrap gap-2">
+                {(r.missed_concepts ?? []).map((mc, i) => (
+                  <span key={i} className="px-3 py-1.5 rounded-xl text-xs font-medium"
+                    style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", color: C.red }}>
+                    {mc}
+                  </span>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Recommended Topics + Next Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Card className="p-5">
+              <SecHead icon={<BookOpen size={16} />} title="Recommended Topics" sub="Study these to improve your score" />
+              <div className="space-y-2">
+                {(r.recommended_topics ?? []).map((t, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <ArrowRight size={10} style={{ color: C.purple, flexShrink: 0 }} />
+                    <span className="text-xs" style={{ color: C.text }}>{t}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+            <Card className="p-5"
+              style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.06))", border: "1px solid rgba(168,85,247,.3)" }}>
+              <SecHead icon={<Target size={16} />} title="Next Steps" sub="Actionable recommendations" />
+              <div className="space-y-2">
+                {(r.next_steps ?? []).map((s, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2 rounded-xl"
+                    style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                    <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: C.purple }} />
+                    <span className="text-xs text-white">{s}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center justify-center gap-3 pb-4">
+            <button onClick={() => setSelectedReport(null)}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
+              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+              <ChevronLeft size={15} /> All Reports
+            </button>
+            <button
+              onClick={() => handleDownloadPdf(r)}
+              disabled={downloading}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
+              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+              {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />} Download PDF
+            </button>
+            <button onClick={onRetake}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: C.grad, boxShadow: "0 4px 20px rgba(168,85,247,.35)" }}>
+              <Plus size={15} /> New Interview
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // â”€â”€ List view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
       <div className="p-6 space-y-6">
@@ -2256,411 +2815,121 @@ function ReportsPage({ onRetake }: { onRetake: () => void }) {
                 style={{ background: "rgba(168,85,247,.14)", color: C.purple }}>
                 <ClipboardList size={18} />
               </div>
-              <h1 className="text-xl font-bold text-white">Interview Evaluation Report</h1>
+              <h1 className="text-xl font-bold text-white">Interview Reports</h1>
             </div>
             <p className="text-sm ml-12" style={{ color: C.muted }}>
-              AI-generated analysis of your <Grad>Mock Interview Session</Grad>
+              View and download your <Grad>AI-generated interview evaluations</Grad>
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-              <Share2 size={13} /> Share
+          <button onClick={onRetake}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
+            style={{ background: C.grad, boxShadow: "0 4px 16px rgba(168,85,247,.3)" }}>
+            <Plus size={15} /> New Interview
+          </button>
+        </div>
+
+        {/* Loading state */}
+        {loadingList && (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 size={32} className="animate-spin" style={{ color: C.purple }} />
+              <span className="text-sm" style={{ color: C.muted }}>Loading reportsâ€¦</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loadingList && listError && (
+          <Card className="p-8 text-center">
+            <AlertTriangle size={32} className="mx-auto mb-3" style={{ color: C.red }} />
+            <div className="text-sm font-bold text-white mb-2">Failed to load reports</div>
+            <div className="text-xs mb-4" style={{ color: C.muted }}>{listError}</div>
+            <button onClick={() => { setLoadingList(true); reportsApi.list().then(setReports).catch(e => setListError(e.message)).finally(() => setLoadingList(false)); }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+              Try again
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-              <Download size={13} /> PDF
-            </button>
-          </div>
-        </div>
-
-        {/* Overall score banner */}
-        <div className="p-6 rounded-2xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg,rgba(168,85,247,.15) 0%,rgba(34,211,238,.08) 100%)", border: "1px solid rgba(168,85,247,.35)" }}>
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5"
-            style={{ background: C.grad, transform: "translate(30%,-30%)" }} />
-          <div className="flex items-center gap-8">
-            {/* Big score */}
-            <div className="flex flex-col items-center gap-2 flex-shrink-0">
-              <div className="text-7xl font-black" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                {overallScore}
-              </div>
-              <div className="text-xs font-medium" style={{ color: C.muted }}>out of 100</div>
-              <div className="px-3 py-1 rounded-full text-xs font-bold"
-                style={{ background: "rgba(52,211,153,.15)", border: "1px solid rgba(52,211,153,.35)", color: C.green }}>
-                Top 18% 🏆
-              </div>
-            </div>
-            {/* Meta info */}
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Interview Type", value: "Technical", icon: <Code2 size={14} />, color: C.cyan },
-                { label: "Difficulty", value: "Medium", icon: <Target size={14} />, color: C.amber },
-                { label: "Duration", value: "28m 14s", icon: <Clock size={14} />, color: C.purple },
-                { label: "Questions", value: "6 / 6", icon: <Check size={14} />, color: C.green },
-              ].map(s => (
-                <div key={s.label} className="p-3 rounded-xl"
-                  style={{ background: "rgba(31,41,55,.6)", border: `1px solid ${C.border}` }}>
-                  <div className="flex items-center gap-1.5 mb-1.5" style={{ color: s.color }}>{s.icon}<span className="text-xs">{s.label}</span></div>
-                  <div className="text-sm font-black text-white">{s.value}</div>
-                </div>
-              ))}
-            </div>
-            {/* Half gauges */}
-            <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-              <HalfGauge value={overallScore} size={110} color={C.purple} label="Overall" />
-              <HalfGauge value={88} size={90} color={C.green} label="Comm." />
-              <HalfGauge value={76} size={90} color={C.cyan} label="Tech." />
-            </div>
-          </div>
-        </div>
-
-        {/* Score cards grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {SCORE_CARDS.map(sc => (
-            <Card key={sc.label} className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: `${sc.color}18`, color: sc.color }}>{sc.icon}</div>
-                <div className="text-right">
-                  <div className="text-xl font-black text-white">{sc.score}</div>
-                  <div className="text-xs font-bold px-1.5 py-0.5 rounded-md"
-                    style={{ background: `${sc.color}15`, color: sc.color }}>{sc.grade}</div>
-                </div>
-              </div>
-              <div className="text-xs font-semibold text-white mb-2">{sc.label}</div>
-              <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                <div className="h-full rounded-full" style={{ width: `${sc.score}%`, background: sc.color, boxShadow: `0 0 6px ${sc.color}60` }} />
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Charts row — Radar + Score Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Radar */}
-          <Card className="p-5">
-            <SecHead icon={<Crosshair size={16} />} title="Skill Radar" sub="Multi-dimension performance analysis" />
-            <div className="grid grid-cols-2 gap-0 items-center">
-              <ResponsiveContainer width="100%" height={220}>
-                <RadarChart id="rp-skills-radar" data={RADAR_DATA} margin={{ top: 16, right: 32, bottom: 16, left: 32 }}>
-                  <PolarGrid stroke={C.border} />
-                  <PolarAngleAxis dataKey="axis" tick={{ fill: C.muted, fontSize: 9 }} />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                  <Radar dataKey="A" stroke={C.purple} fill={C.purple} fillOpacity={0.22} strokeWidth={2} name="Score" />
-                  <Tooltip content={<ChartTip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 pl-2">
-                {RADAR_DATA.map(d => (
-                  <div key={d.axis}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span style={{ color: C.muted }}>{d.axis}</span>
-                      <span className="font-bold text-white">{d.A}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${d.A}%`, background: C.purple }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </Card>
+        )}
 
-          {/* Horizontal bar breakdown */}
-          <Card className="p-5">
-            <SecHead icon={<BarChart2 size={16} />} title="Score Breakdown" sub="All categories ranked" />
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart id="rp-score-bar" data={SCORE_CARDS.map(s => ({ name: s.label.split(" ")[0], score: s.score, fill: s.color }))}
-                layout="vertical" margin={{ top: 4, right: 20, left: -4, bottom: 4 }} barSize={9}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} width={66} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="score" name="Score" radius={[0, 5, 5, 0]}>
-                  {SCORE_CARDS.map((s, i) => <Cell key={`score-cell-${s.label || i}`} fill={s.color} fillOpacity={0.88} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* Progress Timeline + Performance Trend */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-          {/* Performance Trend (wider) */}
-          <Card className="md:col-span-3 p-5">
-            <SecHead icon={<TrendingUp size={16} />} title="Performance Trend"
-              sub="Score improvement across 6 mock sessions"
-              action={
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-                  style={{ background: "rgba(52,211,153,.1)", border: "1px solid rgba(52,211,153,.25)" }}>
-                  <TrendingUp size={11} style={{ color: C.green }} />
-                  <span className="text-xs font-bold" style={{ color: C.green }}>+23 pts</span>
-                </div>
-              } />
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart id="rp-trend-area" data={TREND_DATA} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-                <XAxis dataKey="session" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[45, 100]} tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Area type="monotone" dataKey="score" stroke={C.purple} fill={C.purple} fillOpacity={0.18} strokeWidth={2.5} name="Overall Score"
-                  dot={{ fill: C.purple, strokeWidth: 2, r: 4, stroke: C.bg }} activeDot={{ r: 6, stroke: C.purple, strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Progress Timeline (narrower) */}
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<Calendar size={16} />} title="Progress Timeline" sub="Session history" />
-            <div className="relative pl-5">
-              <div className="absolute left-[7px] top-1 bottom-1 w-0.5 rounded-full"
-                style={{ background: `linear-gradient(to bottom,${C.purple},${C.cyan}30)` }} />
-              <div className="space-y-4">
-                {[
-                  { session: "Session 6", date: "Today", score: 81, grade: "A−", color: C.purple, note: "Technical · Medium · 28m" },
-                  { session: "Session 5", date: "3 days ago", score: 76, grade: "B+", color: C.cyan, note: "Behavioral · Easy · 22m" },
-                  { session: "Session 4", date: "1 week ago", score: 71, grade: "B", color: C.green, note: "Mixed · Medium · 35m" },
-                  { session: "Session 3", date: "2 weeks ago", score: 67, grade: "C+", color: C.amber, note: "HR · Easy · 20m" },
-                  { session: "Session 2", date: "3 weeks ago", score: 63, grade: "C", color: C.amber, note: "Technical · Hard · 40m" },
-                ].map((s, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 mt-0.5 relative z-10"
-                      style={{ background: i === 0 ? s.color : C.bg, borderColor: s.color }} />
-                    <div className="flex-1 pb-1">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-xs font-bold text-white">{s.session}</span>
-                        <span className="text-xs font-black px-1.5 py-0.5 rounded-md"
-                          style={{ background: `${s.color}18`, color: s.color }}>{s.grade}</span>
-                      </div>
-                      <div className="text-xs" style={{ color: C.muted }}>{s.note}</div>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <div className="flex-1 h-1 rounded-full" style={{ background: C.border }}>
-                          <div className="h-full rounded-full" style={{ width: `${s.score}%`, background: s.color }} />
-                        </div>
-                        <span className="text-xs font-bold flex-shrink-0" style={{ color: s.color }}>{s.score}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Empty state */}
+        {!loadingList && !listError && reports.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 gap-6">
+            <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+              style={{ background: "rgba(168,85,247,.1)", border: "1px solid rgba(168,85,247,.2)" }}>
+              <ClipboardList size={36} style={{ color: C.purple }} />
             </div>
-          </Card>
-        </div>
-
-        {/* Strengths + Weaknesses */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Card className="p-5">
-            <SecHead icon={<CheckCircle2 size={16} />} title="Strengths" sub="Areas where you excelled" />
-            <div className="space-y-2.5">
-              {[
-                { s: "Excellent articulation and sentence structure", score: 91 },
-                { s: "Confident tone throughout the session", score: 88 },
-                { s: "Strong knowledge of data structures fundamentals", score: 85 },
-                { s: "Professional demeanour and presentation", score: 87 },
-                { s: "Effective use of real-world examples", score: 83 },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl"
-                  style={{ background: "rgba(52,211,153,.06)", border: "1px solid rgba(52,211,153,.2)" }}>
-                  <CheckCircle2 size={14} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
-                  <div className="flex-1">
-                    <div className="text-xs text-white leading-snug mb-1">{item.s}</div>
-                    <div className="h-1 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${item.score}%`, background: C.green }} />
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold flex-shrink-0" style={{ color: C.green }}>{item.score}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SecHead icon={<AlertTriangle size={16} />} title="Areas to Improve" sub="Focus these before your next interview" />
-            <div className="space-y-2.5">
-              {[
-                { s: "System design answers lacked depth", score: 58 },
-                { s: "Filler words used frequently (um, uh)", score: 62 },
-                { s: "Rushed through Dynamic Programming explanation", score: 55 },
-                { s: "Could be more concise in HR answers", score: 66 },
-                { s: "Missing edge cases in coding problem", score: 60 },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl"
-                  style={{ background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)" }}>
-                  <AlertTriangle size={14} style={{ color: C.red, flexShrink: 0, marginTop: 1 }} />
-                  <div className="flex-1">
-                    <div className="text-xs text-white leading-snug mb-1">{item.s}</div>
-                    <div className="h-1 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${item.score}%`, background: C.red }} />
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold flex-shrink-0" style={{ color: C.red }}>{item.score}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* AI Suggestions */}
-        <Card className="p-5">
-          <SecHead icon={<Sparkles size={16} />} title="AI Improvement Suggestions"
-            sub="Personalised recommendations based on your session"
-            action={<Pill label="4 suggestions" color={C.purple} />} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {
-                title: "Practise System Design Patterns", icon: "🏗️", color: C.cyan,
-                detail: "Study HLD concepts: load balancing, caching, sharding, and consistent hashing.",
-                impact: "High Impact", est: "+12 pts",
-              },
-              {
-                title: "Reduce Filler Word Habit", icon: "🎙️", color: C.purple,
-                detail: "Record yourself answering questions. Pause instead of using um/uh.",
-                impact: "Medium Impact", est: "+7 pts",
-              },
-              {
-                title: "Deep Dive: Dynamic Programming", icon: "📚", color: C.amber,
-                detail: "Solve 20 DP problems on LeetCode (easy → medium). Focus on memoisation vs tabulation.",
-                impact: "High Impact", est: "+10 pts",
-              },
-              {
-                title: "Structure HR Answers with STAR", icon: "⭐", color: C.green,
-                detail: "Rewrite your top-5 STAR stories with a 2-minute time limit each.",
-                impact: "Medium Impact", est: "+8 pts",
-              },
-            ].map((s, i) => (
-              <div key={i} className="p-4 rounded-xl flex items-start gap-3"
-                style={{ background: `${s.color}08`, border: `1px solid ${s.color}25` }}>
-                <span className="text-xl flex-shrink-0">{s.icon}</span>
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-white mb-1">{s.title}</div>
-                  <div className="text-xs leading-relaxed mb-2" style={{ color: C.muted }}>{s.detail}</div>
-                  <div className="flex items-center gap-2">
-                    <Pill label={s.impact} color={s.color} />
-                    <span className="text-xs font-bold" style={{ color: C.green }}>{s.est}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Bottom 4 cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Common Mistakes */}
-          <Card className="p-4">
-            <SecHead icon={<XCircle size={14} />} title="Common Mistakes" sub="This session" />
-            <div className="space-y-2">
-              {[
-                { m: "Skipped edge case analysis", count: 2 },
-                { m: "Overexplained simple concepts", count: 3 },
-                { m: "Used filler words 18 times", count: 18 },
-              ].map((e, i) => (
-                <div key={i} className="flex items-center gap-2.5 p-2 rounded-xl"
-                  style={{ background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.15)" }}>
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: "rgba(239,68,68,.2)", color: C.red }}>{e.count}</div>
-                  <span className="text-xs" style={{ color: C.muted }}>{e.m}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Recommended Learning */}
-          <Card className="p-4">
-            <SecHead icon={<BookOpen size={14} />} title="Recommended Learning" sub="Curated for you" />
-            <div className="space-y-2">
-              {[
-                { t: "Grokking System Design", tag: "Course" },
-                { t: "FAANG DP Patterns — 50 Problems", tag: "Practice" },
-                { t: "Toastmasters Public Speaking", tag: "Soft Skills" },
-                { t: "Clean Code by Robert C. Martin", tag: "Book" },
-              ].map((r, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <ArrowRight size={10} style={{ color: C.purple, flexShrink: 0 }} />
-                  <span className="text-xs flex-1" style={{ color: C.text }}>{r.t}</span>
-                  <Pill label={r.tag} color={C.purple} />
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Action Plan */}
-          <Card className="p-4">
-            <SecHead icon={<Zap size={14} />} title="Action Plan" sub="Next 30 days" />
-            <div className="space-y-2">
-              {[
-                { task: "Solve 5 system design problems", due: "Week 1", color: C.cyan },
-                { task: "30 DP questions on LeetCode", due: "Week 2", color: C.purple },
-                { task: "Record 5 mock HR answers", due: "Week 3", color: C.green },
-                { task: "Take Full Mock Interview", due: "Week 4", color: C.amber },
-              ].map((a, i) => (
-                <div key={i} className="flex items-start gap-2 p-2 rounded-xl"
-                  style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: a.color }} />
-                  <div>
-                    <div className="text-xs text-white">{a.task}</div>
-                    <div className="text-xs" style={{ color: C.muted }}>{a.due}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Next Interview Recommendation */}
-          <Card className="p-4"
-            style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.06))", border: "1px solid rgba(168,85,247,.3)" }}>
-            <SecHead icon={<Target size={14} />} title="Next Mock" sub="AI recommendation" />
-            <div className="space-y-2 mb-4">
-              {[
-                { label: "Type", value: "System Design", color: C.cyan },
-                { label: "Difficulty", value: "Hard", color: C.red },
-                { label: "Duration", value: "60 min", color: C.purple },
-                { label: "Focus", value: "HLD + Scalability", color: C.amber },
-              ].map(s => (
-                <div key={s.label} className="flex justify-between text-xs">
-                  <span style={{ color: C.muted }}>{s.label}</span>
-                  <span className="font-bold" style={{ color: s.color }}>{s.value}</span>
-                </div>
-              ))}
+            <div className="text-center">
+              <div className="text-lg font-bold text-white mb-2">No reports yet</div>
+              <div className="text-sm" style={{ color: C.muted }}>Complete a mock interview to generate your first AI evaluation report.</div>
             </div>
             <button onClick={onRetake}
-              className="w-full py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2"
-              style={{ background: C.grad }}>
-              <Play size={11} fill="white" /> Start Now
+              className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white"
+              style={{ background: C.grad, boxShadow: "0 4px 16px rgba(168,85,247,.3)" }}>
+              <Play size={15} fill="white" /> Start Mock Interview
             </button>
-          </Card>
-        </div>
+          </div>
+        )}
 
-        {/* Action buttons */}
-        <div className="flex items-center justify-center gap-3 pb-4">
-          <button className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-            <Share2 size={15} /> Share Report
-          </button>
-          <button className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-            <Download size={15} /> Download PDF
-          </button>
-          <button onClick={onRetake}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: "rgba(168,85,247,.15)", border: "1px solid rgba(168,85,247,.4)", color: C.purple }}>
-            <RefreshCw size={15} /> Retake Interview
-          </button>
-          <button onClick={onRetake}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white"
-            style={{ background: C.grad, boxShadow: "0 4px 20px rgba(168,85,247,.35)" }}>
-            <Plus size={15} /> Start New Interview
-          </button>
-        </div>
+        {/* Reports list */}
+        {!loadingList && !listError && reports.length > 0 && (
+          <div className="space-y-3">
+            {reports.map((r) => (
+              <Card key={r.id} className="p-5 cursor-pointer hover:scale-[1.01] transition-transform"
+                onClick={() => openReport(r.id)}
+                style={{ border: `1px solid ${C.border}` }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    {/* Score circle */}
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-lg font-black"
+                      style={{ background: `${scoreColor(r.overall_score)}18`, color: scoreColor(r.overall_score), border: `1px solid ${scoreColor(r.overall_score)}30` }}>
+                      {r.overall_score !== undefined ? Math.round(r.overall_score) : "â€“"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-sm font-bold text-white truncate">{r.target_role ?? "Interview"}</span>
+                        {r.interview_type && <Pill label={r.interview_type} color={C.cyan} />}
+                        {r.difficulty && <Pill label={r.difficulty} color={r.difficulty === "Hard" ? C.red : r.difficulty === "Medium" ? C.amber : C.green} />}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs" style={{ color: C.muted }}>
+                        <span className="flex items-center gap-1"><Calendar size={11} />{formatDate(r.interview_date)}</span>
+                        {r.technical_score !== undefined && (
+                          <span className="flex items-center gap-1"><Code2 size={11} />Tech: {Math.round(r.technical_score)}</span>
+                        )}
+                        {r.communication_score !== undefined && (
+                          <span className="flex items-center gap-1"><Mic size={11} />Comm: {Math.round(r.communication_score)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                    <button onClick={e => { e.stopPropagation(); handleDownloadPdf(r); }}
+                      disabled={downloading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                      style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                      <Download size={12} /> PDF
+                    </button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                      style={{ background: "rgba(168,85,247,.15)", border: "1px solid rgba(168,85,247,.3)", color: C.purple }}>
+                      <Eye size={12} /> View
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SHARED UTILITIES FOR NEW PAGES
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// SHARED UTILITIES FOR NEW PAGES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -2673,7 +2942,7 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-// ── Data ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const WEEK_ACTIVITY = [
   { day: "Mon", topics: 4, mock: 1 }, { day: "Tue", topics: 6, mock: 0 },
   { day: "Wed", topics: 3, mock: 1 }, { day: "Thu", topics: 7, mock: 0 },
@@ -2693,42 +2962,42 @@ const SKILLS_GROWTH = [
   { month: "Aug", DSA: 78, System: 60, OOP: 88, SQL: 74 },
 ];
 const ACHIEVEMENTS_LIST = [
-  { title: "First Mock", icon: "🎯", earned: true, date: "Jun 12" },
-  { title: "7-Day Streak", icon: "🔥", earned: true, date: "Jul 3" },
-  { title: "DSA Beginner", icon: "⚡", earned: true, date: "May 28" },
-  { title: "Resume Pro", icon: "📄", earned: true, date: "Apr 15" },
-  { title: "LinkedIn Ready", icon: "💼", earned: true, date: "May 1" },
-  { title: "30-Day Streak", icon: "🏆", earned: false, date: null },
-  { title: "Perfect Score", icon: "💯", earned: false, date: null },
-  { title: "Top 10%", icon: "🌟", earned: false, date: null },
+  { title: "First Mock", icon: "01", earned: true, date: "Jun 12" },
+  { title: "7-Day Streak", icon: "07", earned: true, date: "Jul 3" },
+  { title: "DSA Beginner", icon: "DSA", earned: true, date: "May 28" },
+  { title: "Resume Pro", icon: "CV", earned: true, date: "Apr 15" },
+  { title: "LinkedIn Ready", icon: "IN", earned: true, date: "May 1" },
+  { title: "30-Day Streak", icon: "30", earned: false, date: null },
+  { title: "Perfect Score", icon: "100", earned: false, date: null },
+  { title: "Top 10%", icon: "TOP", earned: false, date: null },
 ];
 const RECENT_ACTS = [
-  { icon: <Mic size={13} />, label: "Technical Mock Interview — Score: 81", time: "2h ago", color: C.purple },
-  { icon: <BookOpen size={13} />, label: "DSA: Binary Trees module — 68%", time: "5h ago", color: C.cyan },
-  { icon: <FileText size={13} />, label: "Resume AI Score updated — 87/100", time: "Yesterday", color: C.green },
-  { icon: <GraduationCap size={13} />, label: "Web Dev Domain — 72% complete", time: "2 days ago", color: C.amber },
-  { icon: <Linkedin size={13} />, label: "LinkedIn Profile Analysis — 74", time: "3 days ago", color: C.blue },
-  { icon: <FolderOpen size={13} />, label: "E-commerce Project analyzed — 82", time: "4 days ago", color: C.pink },
+  { icon: <Mic size={13} />, label: "Technical Mock Interview â€” Score: 81", time: "2h ago", color: C.purple },
+  { icon: <BookOpen size={13} />, label: "DSA: Binary Trees module â€” 68%", time: "5h ago", color: C.cyan },
+  { icon: <FileText size={13} />, label: "Resume AI Score updated â€” 87/100", time: "Yesterday", color: C.green },
+  { icon: <GraduationCap size={13} />, label: "Web Dev Domain â€” 72% complete", time: "2 days ago", color: C.amber },
+  { icon: <Linkedin size={13} />, label: "LinkedIn Profile Analysis â€” 74", time: "3 days ago", color: C.blue },
+  { icon: <FolderOpen size={13} />, label: "E-commerce Project analyzed â€” 82", time: "4 days ago", color: C.pink },
 ];
 
 const CAREER_GOALS_LIST = [
-  { id: "sde", label: "Software Engineer", icon: "💻", color: C.purple, companies: "Google · Meta · Amazon" },
-  { id: "fe", label: "Frontend Developer", icon: "🎨", color: C.cyan, companies: "Flipkart · Swiggy · Zomato" },
-  { id: "ds", label: "Data Scientist", icon: "📊", color: C.green, companies: "Microsoft · IBM · Google" },
-  { id: "devops", label: "DevOps Engineer", icon: "⚙️", color: C.amber, companies: "AWS · Azure · GCP" },
-  { id: "ml", label: "ML Engineer", icon: "🤖", color: C.pink, companies: "OpenAI · HuggingFace · NVIDIA" },
+  { id: "sde", label: "Software Engineer", icon: "SWE", color: C.purple, companies: "Google | Meta | Amazon" },
+  { id: "fe", label: "Frontend Developer", icon: "FE", color: C.cyan, companies: "Flipkart | Swiggy | Zomato" },
+  { id: "ds", label: "Data Scientist", icon: "DS", color: C.green, companies: "Microsoft | IBM | Google" },
+  { id: "devops", label: "DevOps Engineer", icon: "OPS", color: C.amber, companies: "AWS | Azure | GCP" },
+  { id: "ml", label: "ML Engineer", icon: "ML", color: C.pink, companies: "OpenAI | HuggingFace | NVIDIA" },
 ];
 const ROADMAP_PHASES_LIST = [
-  { phase: 1, title: "Foundation Building", weeks: "Weeks 1–3", status: "done",
+  { phase: 1, title: "Foundation Building", weeks: "Weeks 1â€“3", status: "done",
     items: ["Big O notation mastery", "Arrays, Strings, Linked Lists", "Basic SQL queries", "Git & GitHub basics"] },
-  { phase: 2, title: "Core Data Structures", weeks: "Weeks 4–7", status: "current",
+  { phase: 2, title: "Core Data Structures", weeks: "Weeks 4â€“7", status: "current",
     items: ["Trees & Graphs", "Hash Maps & Sets", "Stacks & Queues", "Binary Search patterns"] },
-  { phase: 3, title: "Advanced Algorithms", weeks: "Weeks 8–12", status: "upcoming",
+  { phase: 3, title: "Advanced Algorithms", weeks: "Weeks 8â€“12", status: "upcoming",
     items: ["Dynamic Programming", "Graph algorithms (BFS/DFS)", "Greedy approaches", "Divide & Conquer"] },
-  { phase: 4, title: "System Design", weeks: "Weeks 13–16", status: "upcoming",
+  { phase: 4, title: "System Design", weeks: "Weeks 13â€“16", status: "upcoming",
     items: ["Scalability principles", "Database design patterns", "API design & REST", "Caching strategies"] },
-  { phase: 5, title: "Interview Preparation", weeks: "Weeks 17–20", status: "upcoming",
-    items: ["Mock interviews (×10)", "Behavioural prep (STAR)", "Resume finalization", "Company research"] },
+  { phase: 5, title: "Interview Preparation", weeks: "Weeks 17â€“20", status: "upcoming",
+    items: ["Mock interviews (Ã—10)", "Behavioural prep (STAR)", "Resume finalization", "Company research"] },
 ];
 const SKILL_GAP_RADAR = [
   { axis: "DSA", current: 78, target: 90 },
@@ -2746,22 +3015,22 @@ const NOTIFICATIONS_DATA = [
   { id: 4, type: "progress", title: "Weekly Progress Report", body: "You completed 78% of your weekly goal. Great work this week!", time: "5h ago", read: true, icon: <BarChart3 size={14} />, color: C.green },
   { id: 5, type: "resume", title: "Resume Score Updated", body: "Your resume score improved from 72 to 87 after the latest AI analysis.", time: "Yesterday", read: true, icon: <FileText size={14} />, color: C.blue },
   { id: 6, type: "interview", title: "Interview Results Ready", body: "Your Behavioral round evaluation is now available in Reports.", time: "Yesterday", read: true, icon: <ClipboardList size={14} />, color: C.purple },
-  { id: 7, type: "study", title: "Study Reminder", body: "You haven't studied today yet. Your streak is at risk — 14 days!", time: "2 days ago", read: true, icon: <BookOpen size={14} />, color: C.red },
+  { id: 7, type: "study", title: "Study Reminder", body: "You haven't studied today yet. Your streak is at risk â€” 14 days!", time: "2 days ago", read: true, icon: <BookOpen size={14} />, color: C.red },
   { id: 8, type: "ai", title: "AI Roadmap Updated", body: "Your personalized roadmap has been updated based on your latest performance.", time: "3 days ago", read: true, icon: <Map size={14} />, color: C.indigo },
   { id: 9, type: "progress", title: "Monthly Milestone Reached", body: "You hit 75% overall progress! You're in the top 22% of all users.", time: "4 days ago", read: true, icon: <Trophy size={14} />, color: C.amber },
   { id: 10, type: "resume", title: "LinkedIn Profile Tips", body: "AI found 5 improvements to boost your LinkedIn score from 74 to 86.", time: "5 days ago", read: true, icon: <Linkedin size={14} />, color: C.cyan },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 5: PROGRESS DASHBOARD
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function ProgressDashboardPage() {
   const [range, setRange] = useState<"week" | "month" | "all">("week");
-  const overallPct = 68; const streak = 14;
+  const overallPct = 68;
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
@@ -2789,105 +3058,28 @@ function ProgressDashboardPage() {
           </div>
         </div>
 
-        {/* Top stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Only the few numbers needed to orient the user */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Overall Progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Across all modules", badge: "+8% this week", trend: "+8%" },
-            { label: "Mock Interviews", value: "6 done", icon: <Mic size={16} />, color: C.cyan, sub: "Avg score: 74/100", badge: "Last: 81", trend: "+12pts" },
-            { label: "Study Streak", value: `${streak} days`, icon: <Flame size={16} />, color: C.amber, sub: "Personal best: 14 days", badge: "🔥 On fire!", trend: "Active" },
-            { label: "Goals Completed", value: "7 / 10", icon: <Target size={16} />, color: C.green, sub: "70% completion rate", badge: "3 upcoming", trend: "70%" },
+            { label: "Overall progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Across your preparation" },
+            { label: "Mock interviews", value: "6", icon: <Mic size={16} />, color: C.cyan, sub: "Average score 74" },
+            { label: "Study streak", value: "14 days", icon: <Flame size={16} />, color: C.amber, sub: "Keep it going" },
+            { label: "Next goal", value: "3 tasks", icon: <Target size={16} />, color: C.green, sub: "Due this week" },
           ].map(s => (
-            <Card key={s.label} className="p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-5"
-                style={{ background: s.color, transform: "translate(30%, -30%)" }} />
-              <div className="flex items-start justify-between mb-3">
+            <Card key={s.label} className="p-4">
+              <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18`, color: s.color }}>{s.icon}</div>
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: `${s.color}15`, color: s.color }}>{s.badge}</span>
               </div>
-              <div className="text-3xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-2xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
               <div className="text-xs font-bold text-white mb-1">{s.label}</div>
               <div className="text-xs" style={{ color: C.muted }}>{s.sub}</div>
-              <div className="mt-3 h-1 rounded-full" style={{ background: C.border }}>
-                <div className="h-full rounded-full" style={{ width: s.trend.includes("%") ? s.trend : "60%", background: s.color, maxWidth: "100%" }} />
-              </div>
             </Card>
           ))}
         </div>
 
-        {/* Goal Completion Percentage — prominent visual */}
-        <Card className="p-5"
-          style={{ background: "linear-gradient(135deg,rgba(168,85,247,.07),rgba(34,211,238,.04))", border: "1px solid rgba(168,85,247,.22)" }}>
-          <div className="flex items-center justify-between mb-4">
-            <SecHead icon={<Target size={16} />} title="Goal Completion" sub="Progress across all 10 active goals" />
-            <Pill label="7 / 10 Done" color={C.green} />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[
-              { goal: "Complete DSA Module", pct: 100, done: true, color: C.green },
-              { goal: "Take 5 Mock Interviews", pct: 100, done: true, color: C.green },
-              { goal: "Resume Score 80+", pct: 100, done: true, color: C.green },
-              { goal: "LinkedIn Score 70+", pct: 100, done: true, color: C.green },
-              { goal: "System Design Basics", pct: 100, done: true, color: C.green },
-              { goal: "3 Portfolio Projects", pct: 100, done: true, color: C.green },
-              { goal: "HR Interview Practice", pct: 100, done: true, color: C.green },
-              { goal: "Advanced DP Patterns", pct: 55, done: false, color: C.purple },
-              { goal: "10 Mock Interviews", pct: 60, done: false, color: C.cyan },
-              { goal: "Final System Design", pct: 20, done: false, color: C.amber },
-            ].map((g, i) => (
-              <div key={i} className="p-3 rounded-xl flex flex-col gap-2"
-                style={{ background: g.done ? "rgba(52,211,153,.06)" : C.surface, border: `1px solid ${g.done ? C.green + "30" : C.border}` }}>
-                <div className="flex items-center gap-1.5">
-                  {g.done
-                    ? <CheckCircle2 size={12} style={{ color: C.green, flexShrink: 0 }} />
-                    : <div className="w-3 h-3 rounded-full border-2 flex-shrink-0" style={{ borderColor: g.color }} />}
-                  <span className="text-xs font-medium leading-tight" style={{ color: g.done ? C.green : C.text }}>{g.goal}</span>
-                </div>
-                {!g.done && (
-                  <>
-                    <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${g.pct}%`, background: g.color }} />
-                    </div>
-                    <div className="text-xs font-bold" style={{ color: g.color }}>{g.pct}%</div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Ring progress + weekly activity */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <Card className="p-5 flex flex-col items-center gap-4"
-            style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
-            <div className="relative" style={{ width: 136, height: 136 }}>
-              <svg width={136} height={136} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={68} cy={68} r={52} fill="none" stroke={C.border} strokeWidth={12} />
-                <circle cx={68} cy={68} r={52} fill="none" stroke="url(#pd_ringGrad)" strokeWidth={12}
-                  strokeLinecap="round" strokeDasharray={`${(overallPct / 100) * 2 * Math.PI * 52} ${2 * Math.PI * 52}`} />
-                <defs>
-                  <linearGradient id="pd_ringGrad" x1="1" y1="0" x2="0" y2="1">
-                    <stop stopColor={C.purple} /><stop offset="1" stopColor={C.cyan} />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-3xl font-black" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{overallPct}%</div>
-                <div className="text-xs" style={{ color: C.muted }}>Overall</div>
-              </div>
-            </div>
-            <div className="text-sm font-bold text-white text-center">Overall Learning Progress</div>
-            <div className="w-full space-y-2">
-              {[["DSA & Algo", 68, C.purple], ["Domain Skills", 44, C.cyan], ["Interview Prep", 81, C.green]].map(([l, p, c]) => (
-                <div key={l as string}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{l}</span><span className="font-bold" style={{ color: c as string }}>{p}%</span></div>
-                  <div className="h-1.5 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${p}%`, background: c as string }} /></div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<BarChart3 size={16} />} title="Weekly Activity" sub="Topics studied vs mock interviews per day" />
+        {/* One chart is enough to show movement without turning the dashboard into analytics */}
+        <Card className="p-5">
+            <SecHead icon={<BarChart3 size={16} />} title="Weekly activity" sub="Topics studied and mock interviews" />
             <ResponsiveContainer width="100%" height={210}>
               <BarChart id="pd-activity-bar" data={WEEK_ACTIVITY} margin={{ top: 4, right: 4, left: -22, bottom: 0 }} barSize={20} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
@@ -2905,63 +3097,19 @@ function ProgressDashboardPage() {
                 </div>
               ))}
             </div>
-          </Card>
-        </div>
+        </Card>
 
-        {/* Skills growth + monthly progress */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-          <Card className="md:col-span-3 p-5">
-            <SecHead icon={<TrendingUp size={16} />} title="Skills Growth Timeline" sub="6-month proficiency improvement per subject" />
-            <ResponsiveContainer width="100%" height={210}>
-              <AreaChart id="pd-skills-area" data={SKILLS_GROWTH} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-                <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Area type="monotone" dataKey="DSA" stroke={C.purple} fill={C.purple} fillOpacity={0.14} strokeWidth={2} name="DSA" />
-                <Area type="monotone" dataKey="System" stroke={C.cyan} fill={C.cyan} fillOpacity={0.14} strokeWidth={2} name="System Design" />
-                <Area type="monotone" dataKey="OOP" stroke={C.green} fill={C.green} fillOpacity={0.14} strokeWidth={2} name="OOP" />
-                <Area type="monotone" dataKey="SQL" stroke={C.amber} fill={C.amber} fillOpacity={0.14} strokeWidth={2} name="SQL" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 flex-wrap mt-1">
-              {([["DSA", C.purple], ["System Design", C.cyan], ["OOP", C.green], ["SQL", C.amber]] as [string, string][]).map(([l, c]) => (
-                <div key={l} className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />{l}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<Calendar size={16} />} title="Monthly Progress" sub="Weekly targets vs achieved" />
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart id="pd-monthly-bar" data={MONTHLY_PROG} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barSize={20} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                <XAxis dataKey="week" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Bar dataKey="target" name="Target" radius={[4, 4, 0, 0]} fill={C.border} />
-                <Bar dataKey="progress" name="Achieved" radius={[4, 4, 0, 0]}>
-                  {MONTHLY_PROG.map((_, i) => <Cell key={`mp-cell-${i}`} fill={i === 3 ? C.green : C.purple} fillOpacity={0.85} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* History columns + recent activity */}
+        {/* The two lists that help users decide what to do next */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Interview history */}
           <Card className="p-5">
             <SecHead icon={<Mic size={15} />} title="Interview History" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
             <div className="space-y-2">
-              {[
-                { type: "Technical", score: 81, date: "Aug 1", grade: "A−", color: C.cyan },
+                {[
+                { type: "Technical", score: 81, date: "Aug 1", grade: "Aâˆ’", color: C.cyan },
                 { type: "Behavioral", score: 76, date: "Jul 28", grade: "B+", color: C.green },
                 { type: "Mixed", score: 71, date: "Jul 22", grade: "B", color: C.purple },
                 { type: "HR Interview", score: 84, date: "Jul 15", grade: "A", color: C.amber },
-                { type: "Coding Round", score: 67, date: "Jul 8", grade: "C+", color: C.red },
               ].map((h, i) => (
                 <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${h.color}18`, color: h.color }}><Mic size={12} /></div>
@@ -3021,8 +3169,8 @@ function ProgressDashboardPage() {
           </Card>
         </div>
 
-        {/* Subject / Domain completion + Streak calendar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Compact preparation summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Card className="p-5">
             <SecHead icon={<BookOpen size={15} />} title="Subject Completion" sub="8 core subjects" />
             <div className="space-y-2.5">
@@ -3037,103 +3185,36 @@ function ProgressDashboardPage() {
           </Card>
 
           <Card className="p-5">
-            <SecHead icon={<GraduationCap size={15} />} title="Domain Completion" sub="8 career domains" />
+            <SecHead icon={<GraduationCap size={15} />} title="Preparation progress" sub="Your main study areas" />
+            <div className="space-y-3">
+              {[['Subjects', 68, C.purple], ['Domain skills', 44, C.cyan], ['Interview practice', 81, C.green]].map(([label, progress, color]) => (
+                <div key={label as string}>
+                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{label}</span><span className="font-bold" style={{ color: color as string }}>{progress}%</span></div>
+                  <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${progress}%`, background: color as string }} /></div>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <SecHead icon={<Target size={15} />} title="Next actions" sub="A short list to keep momentum" />
             <div className="space-y-2.5">
-              {DOMAINS.slice(0, 5).map(d => (
-                <div key={d.id}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{d.name.split(" ")[0]}</span><span className="font-bold" style={{ color: d.color }}>{d.progress}%</span></div>
-                  <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${d.progress}%`, background: d.color, boxShadow: `0 0 6px ${d.color}50` }} /></div>
-                </div>
-              ))}
-              <button className="w-full mt-1 py-2 rounded-xl text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>View all 8 domains</button>
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SecHead icon={<Flame size={15} />} title="Study Streak" sub="Daily activity — last 28 days" />
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-4xl font-black" style={{ color: C.amber }}>{streak}</div>
-              <div><div className="text-xs font-bold text-white">day streak</div><div className="text-xs" style={{ color: C.muted }}>Personal best: {streak}</div></div>
-            </div>
-            <div className="grid gap-1.5 mb-2" style={{ gridTemplateColumns: "repeat(7, 1fr)" }}>
-              {Array.from({ length: 28 }, (_, i) => {
-                const active = i >= 14; const today = i === 27;
-                return (
-                  <div key={i} className="rounded aspect-square"
-                    style={{ background: today ? C.amber : active ? `rgba(245,158,11,${0.25 + (i - 14) * 0.05})` : C.surface, border: today ? `1px solid ${C.amber}` : "1px solid transparent" }} />
-                );
-              })}
-            </div>
-            <div className="flex justify-between text-xs" style={{ color: C.muted }}><span>4 weeks ago</span><span>Today</span></div>
-          </Card>
-        </div>
-
-        {/* Achievements + AI Insights + Upcoming Goals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Card className="p-5">
-            <SecHead icon={<Award size={15} />} title="Achievement Badges"
-              sub={`${ACHIEVEMENTS_LIST.filter(a => a.earned).length} earned · ${ACHIEVEMENTS_LIST.filter(a => !a.earned).length} locked`} />
-            <div className="grid grid-cols-4 gap-3">
-              {ACHIEVEMENTS_LIST.map((a, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-xl text-center"
-                  style={{ background: a.earned ? "rgba(168,85,247,.08)" : C.surface, border: `1px solid ${a.earned ? "rgba(168,85,247,.22)" : C.border}`, opacity: a.earned ? 1 : 0.55 }}>
-                  <div className="text-2xl" style={{ filter: a.earned ? "none" : "grayscale(1)" }}>{a.icon}</div>
-                  <div className="text-xs font-semibold leading-tight" style={{ color: a.earned ? C.text : C.muted }}>{a.title}</div>
-                  <div className="text-xs" style={{ color: C.muted }}>{a.earned ? a.date : "Locked"}</div>
+              {['Complete DSA: Binary Trees module', 'Take one technical mock interview', 'Upload your latest resume'].map((action, index) => (
+                <div key={action} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${C.purple}18`, color: C.purple }}>{index + 1}</div>
+                  <span className="text-xs font-medium text-white">{action}</span>
                 </div>
               ))}
             </div>
           </Card>
-
-          <div className="space-y-5">
-            <Card className="p-5" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
-              <SecHead icon={<Sparkles size={15} />} title="AI Performance Insights" sub="Personalised weekly analysis" />
-              <div className="space-y-2.5">
-                {[
-                  { text: "You perform 34% better in Technical vs Behavioral rounds — invest more in STAR stories.", color: C.amber },
-                  { text: "DSA score improved +30% over 6 months — excellent consistency!", color: C.green },
-                  { text: "System Design is weakest at 45%. Target 2 HLD problems daily for the next week.", color: C.purple },
-                ].map((ins, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${ins.color}08`, border: `1px solid ${ins.color}20` }}>
-                    <Sparkles size={12} style={{ color: ins.color, flexShrink: 0, marginTop: 1 }} />
-                    <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{ins.text}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-5">
-              <SecHead icon={<Target size={15} />} title="Upcoming Goals" sub="7/10 completed"
-                action={<button className="text-xs flex items-center gap-1" style={{ color: C.purple }}><Plus size={11} /> Add</button>} />
-              <div className="space-y-2.5">
-                {[
-                  { goal: "Complete DSA: Binary Trees module", due: "Aug 5", pct: 70, color: C.purple },
-                  { goal: "Take 2 Mock Interviews this week", due: "Aug 7", pct: 50, color: C.cyan },
-                  { goal: "Upload updated Resume v4", due: "Aug 10", pct: 0, color: C.amber },
-                ].map((g, i) => (
-                  <div key={i} className="p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                    <div className="flex items-start justify-between mb-2">
-                      <span className="text-xs font-medium text-white flex-1 mr-3 leading-snug">{g.goal}</span>
-                      <div className="flex items-center gap-1 flex-shrink-0" style={{ color: C.muted }}><Clock size={10} /><span className="text-xs">{g.due}</span></div>
-                    </div>
-                    <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="h-full rounded-full" style={{ width: `${g.pct}%`, background: g.color }} />
-                    </div>
-                    <div className="text-xs mt-1 font-semibold" style={{ color: g.pct === 0 ? C.muted : g.color }}>{g.pct === 0 ? "Not started" : `${g.pct}% complete`}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 6: AI PERSONALIZED ROADMAP
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function RoadmapPage() {
   const [goalId, setGoalId] = useState("sde");
   const [level, setLevel] = useState(2);
@@ -3151,7 +3232,7 @@ function RoadmapPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.14)", color: C.purple }}><Map size={18} /></div>
               <h1 className="text-xl font-bold text-white">AI Personalized Learning Roadmap</h1>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Your <Grad>AI-generated path</Grad> to your dream job — tailored to your current skills.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>Your <Grad>AI-generated path</Grad> to your dream job â€” tailored to your current skills.</p>
           </div>
           <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: C.grad }}>
             <Sparkles size={14} /> Regenerate Plan
@@ -3244,8 +3325,8 @@ function RoadmapPage() {
             <div className="space-y-3 mb-5">
               {[
                 { label: "Preparation Duration", value: "20 weeks", color: C.purple },
-                { label: "Daily Study Time", value: "2–3 hours", color: C.cyan },
-                { label: "Weekly Mock Tests", value: "1–2 mocks", color: C.green },
+                { label: "Daily Study Time", value: "2â€“3 hours", color: C.cyan },
+                { label: "Weekly Mock Tests", value: "1â€“2 mocks", color: C.green },
                 { label: "Practice Problems", value: "150+ solved", color: C.amber },
                 { label: "Target Companies", value: "Top 10 FAANG", color: C.pink },
               ].map(s => (
@@ -3331,7 +3412,7 @@ function RoadmapPage() {
               {[
                 { name: "Grokking Algorithms & Patterns", platform: "Educative", rating: 4.9, free: false, color: C.purple },
                 { name: "System Design Interview Guide", platform: "Coursera", rating: 4.8, free: false, color: C.cyan },
-                { name: "CS Fundamentals — MIT 6.006", platform: "MIT OCW", rating: 5.0, free: true, color: C.green },
+                { name: "CS Fundamentals â€” MIT 6.006", platform: "MIT OCW", rating: 5.0, free: true, color: C.green },
                 { name: "FAANG Interview Bootcamp", platform: "Udemy", rating: 4.7, free: false, color: C.amber },
               ].map((c, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -3339,7 +3420,7 @@ function RoadmapPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-white leading-snug">{c.name}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
+                      <span className="text-xs" style={{ color: C.amber }}>â˜… {c.rating}</span>
                       <span className="text-xs" style={{ color: C.muted }}>{c.platform}</span>
                       {c.free && <Pill label="Free" color={C.green} />}
                     </div>
@@ -3372,10 +3453,10 @@ function RoadmapPage() {
               <SecHead icon={<Calendar size={15} />} title="Daily Study Plan" sub="Recommended schedule" />
               <div className="space-y-2">
                 {[
-                  { time: "7:00 AM", task: "30 min — Revision notes", color: C.purple },
-                  { time: "6:00 PM", task: "1 hr — 2 LeetCode problems", color: C.cyan },
-                  { time: "8:00 PM", task: "1 hr — Course module / reading", color: C.green },
-                  { time: "9:30 PM", task: "30 min — Mock Q&A with AI", color: C.amber },
+                  { time: "7:00 AM", task: "30 min â€” Revision notes", color: C.purple },
+                  { time: "6:00 PM", task: "1 hr â€” 2 LeetCode problems", color: C.cyan },
+                  { time: "8:00 PM", task: "1 hr â€” Course module / reading", color: C.green },
+                  { time: "9:30 PM", task: "30 min â€” Mock Q&A with AI", color: C.amber },
                 ].map((d, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="text-xs font-mono font-bold w-16 flex-shrink-0" style={{ color: d.color }}>{d.time}</div>
@@ -3494,7 +3575,7 @@ function RoadmapPage() {
                   </div>
                   <button className="text-xs font-semibold px-3 py-1.5 rounded-lg"
                     style={{ background: `${proj.color}12`, color: proj.color, border: `1px solid ${proj.color}30` }}>
-                    View Guide →
+                    View Guide â†’
                   </button>
                 </div>
               </div>
@@ -3513,7 +3594,7 @@ function RoadmapPage() {
               </div>
               <div>
                 <div className="text-base font-bold text-white">AI Next-Step Recommendations</div>
-                <div className="text-xs" style={{ color: C.muted }}>Personalised actions based on your performance data — updated daily</div>
+                <div className="text-xs" style={{ color: C.muted }}>Personalised actions based on your performance data â€” updated daily</div>
               </div>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: "rgba(168,85,247,.12)", border: "1px solid rgba(168,85,247,.3)" }}>
@@ -3527,19 +3608,19 @@ function RoadmapPage() {
                 priority: "Do Today", icon: <Zap size={14} />, color: C.red,
                 action: "Solve 3 DP problems on LeetCode",
                 reason: "You've skipped DP for 4 days. Consistency drops sharply after 3 days of inactivity.",
-                time: "~90 min", cta: "Open LeetCode →",
+                time: "~90 min", cta: "Open LeetCode â†’",
               },
               {
                 priority: "This Week", icon: <Target size={14} />, color: C.amber,
                 action: "Complete System Design: URL Shortener module",
                 reason: "System Design is your weakest area at 45%. One module/week brings it to 65% in 6 weeks.",
-                time: "~3 hrs total", cta: "Start Module →",
+                time: "~3 hrs total", cta: "Start Module â†’",
               },
               {
                 priority: "Next Step", icon: <TrendingUp size={14} />, color: C.cyan,
                 action: "Schedule your 2nd Behavioral Mock Interview",
                 reason: "Your last behavioral round was 18 days ago. Regular practice improves scores by 22%.",
-                time: "45 min session", cta: "Book Now →",
+                time: "45 min session", cta: "Book Now â†’",
               },
             ].map((rec, i) => (
               <div key={i} className="flex flex-col gap-3 p-4 rounded-2xl"
@@ -3586,9 +3667,9 @@ function RoadmapPage() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 7: USER PROFILE
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<"personal" | "academic" | "skills" | "certs">("personal");
@@ -3609,7 +3690,7 @@ function ProfilePage() {
   const skills = ["React", "TypeScript", "Node.js", "Python", "DSA", "SQL", "System Design", "Docker", "Git", "REST APIs"];
   const certs = [
     { name: "AWS Cloud Practitioner", org: "Amazon Web Services", date: "Mar 2024", color: C.amber },
-    { name: "Google Data Analytics", org: "Coursera · Google", date: "Jan 2024", color: C.blue },
+    { name: "Google Data Analytics", org: "Coursera Â· Google", date: "Jan 2024", color: C.blue },
     { name: "Meta Frontend Developer", org: "Meta Platforms", date: "Nov 2023", color: C.cyan },
   ];
 
@@ -3651,7 +3732,7 @@ function ProfilePage() {
               </div>
               <div className="text-center">
                 <div className="text-lg font-black text-white">Dhruti Shah</div>
-                <div className="text-sm" style={{ color: C.muted }}>B.Tech · Computer Science</div>
+                <div className="text-sm" style={{ color: C.muted }}>B.Tech Â· Computer Science</div>
                 <div className="flex items-center justify-center gap-1.5 mt-1.5">
                   <Pill label="Pro Plan" color={C.purple} />
                   <Pill label="Active" color={C.green} />
@@ -3717,7 +3798,7 @@ function ProfilePage() {
             </Card>
           </div>
 
-          {/* Right panel — forms */}
+          {/* Right panel â€” forms */}
           <div className="md:col-span-2 space-y-5">
             {/* Tab nav */}
             <div className="flex gap-1 p-1 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -3775,7 +3856,7 @@ function ProfilePage() {
                 <div className="text-xs font-bold mb-3 text-white">Resume</div>
                 <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(168,85,247,.15)", color: C.purple }}><FileText size={18} /></div>
-                  <div className="flex-1"><div className="text-sm font-semibold text-white">Resume_v3_Dhruti_Shah.pdf</div><div className="text-xs" style={{ color: C.muted }}>Uploaded Jul 30, 2025 · AI Score: 87/100</div></div>
+                  <div className="flex-1"><div className="text-sm font-semibold text-white">Resume_v3_Dhruti_Shah.pdf</div><div className="text-xs" style={{ color: C.muted }}>Uploaded Jul 30, 2025 Â· AI Score: 87/100</div></div>
                   <div className="flex gap-2">
                     <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(168,85,247,.12)", color: C.purple }}>View</button>
                     {editing && <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>Replace</button>}
@@ -3819,7 +3900,7 @@ function ProfilePage() {
                   {certs.map((c, i) => (
                     <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: `${c.color}08`, border: `1px solid ${c.color}25` }}>
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${c.color}18`, color: c.color }}><Award size={18} /></div>
-                      <div className="flex-1"><div className="text-sm font-bold text-white">{c.name}</div><div className="text-xs" style={{ color: C.muted }}>{c.org} · {c.date}</div></div>
+                      <div className="flex-1"><div className="text-sm font-bold text-white">{c.name}</div><div className="text-xs" style={{ color: C.muted }}>{c.org} Â· {c.date}</div></div>
                       <div className="flex gap-2">
                         <button className="px-3 py-1.5 rounded-lg text-xs" style={{ background: `${c.color}12`, color: c.color }}>View</button>
                         {editing && <button><Trash2 size={14} style={{ color: C.muted }} /></button>}
@@ -3844,9 +3925,9 @@ function ProfilePage() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 8: SETTINGS
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function SettingsPage() {
   const [section, setSection] = useState("account");
   const [toggles, setToggles] = useState<Record<string, boolean>>({
@@ -3938,7 +4019,7 @@ function SettingsPage() {
                 {["Current Password", "New Password", "Confirm New Password"].map(l => (
                   <div key={l}>
                     <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{l}</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    <input type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                       style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   </div>
                 ))}
@@ -3962,11 +4043,11 @@ function SettingsPage() {
             <Card className="p-5">
               <SecHead icon={<Eye size={16} />} title="Active Sessions" sub="Devices currently logged in" />
               {[
-                { device: "MacBook Pro — Chrome", location: "Ahmedabad, IN", time: "Now", current: true },
-                { device: "iPhone 15 Pro — Safari", location: "Ahmedabad, IN", time: "2h ago", current: false },
+                { device: "MacBook Pro â€” Chrome", location: "Ahmedabad, IN", time: "Now", current: true },
+                { device: "iPhone 15 Pro â€” Safari", location: "Ahmedabad, IN", time: "2h ago", current: false },
               ].map((s, i) => (
                 <div key={i} className="flex items-center justify-between py-3 border-b last:border-b-0" style={{ borderColor: C.border }}>
-                  <div><div className="text-sm font-medium text-white">{s.device}</div><div className="text-xs" style={{ color: C.muted }}>{s.location} · {s.time}</div></div>
+                  <div><div className="text-sm font-medium text-white">{s.device}</div><div className="text-xs" style={{ color: C.muted }}>{s.location} Â· {s.time}</div></div>
                   {s.current ? <Pill label="Current" color={C.green} /> : <button className="text-xs font-semibold" style={{ color: C.red }}>Revoke</button>}
                 </div>
               ))}
@@ -4111,7 +4192,7 @@ function SettingsPage() {
 
         {section === "danger" && (
           <div className="space-y-5 max-w-2xl">
-            <div><div className="text-lg font-bold" style={{ color: C.red }}>Danger Zone</div><div className="text-sm" style={{ color: C.muted }}>Irreversible actions — proceed with caution.</div></div>
+            <div><div className="text-lg font-bold" style={{ color: C.red }}>Danger Zone</div><div className="text-sm" style={{ color: C.muted }}>Irreversible actions â€” proceed with caution.</div></div>
             {[
               { title: "Clear All Progress Data", desc: "Permanently delete your learning progress, streaks and history. This cannot be undone.", btn: "Clear Data", color: C.amber },
               { title: "Deactivate Account", desc: "Temporarily disable your account. You can reactivate at any time.", btn: "Deactivate", color: C.amber },
@@ -4135,9 +4216,9 @@ function SettingsPage() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 9: NOTIFICATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function NotificationsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -4213,7 +4294,7 @@ function NotificationsPage() {
           <div className="relative flex-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search notifications by title or message…"
+              placeholder="Search notifications by title or messageâ€¦"
               className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
               style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
           </div>
@@ -4309,9 +4390,9 @@ function NotifCard({ n, onRead, onDelete }: { n: typeof NOTIFICATIONS_DATA[0]; o
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PAGE 10: 404 NOT FOUND
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function NotFoundPage({ onHome }: { onHome: () => void }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -4331,7 +4412,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         <rect x={150} y={130} width={60} height={65} rx={12} fill={C.card} stroke={C.border} strokeWidth={1.5} />
         {/* Robot belly screen */}
         <rect x={158} y={145} width={44} height={28} rx={7} fill="#0B1120" stroke="rgba(168,85,247,.4)" strokeWidth={1} />
-        {/* Screen content — sad face / error */}
+        {/* Screen content â€” sad face / error */}
         <text x={180} y={165} textAnchor="middle" fill={C.red} style={{ fontSize: 14, fontFamily: "monospace" }}>404</text>
 
         {/* Robot head */}
@@ -4344,7 +4425,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         <rect x={187} y={109} width={10} height={8} rx={4} fill={C.surface} />
         <circle cx={192} cy={113} r={3} fill={C.red} />
         <circle cx={193.5} cy={111.5} r={1} fill="rgba(255,255,255,.6)" />
-        {/* Mouth — flat sad */}
+        {/* Mouth â€” flat sad */}
         <path d="M170 126 Q180 122 190 126" stroke={C.muted} strokeWidth={1.5} strokeLinecap="round" fill="none" />
         {/* Antenna */}
         <line x1={180} y1={98} x2={180} y2={85} stroke={C.border} strokeWidth={1.5} />
@@ -4358,7 +4439,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         {/* Arms */}
         <rect x={122} y={135} width={28} height={12} rx={6} fill={C.surface} stroke={C.border} strokeWidth={1} transform="rotate(-20 136 141)" />
         <rect x={210} y={135} width={28} height={12} rx={6} fill={C.surface} stroke={C.border} strokeWidth={1} transform="rotate(20 224 141)" />
-        {/* Hands — question mark bubbles */}
+        {/* Hands â€” question mark bubbles */}
         <circle cx={112} cy={152} r={10} fill={C.surface} stroke={C.border} strokeWidth={1} />
         <text x={112} y={156} textAnchor="middle" fill={C.amber} style={{ fontSize: 12, fontWeight: 700 }}>?</text>
         <circle cx={248} cy={152} r={10} fill={C.surface} stroke={C.border} strokeWidth={1} />
@@ -4415,14 +4496,14 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
       <div className="text-2xl font-bold text-white mb-2">Page Not Found</div>
       <p className="text-sm max-w-md mb-6 leading-relaxed" style={{ color: C.muted }}>
         Oops! This page seems to have taken a different career path.
-        Even our AI couldn't locate it — and it knows <em>everything</em>.
+        Even our AI couldn't locate it â€” and it knows <em>everything</em>.
       </p>
 
       {/* Error detail chip */}
       <div className="flex items-center gap-2 px-4 py-2 rounded-xl mb-8"
         style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", color: C.red }}>
         <AlertTriangle size={13} />
-        <span className="text-xs font-mono">Error 404 — Route not matched in navigation tree</span>
+        <span className="text-xs font-mono">Error 404 â€” Route not matched in navigation tree</span>
       </div>
 
       {/* Quick nav suggestions */}
@@ -4463,40 +4544,320 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // RESUME ANALYZER PAGE
-// ═══════════════════════════════════════════════════════════════════════════════
-const RESUME_SECTIONS = [
-  { name: "Contact Info", score: 95, max: 100, color: C.green, tips: ["Add LinkedIn URL", "Include GitHub profile"] },
-  { name: "Work Experience", score: 72, max: 100, color: C.cyan, tips: ["Use stronger action verbs", "Quantify achievements with numbers", "Add impact metrics"] },
-  { name: "Education", score: 88, max: 100, color: C.purple, tips: ["Add relevant coursework", "Mention academic projects"] },
-  { name: "Skills", score: 65, max: 100, color: C.amber, tips: ["Group skills by category", "Add proficiency levels", "Remove outdated skills"] },
-  { name: "Projects", score: 80, max: 100, color: C.blue, tips: ["Add live demo links", "Include tech stack clearly"] },
-  { name: "Summary", score: 58, max: 100, color: C.pink, tips: ["Make it role-specific", "Highlight top achievements", "Keep under 3 lines"] },
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+const TARGET_ROLES = [
+  "Full Stack Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "AI / ML Engineer",
+  "Data Scientist",
+  "DevOps Engineer",
+  "Cloud Solutions Architect",
+  "Mobile App Developer",
 ];
-const RESUME_KEYWORDS = [
-  { word: "React", found: true }, { word: "TypeScript", found: true }, { word: "Node.js", found: true },
-  { word: "REST API", found: true }, { word: "Agile", found: false }, { word: "CI/CD", found: false },
-  { word: "Docker", found: false }, { word: "AWS", found: false }, { word: "System Design", found: false }, { word: "SQL", found: true },
+
+const SECTION_COLOR_MAP: Record<string, string> = {
+  contact_info: C.green,
+  summary: C.pink,
+  work_experience: C.cyan,
+  education: C.purple,
+  skills: C.amber,
+  projects: C.blue,
+};
+
+const DEFAULT_RESUME_SECTIONS = [
+  { key: "contact_info", name: "Contact Information", score: 95, color: C.green, tips: ["GitHub and LinkedIn profiles clearly listed", "Include phone country code for international recruiters"] },
+  { key: "summary", name: "Professional Summary", score: 68, color: C.pink, tips: ["Tailor the opening summary specifically for target roles", "Highlight 1-2 major achievements within the first 3 lines"] },
+  { key: "work_experience", name: "Work Experience", score: 75, color: C.cyan, tips: ["Use Google XYZ format (Accomplished [X], as measured by [Y], by doing [Z])", "Begin each bullet point with strong action verbs (Architected, Engineered, Optimized)"] },
+  { key: "education", name: "Education", score: 88, color: C.purple, tips: ["Degree and graduation year are well formatted", "Include relevant core coursework (Algorithms, Systems, DB)"] },
+  { key: "skills", name: "Skills & Technologies", score: 78, color: C.amber, tips: ["Organize skills by categories (Languages, Frameworks, Cloud, Databases)", "Remove obsolete tools to keep the section punchy"] },
+  { key: "projects", name: "Projects", score: 72, color: C.blue, tips: ["Include live demo URLs and GitHub repository links", "Mention architecture choices and performance metrics (e.g., reduced latency by 30%)"] },
 ];
+
+const getScoreGrade = (score: number) => {
+  if (score >= 90) return "A+";
+  if (score >= 85) return "A";
+  if (score >= 80) return "Aâˆ’";
+  if (score >= 75) return "B+";
+  if (score >= 70) return "B";
+  if (score >= 65) return "Bâˆ’";
+  if (score >= 60) return "C+";
+  return "C";
+};
 
 function ResumeAnalyzerPage() {
   const [step, setStep] = useState<"upload" | "analyzing" | "results">("upload");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [targetRole, setTargetRole] = useState("Full Stack Developer");
+  const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [activeSection, setActiveSection] = useState(0);
-  const overallScore = 78;
-  const atsScore = 72;
+  const [progressPhase, setProgressPhase] = useState("Preparing document...");
+  const [activeSectionKey, setActiveSectionKey] = useState("work_experience");
+  const [error, setError] = useState<string | null>(null);
 
-  const startAnalysis = () => {
-    setStep("analyzing");
-    setProgress(0);
-    let p = 0;
-    const iv = setInterval(() => {
-      p += Math.random() * 18 + 5;
-      if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => setStep("results"), 400); }
-      setProgress(Math.min(p, 100));
-    }, 220);
+  const [analysisResult, setAnalysisResult] = useState<{
+    overallScore: number;
+    atsScore: number;
+    readabilityScore: number;
+    keywordMatchScore: number;
+    summaryFeedback: string;
+    sections: Record<string, { name?: string; score?: number; tips?: string[] }>;
+    detectedSkills: Array<{ skill: string; category?: string; confidence?: number }>;
+    foundKeywords: string[];
+    missingKeywords: string[];
+    priorityActionPlan: Array<{ section: string; action: string; potential_gain: number; impact: string }>;
+    filename: string;
+  }>({
+    overallScore: 78,
+    atsScore: 72,
+    readabilityScore: 82,
+    keywordMatchScore: 74,
+    summaryFeedback: "Resume effectively demonstrates technical competencies relevant to your target role. To achieve top ATS ranking, quantify project impacts with concrete metrics and incorporate additional industry keywords.",
+    sections: {},
+    detectedSkills: [],
+    foundKeywords: ["REST APIs", "Git", "React", "SQL", "TypeScript", "Agile", "FastAPI"],
+    missingKeywords: ["CI/CD Pipelines", "Unit Testing / Jest", "Cloud Deployment (AWS/GCP)", "System Architecture"],
+    priorityActionPlan: [
+      { section: "Work Experience", action: "Quantify bullet points with metric-driven outcomes (%, $, latency, scale)", potential_gain: 9, impact: "Critical" },
+      { section: "Skills & Technologies", action: "Add keywords for CI/CD and Cloud infrastructure to pass initial ATS filters", potential_gain: 7, impact: "High" },
+      { section: "Professional Summary", action: "Focus executive summary around target role business impact", potential_gain: 5, impact: "Medium" },
+    ],
+    filename: "Alexander_Chen_Resume.pdf",
+  });
+
+  const validateAndSetFile = (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const allowed = ["pdf", "docx", "doc", "txt", "rtf"];
+    if (ext && !allowed.includes(ext)) {
+      setError("Supported formats: .pdf, .docx, .doc, .txt, .rtf.");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setError("File size exceeds 15MB limit.");
+      return;
+    }
+    setError(null);
+    setSelectedFile(file);
   };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      validateAndSetFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const generateLocalEvaluation = async (file?: File, role?: string) => {
+    const target = role || "Full Stack Developer";
+    let textContent = "";
+    let candidateName = "";
+
+    if (file) {
+      try {
+        textContent = await file.text();
+      } catch {
+        textContent = "";
+      }
+      const cleanFn = file.name.replace(/resume|\.docx|\.pdf|\.doc|\.txt/gi, "").trim();
+      if (cleanFn.length > 2) candidateName = cleanFn;
+    }
+
+    if (!candidateName) candidateName = "Candidate";
+    const textLower = (textContent + " " + (file?.name || "")).toLowerCase();
+
+    const SKILLS = [
+      { skill: "Java", test: /java\b/i, category: "Language" },
+      { skill: "JavaScript", test: /javascript|java\s*script/i, category: "Language" },
+      { skill: "C++", test: /c\+\+/i, category: "Language" },
+      { skill: "C", test: /\b[cC]\b/i, category: "Language" },
+      { skill: "Python", test: /\bpython\b/i, category: "Language" },
+      { skill: "TypeScript", test: /\btypescript\b/i, category: "Language" },
+      { skill: "HTML & CSS", test: /html|css/i, category: "Frontend" },
+      { skill: "React", test: /react/i, category: "Frontend" },
+      { skill: "Full Stack Development", test: /full\s*stack/i, category: "Development" },
+      { skill: "MySQL", test: /mysql/i, category: "Database" },
+      { skill: "SQL", test: /sql/i, category: "Database" },
+      { skill: "Cybersecurity", test: /cybersecurity|security/i, category: "Security" },
+      { skill: "Web Security", test: /web\s*security/i, category: "Security" },
+      { skill: "Vulnerability Assessment", test: /vulnerability/i, category: "Security" },
+      { skill: "Git & GitHub", test: /git|github/i, category: "Tools" },
+      { skill: "VS Code", test: /vs\s*code|vscode/i, category: "Tools" },
+    ];
+
+    const detected: Array<{ skill: string; category: string; confidence: number }> = [];
+    const found: string[] = [];
+    SKILLS.forEach(s => {
+      if (s.test.test(textLower) || s.test.test(textContent)) {
+        detected.push({ skill: s.skill, category: s.category, confidence: Math.floor(Math.random() * 6) + 91 });
+        found.push(s.skill);
+      }
+    });
+
+    if (detected.length === 0) {
+      [
+        { skill: "Java", category: "Language" },
+        { skill: "JavaScript", category: "Language" },
+        { skill: "C++", category: "Language" },
+        { skill: "C", category: "Language" },
+        { skill: "HTML & CSS", category: "Frontend" },
+        { skill: "Full Stack Development", category: "Development" },
+        { skill: "MySQL", category: "Database" },
+        { skill: "Cybersecurity", category: "Security" },
+        { skill: "Web Security", category: "Security" },
+        { skill: "Git & GitHub", category: "Tools" },
+      ].forEach(s => {
+        detected.push({ skill: s.skill, category: s.category, confidence: 93 });
+        found.push(s.skill);
+      });
+    }
+
+    const missing = ["Node.js", "CI/CD Pipelines", "Docker", "Redis", "Unit Testing / Jest"].filter(k => !textLower.includes(k.toLowerCase()));
+
+    return {
+      overall_score: 92,
+      ats_score: 89,
+      ai_feedback: `Resume for ${candidateName} demonstrates well-rounded foundations in ${detected.slice(0, 4).map(s => s.skill).join(", ")}. Project implementations and technical skills show strong practical problem-solving. To achieve top ATS ranking for ${target}, highlight metric-driven outcomes and CI/CD tools.`,
+      full_analysis: {
+        overall_score: 92,
+        ats_score: 89,
+        readability_score: 86,
+        keyword_match_score: 88,
+        candidate_name: candidateName,
+        summary_feedback: `Resume for ${candidateName} demonstrates well-rounded foundations in ${detected.slice(0, 4).map(s => s.skill).join(", ")}. Project implementations and technical skills show strong practical problem-solving. To achieve top ATS ranking for ${target}, highlight metric-driven outcomes and CI/CD tools.`,
+        sections: {
+          contact_info: {
+            name: "Contact Information",
+            score: 98,
+            tips: ["GitHub, LinkedIn, and email address are clearly identified and parseable", "Ensure phone number includes standard international dial code (+91)"]
+          },
+          summary: {
+            name: "Career Objective & Summary",
+            score: 82,
+            tips: [`Tailor the career objective directly towards ${target} roles`, "Highlight top competitive achievements or hackathon credentials within the first two lines"]
+          },
+          work_experience: {
+            name: "Experience & Practical Work",
+            score: 84,
+            tips: ["Adopt the Google XYZ formula: Accomplished [X], as measured by [Y], by doing [Z]", "Begin each bullet point with high-impact action verbs (Architected, Engineered, Secured, Optimized)"]
+          },
+          education: {
+            name: "Academic Qualifications",
+            score: 92,
+            tips: ["Degree program, institute, and CGPA/percentages are structured cleanly in a recognized layout", "Include relevant specialized coursework (Computer Networks, Database Management, Operating Systems)"]
+          },
+          skills: {
+            name: "Software Proficiency & Skills",
+            score: 92,
+            tips: ["Organize skills into Languages, Web, Databases, and Security Tools", `Add modern framework keywords (like ${missing.slice(0, 2).join(", ")}) to boost keyword match rate`]
+          },
+          projects: {
+            name: "Projects & Implementations",
+            score: 88,
+            tips: ["Highlight architecture and security implementations in your key projects", "Include live demo URLs or public GitHub repository links directly next to each project title"]
+          }
+        },
+        detected_skills: detected,
+        found_keywords: found,
+        missing_keywords: missing,
+        priority_action_plan: [
+          {
+            section: "Projects & Experience",
+            action: "Quantify project accomplishments with measurable metrics (e.g. user capacity, query execution speed)",
+            potential_gain: 8,
+            impact: "Critical"
+          },
+          {
+            section: "Skills & Tools",
+            action: `Add industry-standard keywords for ${target} (${missing.slice(0, 2).join(", ") || "Docker, CI/CD"}) to pass strict screening`,
+            potential_gain: 6,
+            impact: "High"
+          },
+          {
+            section: "Career Summary",
+            action: "Align the career objective with the exact technical skills required for the position",
+            potential_gain: 4,
+            impact: "Medium"
+          }
+        ]
+      }
+    };
+  };
+
+  const startAnalysis = async (fileToAnalyze?: File) => {
+    if (!fileToAnalyze) {
+      setError("Choose a PDF or DOCX resume before starting analysis.");
+      return;
+    }
+    setStep("analyzing");
+    setProgress(15);
+    setProgressPhase("Extracting text and scanning document structureâ€¦");
+    setError(null);
+
+    const iv = setInterval(() => {
+      setProgress((p) => {
+        if (p < 40) {
+          setProgressPhase("Scanning ATS formatting and parsing contact detailsâ€¦");
+          return p + 6;
+        }
+        if (p < 75) {
+          setProgressPhase("Consulting Google Gemini 2.0 AI for semantic evaluationâ€¦");
+          return p + 4;
+        }
+        if (p < 92) {
+          setProgressPhase("Analyzing technical keywords and synthesizing recommendationsâ€¦");
+          return p + 2;
+        }
+        return p;
+      });
+    }, 240);
+
+    try {
+      const data = await resumeApi.analyze(fileToAnalyze, targetRole);
+
+      clearInterval(iv);
+      setProgress(100);
+      setProgressPhase("Evaluation complete!");
+
+      const full = data.full_analysis || {};
+      setAnalysisResult({
+        overallScore: data.overall_score ?? full.overall_score ?? 78,
+        atsScore: data.ats_score ?? full.ats_score ?? 72,
+        readabilityScore: full.readability_score ?? 82,
+        keywordMatchScore: full.keyword_match_score ?? 74,
+        summaryFeedback: data.ai_feedback ?? full.summary_feedback ?? "Your resume demonstrates solid fundamentals with room for targeted improvements.",
+        sections: full.sections || {},
+        detectedSkills: full.detected_skills || [],
+        foundKeywords: full.found_keywords || ["Git", "React", "SQL", "TypeScript", "REST APIs"],
+        missingKeywords: full.missing_keywords || ["CI/CD Pipelines", "Docker", "AWS / Cloud"],
+        priorityActionPlan: full.priority_action_plan || [
+          { section: "Work Experience", action: "Quantify achievements with concrete numbers and business metrics", potential_gain: 8, impact: "Critical" },
+        ],
+        filename: fileToAnalyze.name,
+      });
+
+      setTimeout(() => setStep("results"), 400);
+    } catch (err: any) {
+      clearInterval(iv);
+      setError(err?.message ?? "Resume analysis failed. Please try again.");
+      setStep("upload");
+    }
+  };
+
+  // Compile section list for rendering
+  const activeSections = Object.keys(analysisResult.sections).length > 0
+    ? Object.entries(analysisResult.sections).map(([key, sec]) => ({
+        key,
+        name: sec.name || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        score: sec.score ?? 70,
+        color: SECTION_COLOR_MAP[key] || C.purple,
+        tips: sec.tips || ["Focus on quantifiable achievements in this section"],
+      }))
+    : DEFAULT_RESUME_SECTIONS;
+
+  const currentSection = activeSections.find(s => s.key === activeSectionKey) || activeSections[0];
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -4505,72 +4866,196 @@ function ResumeAnalyzerPage() {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.14)", color: C.purple }}><FileText size={18} /></div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.14)", color: C.purple }}>
+                <FileText size={18} />
+              </div>
               <h1 className="text-xl font-bold text-white">Resume Analyzer</h1>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1"
+                style={{ background: "rgba(34,211,238,.12)", color: C.cyan, border: "1px solid rgba(34,211,238,.3)" }}>
+                <Sparkles size={11} /> Gemini 2.0 AI
+              </span>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Get an <Grad>AI-powered score</Grad> and actionable improvements for your resume.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>
+              Instant ATS scoring, section diagnosis, and keyword gap analysis powered by <Grad>Google Gemini AI</Grad>.
+            </p>
           </div>
           {step === "results" && (
-            <button onClick={() => setStep("upload")}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-              <RefreshCw size={14} /> Re-analyze
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setStep("upload"); setSelectedFile(null); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:bg-white/5"
+                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }}>
+                <RefreshCw size={14} /> Analyze Another Resume
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Upload step */}
-        {step === "upload" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-8 flex flex-col items-center gap-5"
-              style={{ background: "linear-gradient(135deg,rgba(168,85,247,.07),rgba(34,211,238,.04))", border: "2px dashed rgba(168,85,247,.35)" }}>
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(168,85,247,.14)" }}>
-                <FileText size={28} style={{ color: C.purple }} />
+        {/* Error notification banner */}
+        {error && (
+          <div className="p-4 rounded-xl flex items-start justify-between gap-3"
+            style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)" }}>
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle size={16} className="text-red-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="text-xs font-bold text-red-400">Connection or Parsing Notice</div>
+                <div className="text-xs text-gray-300 mt-0.5">{error}</div>
               </div>
-              <div className="text-center">
-                <div className="text-base font-bold text-white mb-1">Upload Your Resume</div>
-                <div className="text-sm" style={{ color: C.muted }}>Drag & drop your PDF or Word file here</div>
-                <div className="text-xs mt-1" style={{ color: C.muted }}>Supported: PDF, DOCX, DOC · Max 5MB</div>
-              </div>
-              <label className="cursor-pointer">
-                <input type="file" className="hidden" accept=".pdf,.doc,.docx" />
-                <div className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: C.grad }}>Choose File</div>
-              </label>
-              <div className="flex items-center gap-2 w-full"><div className="h-px flex-1" style={{ background: C.border }} /><span className="text-xs" style={{ color: C.muted }}>or</span><div className="h-px flex-1" style={{ background: C.border }} /></div>
-              <button onClick={startAnalysis}
-                className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                style={{ background: C.grad, boxShadow: "0 6px 20px rgba(168,85,247,.3)" }}>
-                <Sparkles size={15} /> Analyze Sample Resume
-              </button>
-            </Card>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={() => setError(null)} className="text-xs text-gray-400 hover:text-white px-1">âœ•</button>
+            </div>
+          </div>
+        )}
 
-            <div className="space-y-4">
+        {/* STEP 1: UPLOAD & CONFIGURATION */}
+        {step === "upload" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left upload card */}
+            <div className="lg:col-span-7 space-y-5">
+              <Card
+                className="p-8 flex flex-col items-center gap-5 transition-all"
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+                style={{
+                  background: isDragging ? "rgba(168,85,247,.12)" : "linear-gradient(135deg,rgba(168,85,247,.06),rgba(34,211,238,.03))",
+                  border: isDragging ? `2px dashed ${C.purple}` : "2px dashed rgba(168,85,247,.35)",
+                }}
+              >
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ background: "rgba(168,85,247,.15)", boxShadow: "0 0 24px rgba(168,85,247,.2)" }}>
+                  <FileText size={30} style={{ color: C.purple }} />
+                </div>
+
+                <div className="text-center">
+                  <div className="text-base font-bold text-white mb-1">
+                    {selectedFile ? selectedFile.name : "Upload Your Resume"}
+                  </div>
+                  <div className="text-sm" style={{ color: C.muted }}>
+                    {selectedFile
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB Â· Ready to evaluate`
+                      : "Drag & drop your PDF, DOCX, DOC, or TXT document here"}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: C.muted }}>
+                    Supported formats: .pdf, .docx, .doc, .txt Â· Maximum size: 15MB
+                  </div>
+                </div>
+
+                {/* File picker */}
+                <div className="flex items-center gap-3">
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.docx,.doc,.txt,.rtf"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          validateAndSetFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+                      style={{ background: C.grad }}>
+                      <FolderOpen size={15} /> {selectedFile ? "Change Document" : "Choose File"}
+                    </div>
+                  </label>
+                  {selectedFile && (
+                    <button
+                      onClick={() => setSelectedFile(null)}
+                      className="px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 border border-red-500/20">
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                {/* Primary Action Button */}
+                <button
+                  onClick={() => startAnalysis(selectedFile ?? undefined)}
+                  className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  style={{
+                    background: C.grad,
+                    boxShadow: "0 8px 24px rgba(168,85,247,.35)",
+                  }}
+                >
+                  <Sparkles size={16} />
+                  {selectedFile ? "Analyze Selected Resume with Gemini AI" : "Choose a Resume to Analyze"}
+                </button>
+
+                <div className="text-xs text-center" style={{ color: C.muted }}>
+                  Instant ATS evaluation Â· Evaluates all resume formats
+                </div>
+              </Card>
+
+              {/* Target Job Role Selector */}
               <Card className="p-5">
-                <div className="text-sm font-bold text-white mb-3">What We Analyze</div>
-                <div className="space-y-2.5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-bold text-white flex items-center gap-2">
+                    <Target size={15} style={{ color: C.cyan }} /> Target Job Role
+                  </div>
+                  <span className="text-xs" style={{ color: C.muted }}>Tailors ATS keyword matching</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {TARGET_ROLES.map((role) => {
+                    const isSelected = targetRole === role;
+                    return (
+                      <button
+                        key={role}
+                        onClick={() => setTargetRole(role)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{
+                          background: isSelected ? C.gradSubtle : C.surface,
+                          border: isSelected ? `1px solid ${C.purple}` : `1px solid ${C.border}`,
+                          color: isSelected ? C.purple : C.muted,
+                        }}
+                      >
+                        {role}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+
+            {/* Right analysis overview card */}
+            <div className="lg:col-span-5 space-y-4">
+              <Card className="p-5">
+                <div className="text-sm font-bold text-white mb-3">How CrackIt Evaluates Your Resume</div>
+                <div className="space-y-3">
                   {[
-                    { icon: <Target size={14} />, label: "ATS Compatibility Score", desc: "How well your resume passes automated screening", color: C.cyan },
-                    { icon: <BarChart3 size={14} />, label: "Section-wise Scoring", desc: "Detailed breakdown of each resume section", color: C.purple },
-                    { icon: <Search size={14} />, label: "Keyword Analysis", desc: "Missing keywords for your target role", color: C.green },
-                    { icon: <Lightbulb size={14} />, label: "AI Suggestions", desc: "Actionable tips to improve each section", color: C.amber },
-                    { icon: <TrendingUp size={14} />, label: "Industry Benchmarking", desc: "Compare against top resumes in your field", color: C.pink },
+                    { icon: <Target size={14} />, label: "ATS Screening Simulation", desc: "Checks header hierarchy, font parseability, and automated keyword match rate", color: C.cyan },
+                    { icon: <Sparkles size={14} />, label: "Gemini 2.0 Semantic Review", desc: "Analyzes phrasing, Google XYZ bullet formulation, and depth of technical impact", color: C.purple },
+                    { icon: <Search size={14} />, label: "Target Role Keyword Audit", desc: "Compares your skills against current industry job listings for missing competencies", color: C.green },
+                    { icon: <TrendingUp size={14} />, label: "Priority Improvement Plan", desc: "Ranks edits by the exact potential ATS points gain they produce", color: C.amber },
+                    { icon: <Shield size={14} />, label: "Privacy First", desc: "Documents are processed securely and only saved when logged in", color: C.pink },
                   ].map((f, i) => (
                     <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${f.color}15`, color: f.color }}>{f.icon}</div>
-                      <div><div className="text-xs font-semibold text-white">{f.label}</div><div className="text-xs mt-0.5" style={{ color: C.muted }}>{f.desc}</div></div>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${f.color}15`, color: f.color }}>
+                        {f.icon}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white">{f.label}</div>
+                        <div className="text-xs mt-0.5 leading-relaxed" style={{ color: C.muted }}>{f.desc}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-2 mb-2"><Star size={13} style={{ color: C.amber }} /><span className="text-xs font-bold text-white">Pro Tip</span></div>
-                <p className="text-xs leading-relaxed" style={{ color: C.muted }}>Tailor your resume for each job description. Include specific keywords from the job posting to dramatically improve your ATS score and recruiter visibility.</p>
+
+              <Card className="p-4" style={{ background: "rgba(245,158,11,.06)", border: "1px solid rgba(245,158,11,.2)" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Star size={14} style={{ color: C.amber }} />
+                  <span className="text-xs font-bold text-white">Pro Tip for Software Engineers</span>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
+                  Recruiters spend an average of 7 seconds per resume. Highlight concrete numerical metrics (e.g. &ldquo;reduced API latency by 45%&rdquo;, &ldquo;scaled to 100k DAU&rdquo;) in your work experience bullets.
+                </p>
               </Card>
             </div>
           </div>
         )}
 
-        {/* Analyzing step */}
+        {/* STEP 2: ANALYZING STATE */}
         {step === "analyzing" && (
           <Card className="p-12 flex flex-col items-center gap-6"
             style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
@@ -4580,39 +5065,56 @@ function ResumeAnalyzerPage() {
                 <Brain size={28} style={{ color: C.purple }} />
               </div>
             </div>
+
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">AI is analyzing your resume…</div>
-              <div className="text-sm" style={{ color: C.muted }}>Scanning sections, keywords, and ATS compatibility</div>
+              <div className="text-base font-bold text-white mb-1">Gemini AI is analyzing your resumeâ€¦</div>
+              <div className="text-sm" style={{ color: C.cyan }}>{progressPhase}</div>
+              <div className="text-xs mt-1" style={{ color: C.muted }}>Evaluating against {targetRole} standards</div>
             </div>
+
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Analyzing…</span><span style={{ color: C.purple }}>{Math.round(progress)}%</span></div>
-              <div className="h-2 rounded-full" style={{ background: C.border }}>
-                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: C.grad, boxShadow: "0 0 10px rgba(168,85,247,.5)" }} />
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}>
+                <span>Progress</span>
+                <span style={{ color: C.purple }} className="font-bold">{Math.round(progress)}%</span>
+              </div>
+              <div className="h-2.5 rounded-full" style={{ background: C.border }}>
+                <div className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%`, background: C.grad, boxShadow: "0 0 12px rgba(168,85,247,.5)" }} />
               </div>
             </div>
+
             <div className="flex flex-wrap gap-2 justify-center">
-              {["Parsing content", "Scoring sections", "Checking ATS keywords", "Generating insights"].map((s, i) => (
-                <Pill key={i} label={s} color={progress > i * 25 ? C.purple : C.muted} />
+              {[
+                "Extracting Text",
+                "ATS Parsing",
+                "Gemini 2.0 Evaluation",
+                "Keyword Match",
+                "Synthesizing Insights",
+              ].map((s, i) => (
+                <Pill key={i} label={s} color={progress > i * 20 ? C.purple : C.muted} />
               ))}
             </div>
           </Card>
         )}
 
-        {/* Results step */}
+        {/* STEP 3: RESULTS STATE */}
         {step === "results" && (
-          <>
-            {/* Score cards row */}
+          <div className="space-y-6">
+            {/* Top Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Overall Score", value: `${overallScore}/100`, grade: "B+", color: C.purple, sub: "Good — room to improve" },
-                { label: "ATS Score", value: `${atsScore}%`, grade: "C+", color: C.cyan, sub: "Passing threshold: 70%" },
-                { label: "Keyword Match", value: "4/10", grade: "D+", color: C.amber, sub: "6 keywords missing" },
-                { label: "Readability", value: "82/100", grade: "A−", color: C.green, sub: "Clear structure detected" },
-              ].map(s => (
-                <Card key={s.label} className="p-5" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.07),rgba(34,211,238,.04))", border: `1px solid ${s.color}30` }}>
+                { label: "Overall Score", value: `${analysisResult.overallScore}/100`, grade: getScoreGrade(analysisResult.overallScore), color: C.purple, sub: "Calculated across all dimensions" },
+                { label: "ATS Score", value: `${analysisResult.atsScore}%`, grade: getScoreGrade(analysisResult.atsScore), color: C.cyan, sub: "Passing threshold: 70%" },
+                { label: "Keyword Match", value: `${analysisResult.keywordMatchScore}%`, grade: getScoreGrade(analysisResult.keywordMatchScore), color: C.green, sub: `${analysisResult.foundKeywords.length} key skills matched` },
+                { label: "Readability", value: `${analysisResult.readabilityScore}/100`, grade: getScoreGrade(analysisResult.readabilityScore), color: C.amber, sub: "Clarity & bullet structure" },
+              ].map((s) => (
+                <Card key={s.label} className="p-5"
+                  style={{ background: "linear-gradient(135deg,rgba(168,85,247,.07),rgba(34,211,238,.04))", border: `1px solid ${s.color}30` }}>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold" style={{ color: C.muted }}>{s.label}</span>
-                    <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${s.color}18`, color: s.color }}>{s.grade}</span>
+                    <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${s.color}18`, color: s.color }}>
+                      {s.grade}
+                    </span>
                   </div>
                   <div className="text-2xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
                   <div className="text-xs" style={{ color: C.muted }}>{s.sub}</div>
@@ -4620,107 +5122,209 @@ function ResumeAnalyzerPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Section breakdown */}
-              <Card className="md:col-span-2 p-5">
-                <SecHead icon={<BarChart3 size={16} />} title="Section-wise Breakdown" sub="Click a section to see improvement tips" />
+            {/* AI Executive Summary Quote */}
+            <Card className="p-5" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.3)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={16} style={{ color: C.purple }} />
+                <span className="text-sm font-bold text-white">Gemini AI Executive Assessment</span>
+                <span className="text-xs ml-auto" style={{ color: C.muted }}>File: {analysisResult.filename}</span>
+              </div>
+              <p className="text-sm leading-relaxed text-gray-200">
+                &ldquo;{analysisResult.summaryFeedback}&rdquo;
+              </p>
+            </Card>
+
+            {/* Section Breakdown & Tips Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Section Breakdown list */}
+              <Card className="lg:col-span-7 p-5">
+                <SecHead icon={<BarChart3 size={16} />} title="Section-wise Diagnosis" sub="Click any section to inspect specific AI tips" />
                 <div className="space-y-3">
-                  {RESUME_SECTIONS.map((s, i) => (
-                    <button key={i} onClick={() => setActiveSection(i)}
-                      className="w-full flex items-center gap-4 p-3 rounded-xl text-left transition-all"
-                      style={{ background: activeSection === i ? `${s.color}10` : C.surface, border: `1px solid ${activeSection === i ? s.color + "40" : C.border}` }}>
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
-                        style={{ background: `${s.color}18`, color: s.color }}>{s.score}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-semibold text-white">{s.name}</span>
-                          <span className="text-xs font-bold" style={{ color: s.color }}>{s.score}%</span>
+                  {activeSections.map((s) => {
+                    const isSelected = s.key === currentSection.key;
+                    return (
+                      <button
+                        key={s.key}
+                        onClick={() => setActiveSectionKey(s.key)}
+                        className="w-full flex items-center gap-4 p-3.5 rounded-xl text-left transition-all hover:scale-[1.005]"
+                        style={{
+                          background: isSelected ? `${s.color}14` : C.surface,
+                          border: `1px solid ${isSelected ? s.color + "60" : C.border}`,
+                          boxShadow: isSelected ? `0 0 16px ${s.color}18` : "none",
+                        }}
+                      >
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
+                          style={{ background: `${s.color}18`, color: s.color }}>
+                          {s.score}
                         </div>
-                        <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                          <div className="h-full rounded-full" style={{ width: `${s.score}%`, background: s.color, boxShadow: `0 0 6px ${s.color}50` }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm font-semibold text-white truncate">{s.name}</span>
+                            <span className="text-xs font-bold" style={{ color: s.color }}>{s.score}%</span>
+                          </div>
+                          <div className="h-2 rounded-full" style={{ background: C.border }}>
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${s.score}%`, background: s.color, boxShadow: `0 0 8px ${s.color}50` }} />
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                        <ChevronRight size={16} style={{ color: isSelected ? s.color : C.muted }} />
+                      </button>
+                    );
+                  })}
                 </div>
               </Card>
 
-              {/* Tips panel */}
-              <div className="space-y-5">
-                <Card className="p-5" style={{ background: `${RESUME_SECTIONS[activeSection].color}08`, border: `1px solid ${RESUME_SECTIONS[activeSection].color}30` }}>
-                  <SecHead icon={<Lightbulb size={15} />} title={`${RESUME_SECTIONS[activeSection].name} Tips`} sub="AI-generated recommendations" />
+              {/* Active Section Tips & Keywords */}
+              <div className="lg:col-span-5 space-y-5">
+                <Card className="p-5" style={{ background: `${currentSection.color}08`, border: `1px solid ${currentSection.color}35` }}>
+                  <SecHead icon={<Lightbulb size={15} />} title={`${currentSection.name} AI Recommendations`} sub="Targeted fixes generated by Gemini" />
                   <div className="space-y-2.5">
-                    {RESUME_SECTIONS[activeSection].tips.map((tip, i) => (
-                      <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${RESUME_SECTIONS[activeSection].color}08`, border: `1px solid ${RESUME_SECTIONS[activeSection].color}20` }}>
-                        <ArrowRight size={12} style={{ color: RESUME_SECTIONS[activeSection].color, flexShrink: 0, marginTop: 1 }} />
+                    {currentSection.tips.map((tip, i) => (
+                      <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl"
+                        style={{ background: `${currentSection.color}10`, border: `1px solid ${currentSection.color}20` }}>
+                        <ArrowRight size={13} style={{ color: currentSection.color, flexShrink: 0, marginTop: 2 }} />
                         <span className="text-xs leading-relaxed text-white">{tip}</span>
                       </div>
                     ))}
                   </div>
                 </Card>
 
+                {/* Keyword Analysis */}
                 <Card className="p-5">
-                  <SecHead icon={<Search size={15} />} title="Keyword Analysis" sub={`${RESUME_KEYWORDS.filter(k => k.found).length} of ${RESUME_KEYWORDS.length} found`} />
-                  <div className="flex flex-wrap gap-1.5">
-                    {RESUME_KEYWORDS.map((k, i) => (
-                      <div key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
-                        style={{ background: k.found ? "rgba(52,211,153,.1)" : "rgba(239,68,68,.08)", border: `1px solid ${k.found ? C.green + "40" : C.red + "35"}`, color: k.found ? C.green : C.red }}>
-                        {k.found ? <Check size={10} /> : <XCircle size={10} />} {k.word}
+                  <SecHead icon={<Search size={15} />} title="Keyword Coverage" sub={`Audited against ${targetRole} requirements`} />
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Check size={12} className="text-emerald-400" /> Found Keywords ({analysisResult.foundKeywords.length})
                       </div>
-                    ))}
+                      <div className="flex flex-wrap gap-1.5">
+                        {analysisResult.foundKeywords.map((word, i) => (
+                          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                            style={{ background: "rgba(52,211,153,.12)", border: `1px solid ${C.green}40`, color: C.green }}>
+                            <Check size={10} /> {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <XCircle size={12} className="text-red-400" /> Missing Keywords ({analysisResult.missingKeywords.length})
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {analysisResult.missingKeywords.map((word, i) => (
+                          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                            style={{ background: "rgba(239,68,68,.1)", border: `1px solid ${C.red}35`, color: C.red }}>
+                            <Plus size={10} /> {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </Card>
               </div>
             </div>
 
-            {/* ATS bar chart + Comparison */}
+            {/* Detected Skills Cloud */}
+            {analysisResult.detectedSkills.length > 0 && (
+              <Card className="p-5">
+                <SecHead icon={<Cpu size={16} />} title="Detected Technical Skills" sub="Parsed from work experience and projects" />
+                <div className="flex flex-wrap gap-2">
+                  {analysisResult.detectedSkills.map((sk, i) => (
+                    <div key={i} className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-2"
+                      style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                      <span className="text-white font-semibold">{sk.skill}</span>
+                      {sk.category && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(168,85,247,.15)", color: C.purple }}>{sk.category}</span>}
+                      {sk.confidence && <span className="text-[10px]" style={{ color: C.cyan }}>{sk.confidence}%</span>}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* ATS Comparison Chart & Priority Action Plan */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Card className="p-5">
-                <SecHead icon={<Target size={16} />} title="ATS Compatibility" sub="Score vs industry average" />
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart id="ra-ats-bar" data={RESUME_SECTIONS.map(s => ({ name: s.name.split(" ")[0], score: s.score, avg: Math.round(s.score * 0.85) }))}
-                    margin={{ top: 4, right: 4, left: -22, bottom: 0 }} barSize={18} barGap={4}>
+                <SecHead icon={<Target size={16} />} title="ATS Section Benchmarks" sub="Your section scores vs. top candidate percentiles" />
+                <ResponsiveContainer width="100%" height={210}>
+                  <BarChart id="ra-ats-bar"
+                    data={activeSections.map((s) => ({
+                      name: s.name.split(" ")[0],
+                      score: s.score,
+                      avg: Math.min(95, Math.round(s.score * 0.82 + 10)),
+                    }))}
+                    margin={{ top: 4, right: 4, left: -22, bottom: 0 }}
+                    barSize={18}
+                    barGap={4}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
                     <XAxis dataKey="name" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<ChartTip />} />
-                    <Bar dataKey="avg" name="Industry Avg" radius={[3, 3, 0, 0]} fill={C.border} />
-                    <Bar dataKey="score" name="Your Score" radius={[3, 3, 0, 0]} fill={C.purple} fillOpacity={0.85} />
+                    <Bar dataKey="avg" name="Industry Top 20%" radius={[3, 3, 0, 0]} fill={C.border} />
+                    <Bar dataKey="score" name="Your Resume" radius={[3, 3, 0, 0]} fill={C.purple} fillOpacity={0.88} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
 
-              <Card className="p-5">
-                <SecHead icon={<TrendingUp size={16} />} title="Priority Action Plan" sub="Focus on these for the biggest gain" />
-                <div className="space-y-2.5">
-                  {RESUME_SECTIONS.filter(s => s.score < 80).sort((a, b) => a.score - b.score).map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                        style={{ background: i === 0 ? C.red : i === 1 ? C.amber : C.green }}>#{i + 1}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-white">{s.name}</div>
-                        <div className="text-xs" style={{ color: C.muted }}>+{Math.round((80 - s.score) * 0.6)} pts potential gain</div>
+              {/* Priority Action Plan */}
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <SecHead icon={<TrendingUp size={16} />} title="Priority Action Plan" sub="Ranked by estimated ATS score gain" />
+                  <div className="space-y-2.5">
+                    {analysisResult.priorityActionPlan.map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl"
+                        style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                          style={{ background: item.impact === "Critical" ? C.red : item.impact === "High" ? C.amber : C.green }}>
+                          #{i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-white truncate">{item.section}</div>
+                          <div className="text-xs leading-snug line-clamp-2" style={{ color: C.muted }}>{item.action}</div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-xs font-bold" style={{ color: C.green }}>+{item.potential_gain} pts</div>
+                          <div className="text-[10px]" style={{ color: C.muted }}>{item.impact}</div>
+                        </div>
                       </div>
-                      <span className="text-xs font-black" style={{ color: s.color }}>{s.score}%</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-                <button className="w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                  style={{ background: C.grad }}>
-                  <Download size={14} /> Download Full Report
-                </button>
+
+                <div className="mt-5 flex gap-2">
+                  <button
+                    onClick={() => {
+                      const textData = `CRACKIT RESUME EVALUATION REPORT\nRole: ${targetRole}\nOverall Score: ${analysisResult.overallScore}/100\nATS Score: ${analysisResult.atsScore}%\nFeedback: ${analysisResult.summaryFeedback}\n\nTop Missing Keywords: ${analysisResult.missingKeywords.join(", ")}`;
+                      const blob = new Blob([textData], { type: "text/plain" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `Resume_Analysis_${targetRole.replace(/\s+/g, "_")}.txt`;
+                      a.click();
+                    }}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{ background: C.grad }}>
+                    <Download size={14} /> Export Report
+                  </button>
+                  <button
+                    onClick={() => { setStep("upload"); setSelectedFile(null); }}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-300 hover:text-white border border-gray-700 hover:bg-gray-800">
+                    Re-test
+                  </button>
+                </div>
               </Card>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // LINKEDIN ANALYZER PAGE
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const LINKEDIN_SECTIONS = [
   { name: "Profile Photo", score: 100, icon: <Camera size={14} />, color: C.green, tips: ["Great professional photo detected"] },
   { name: "Headline", score: 65, icon: <Hash size={14} />, color: C.amber, tips: ["Add target role keywords", "Mention top skills", "Make it specific not generic"] },
@@ -4784,7 +5388,7 @@ function LinkedInAnalyzerPage() {
                 </div>
                 <div>
                   <div className="text-base font-bold text-white">Enter Your LinkedIn URL</div>
-                  <div className="text-xs" style={{ color: C.muted }}>Public profile analysis — no login required</div>
+                  <div className="text-xs" style={{ color: C.muted }}>Public profile analysis â€” no login required</div>
                 </div>
               </div>
               <div>
@@ -4841,11 +5445,11 @@ function LinkedInAnalyzerPage() {
               <div className="absolute inset-0 flex items-center justify-center"><Linkedin size={28} style={{ color: C.cyan }} /></div>
             </div>
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">Scanning LinkedIn profile…</div>
+              <div className="text-base font-bold text-white mb-1">Scanning LinkedIn profileâ€¦</div>
               <div className="text-sm" style={{ color: C.muted }}>Analyzing {url}</div>
             </div>
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processing…</span><span style={{ color: C.cyan }}>{Math.round(progress)}%</span></div>
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processingâ€¦</span><span style={{ color: C.cyan }}>{Math.round(progress)}%</span></div>
               <div className="h-2 rounded-full" style={{ background: C.border }}>
                 <div className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${progress}%`, background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 0 10px rgba(34,211,238,.5)" }} />
@@ -4860,8 +5464,8 @@ function LinkedInAnalyzerPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Profile Strength", value: `${overallScore}/100`, color: scoreColor, sub: "Needs improvement", grade: "C+" },
-                { label: "Recruiter Visibility", value: "38%", color: C.amber, sub: "Low — below average", grade: "D+" },
-                { label: "Profile Completeness", value: "71%", color: C.cyan, sub: "Missing 3 key sections", grade: "B−" },
+                { label: "Recruiter Visibility", value: "38%", color: C.amber, sub: "Low â€” below average", grade: "D+" },
+                { label: "Profile Completeness", value: "71%", color: C.cyan, sub: "Missing 3 key sections", grade: "Bâˆ’" },
                 { label: "Keyword Optimisation", value: "52%", color: C.red, sub: "Add role-specific keywords", grade: "D" },
               ].map(s => (
                 <Card key={s.label} className="p-5" style={{ border: `1px solid ${s.color}30` }}>
@@ -4962,7 +5566,7 @@ function LinkedInAnalyzerPage() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
                         style={{ background: i < 2 ? C.red : C.amber }}>#{i + 1}</div>
                       <div className="flex-1">
-                        <div className="text-xs font-bold text-white mb-0.5">{s.name} — {s.score}%</div>
+                        <div className="text-xs font-bold text-white mb-0.5">{s.name} â€” {s.score}%</div>
                         <div className="text-xs" style={{ color: C.muted }}>{s.tips[0]}</div>
                       </div>
                     </div>
@@ -4981,9 +5585,9 @@ function LinkedInAnalyzerPage() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PROJECT ANALYZER PAGE
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const PROJECT_SAMPLES = [
   { name: "E-Commerce Web App", tech: ["React", "Node.js", "MongoDB", "Express"], desc: "Full-stack e-commerce platform with cart, auth, and payment integration.", type: "Full Stack" },
   { name: "AI Chatbot", tech: ["Python", "FastAPI", "OpenAI", "React"], desc: "LLM-powered chatbot with context memory and document Q&A features.", type: "AI/ML" },
@@ -5028,7 +5632,7 @@ function ProjectAnalyzerPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(52,211,153,.12)", color: C.green }}><FolderOpen size={18} /></div>
               <h1 className="text-xl font-bold text-white">Project Analyzer</h1>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Get <Grad>AI-powered feedback</Grad> on your projects — know exactly how they'll land in interviews.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>Get <Grad>AI-powered feedback</Grad> on your projects â€” know exactly how they'll land in interviews.</p>
           </div>
           {step === "results" && (
             <button onClick={() => setStep("input")}
@@ -5131,11 +5735,11 @@ function ProjectAnalyzerPage() {
               <div className="absolute inset-0 flex items-center justify-center"><FolderOpen size={28} style={{ color: C.green }} /></div>
             </div>
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">AI is evaluating your project…</div>
+              <div className="text-base font-bold text-white mb-1">AI is evaluating your projectâ€¦</div>
               <div className="text-sm" style={{ color: C.muted }}>Analyzing: {name}</div>
             </div>
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processing…</span><span style={{ color: C.green }}>{Math.round(progress)}%</span></div>
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processingâ€¦</span><span style={{ color: C.green }}>{Math.round(progress)}%</span></div>
               <div className="h-2 rounded-full" style={{ background: C.border }}>
                 <div className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${progress}%`, background: "linear-gradient(135deg,#34D399,#A855F7)", boxShadow: "0 0 10px rgba(52,211,153,.5)" }} />
@@ -5150,7 +5754,7 @@ function ProjectAnalyzerPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Overall Score", value: `${overallScore}/100`, grade: "B", color: C.green, sub: "Above average project" },
-                { label: "Interview Impact", value: "88/100", grade: "A−", color: C.purple, sub: "Will impress interviewers" },
+                { label: "Interview Impact", value: "88/100", grade: "Aâˆ’", color: C.purple, sub: "Will impress interviewers" },
                 { label: "Technical Depth", value: "78/100", grade: "B+", color: C.cyan, sub: "Good complexity level" },
                 { label: "Improvement Potential", value: "+18 pts", grade: "", color: C.amber, sub: "With documentation fixes" },
               ].map(s => (
@@ -5222,9 +5826,9 @@ function ProjectAnalyzerPage() {
                   <div className="flex items-center gap-2 mb-3"><Sparkles size={14} style={{ color: C.purple }} /><span className="text-sm font-bold text-white">Interview Talking Points</span></div>
                   <div className="space-y-2">
                     {[
-                      `"I built ${name} to solve a real problem I faced…"`,
-                      `"The biggest challenge was implementing ${PROJECT_SAMPLES[selected].tech[0]} with real-time sync…"`,
-                      `"I learned about scalability when I had to handle concurrent users…"`,
+                      `"I built ${name} to solve a real problem I facedâ€¦"`,
+                      `"The biggest challenge was implementing ${PROJECT_SAMPLES[selected].tech[0]} with real-time syncâ€¦"`,
+                      `"I learned about scalability when I had to handle concurrent usersâ€¦"`,
                     ].map((p, i) => (
                       <div key={i} className="p-2.5 rounded-xl text-xs text-white leading-snug"
                         style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)" }}>{p}</div>
@@ -5289,7 +5893,7 @@ function ProjectAnalyzerPage() {
   );
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Footer() {
   return (
     <footer className="px-6 py-3 flex items-center justify-between flex-shrink-0"
@@ -5300,7 +5904,7 @@ function Footer() {
           <defs><linearGradient id="footerGrad" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#A855F7"/><stop offset="1" stopColor="#22D3EE"/></linearGradient></defs>
         </svg>
         <span className="text-xs font-semibold" style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>CrackIt</span>
-        <span className="text-xs" style={{ color: C.muted }}>© 2025 · All rights reserved.</span>
+        <span className="text-xs" style={{ color: C.muted }}>(c) 2025 | All rights reserved.</span>
       </div>
       <div className="flex gap-4">
         {["Privacy Policy", "Terms of Service", "Help Center"].map(l => (
@@ -5311,7 +5915,7 @@ function Footer() {
   );
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type Page =
   | "dashboard" | "resume" | "linkedin" | "projects"
   | "subject" | "domain" | "mock" | "roadmap" | "reports"
@@ -5324,13 +5928,35 @@ const ALL_PAGES: Page[] = [
 ];
 
 export default function App() {
+  const { loading, isAuthenticated } = useAuth();
   const [col, setCol] = useState(false);
   const [page, setPage] = useState<Page>("dashboard");
+  const [authView, setAuthView] = useState<"login" | "signup">("login");
+  // Track most recently generated report ID to auto-open it in Reports page
+  const [activeReportId, setActiveReportId] = useState<number | undefined>(undefined);
 
   const handleNav = (id: string) => {
+    if (id !== "reports") setActiveReportId(undefined); // Clear when navigating away
     if (ALL_PAGES.includes(id as Page)) setPage(id as Page);
     else setPage("404");
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center dark" style={{ background: C.bg }}>
+        <div className="animate-spin" style={{ color: C.purple }}>
+          <Loader2 size={32} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    if (authView === "login") {
+      return <LoginPage onGoSignup={() => setAuthView("signup")} />;
+    }
+    return <SignupPage onGoLogin={() => setAuthView("login")} />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden dark"
@@ -5338,16 +5964,22 @@ export default function App() {
       <Sidebar col={col} active={page} onNav={handleNav} onToggle={() => setCol(!col)} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar onToggle={() => setCol(!col)} />
-        <div className="flex flex-1 overflow-hidden">
+        <div key={page} className="flex flex-1 overflow-hidden crackit-page-enter">
           {page === "dashboard" && <ProgressDashboardPage />}
           {page === "resume" && <ResumeAnalyzerPage />}
           {page === "linkedin" && <LinkedInAnalyzerPage />}
           {page === "projects" && <ProjectAnalyzerPage />}
           {page === "subject" && <SubjectPrepPage />}
           {page === "domain" && <DomainPrepPage />}
-          {page === "mock" && <MockInterviewPage onFinish={() => setPage("reports")} />}
+          {page === "mock" && <MockInterviewPage onFinish={(reportId) => {
+            setActiveReportId(reportId);
+            setPage("reports");
+          }} />}
           {page === "roadmap" && <RoadmapPage />}
-          {page === "reports" && <ReportsPage onRetake={() => setPage("mock")} />}
+          {page === "reports" && <ReportsPage
+            initialReportId={activeReportId}
+            onRetake={() => setPage("mock")}
+          />}
           {page === "notifications" && <NotificationsPage />}
           {page === "profile" && <ProfilePage />}
           {page === "settings" && <SettingsPage />}
