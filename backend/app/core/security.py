@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jwt import InvalidTokenError
 
 from app.core.config import SECRET_KEY, ALGORITHM
 
@@ -36,7 +37,7 @@ def verify_token(token: str) -> dict:
         if user_id is None:
             raise credentials_exception
         return payload
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
 
 

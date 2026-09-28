@@ -18,6 +18,7 @@ router = APIRouter(
 async def analyze_resume(
     file: UploadFile = File(...),
     target_role: Optional[str] = Form(None),
+    job_description: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -27,14 +28,16 @@ async def analyze_resume(
     result = await process_resume_upload(
         file=file,
         user_id=current_user["sub"],
-        target_role=target_role
+        target_role=target_role,
+        job_description=job_description,
     )
     return result
 
 
 @router.post("/sample", response_model=ResumeAnalysisResponse)
 def analyze_sample_resume(
-    target_role: Optional[str] = Form("Full Stack Developer")
+    target_role: Optional[str] = Form(None),
+    job_description: Optional[str] = Form(None),
 ):
     """
     Instantly analyze a comprehensive sample software engineer resume using Gemini AI.
@@ -75,7 +78,7 @@ def analyze_sample_resume(
     Bachelor of Science in Computer Science
     University of California, Berkeley | 2017 - 2021
     """
-    analysis = analyze_with_gemini(sample_text, target_role)
+    analysis = analyze_with_gemini(sample_text, target_role=target_role, job_description=job_description)
     return {
         "success": True,
         "resume_id": None,

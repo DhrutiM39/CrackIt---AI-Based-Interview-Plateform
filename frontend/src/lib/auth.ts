@@ -1,18 +1,20 @@
-// ─── Token & User helpers (localStorage) ─────────────────────────────────────
+// ─── Token & User helpers (in-memory only) ────────────────────────────────────
+// Do not persist auth tokens or user data in localStorage or sessionStorage.
+// Browser storage is readable by XSS payloads and browser extensions.
 
-const TOKEN_KEY = "crackit_token";
-const USER_KEY  = "crackit_user";
+let memoryToken: string | null = null;
+let memoryUser: StoredUser | null = null;
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return memoryToken;
 }
 
 export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
+  memoryToken = token;
 }
 
 export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
+  memoryToken = null;
 }
 
 export interface StoredUser {
@@ -22,18 +24,15 @@ export interface StoredUser {
 }
 
 export function getUser(): StoredUser | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw) as StoredUser; }
-  catch { return null; }
+  return memoryUser;
 }
 
 export function setUser(user: StoredUser): void {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  memoryUser = user;
 }
 
 export function clearUser(): void {
-  localStorage.removeItem(USER_KEY);
+  memoryUser = null;
 }
 
 export function clearAuth(): void {

@@ -44,6 +44,29 @@ class ResumeAnalysisResponse(BaseModel):
     message: Optional[str] = None
 
 
+class KeywordEvidence(BaseModel):
+    keyword: str
+    status: str = Field(default="matched")
+    evidence: List[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.0, ge=0, le=1)
+
+
+class RecommendationEntry(BaseModel):
+    priority: str = Field(default="medium")
+    issue: str
+    evidence: List[str] = Field(default_factory=list)
+    why: str
+    recommendation: str
+    section: str = "general"
+
+
+class ResumeTargetContext(BaseModel):
+    role: Optional[str] = None
+    role_source: str = Field(default="not_provided")
+    job_description_provided: bool = False
+    note: str = "No target role or job description provided. Keyword and role-fit analysis is limited to general resume quality."
+
+
 class SectionScore(BaseModel):
     name: str
     score: int

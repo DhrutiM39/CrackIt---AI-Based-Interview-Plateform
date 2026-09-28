@@ -10,7 +10,6 @@ colorama==0.4.6
 cryptography==50.0.0
 deprecation==2.1.0
 dnspython==2.8.0
-ecdsa==0.19.2
 email-validator==2.3.0
 fastapi==0.141.1
 google-ai-generativelanguage==0.6.15
@@ -45,7 +44,6 @@ pydantic_core==2.46.4
 PyJWT==2.13.0
 pyparsing==3.3.2
 python-dotenv==1.2.2
-python-jose==3.5.0
 python-multipart==0.0.32
 realtime==2.31.0
 requests==2.34.2
