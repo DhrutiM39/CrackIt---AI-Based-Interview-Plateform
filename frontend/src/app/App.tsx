@@ -5343,90 +5343,203 @@ const LINKEDIN_SECTIONS = [
 function LinkedInAnalyzerPage() {
   const [step, setStep] = useState<"input" | "analyzing" | "results">("input");
   const [url, setUrl] = useState("linkedin.com/in/dhruti-shah-cs");
+  const [profileText, setProfileText] = useState(
+    "Senior Data Analyst with 4+ years of experience in SQL, Python, Tableau, and BI reporting for SaaS and fintech teams. Built dashboards and KPI frameworks used by product, finance, and leadership stakeholders. Strong background in business intelligence, experiment analysis, customer insights, and stakeholder communication. Experienced in translating raw data into recurring actionable reporting and executive narratives."
+  );
+  const [targetRole, setTargetRole] = useState("Senior Data Analyst");
+  const [location, setLocation] = useState("New York");
+  const [skillsInput, setSkillsInput] = useState("SQL, Python, Power BI, Tableau, BI, Data Analysis");
   const [progress, setProgress] = useState(0);
   const [activeIdx, setActiveIdx] = useState(0);
-  const overallScore = 62;
+  const [analysis, setAnalysis] = useState({
+    overallScore: 78,
+    recruiterScore: 82,
+    completeness: 71,
+    keywordCoverage: 74,
+    sectionScores: [
+      { name: "Headline & Title", score: 86, color: C.green, tips: ["Title is well aligned to the target role", "Add one more keyword for stronger search visibility."] },
+      { name: "About / Summary", score: 73, color: C.amber, tips: ["Add measurable outcomes and stronger impact language", "Mention the role-specific keywords more naturally."] },
+      { name: "Experience", score: 81, color: C.green, tips: ["Strong relevance and business context", "Quantify key outcomes where possible."] },
+      { name: "Skills & Endorsements", score: 69, color: C.amber, tips: ["Prioritize high-value tools and add missing keywords", "Only add skills you genuinely have experience with."] },
+      { name: "Education & Certs", score: 76, color: C.cyan, tips: ["Good foundations; add role-relevant credentials if available."] },
+      { name: "Profile Completeness", score: 74, color: C.cyan, tips: ["Complete final profile polish details", "Add custom URL and any missing supporting information."] },
+    ],
+    matchedKeywords: ["SQL", "Python", "Tableau", "Data Analysis", "Business Intelligence", "Dashboards"],
+    partialKeywords: ["Power BI"],
+    missingKeywords: ["Snowflake", "dbt", "Statistical Analysis", "Product Analytics"],
+    checklist: [
+      { title: "Headline", status: "good", text: "The headline is relevant and includes the target role signal.", reason: "This improves recruiter search relevance.", action: "Add one more strategic keyword to tighten the match." },
+      { title: "About section", status: "needs-work", text: "The summary is relevant but could include a clearer measurable outcome.", reason: "Recruiters scan the overview quickly for value and fit.", action: "Mention one concrete result and one role-specific keyword." },
+      { title: "Experience", status: "good", text: "Your experience demonstrates strong business context and data work.", reason: "This is one of the strongest signals recruiters look for.", action: "Add a metric or a stronger action verb to a top bullet." },
+      { title: "Skills", status: "needs-work", text: "The core skills are present, but a few role-critical keywords are still missing.", reason: "Skill coverage strongly impacts discovery and role fit.", action: "Only add missing skills if you genuinely have this experience." },
+      { title: "Completeness", status: "warning", text: "The profile is mostly complete, but final polish could improve trust.", reason: "Completeness affects perceived professionalism.", action: "Tighten the finishing details and confirm profile accuracy." },
+    ],
+    headlineOptions: [
+      "Senior Data Analyst | SQL, Python, Tableau, BI & Reporting",
+      "Data Analyst specializing in SQL, Python, dashboards, and business insights",
+      "Senior Data Analyst helping teams turn complex data into clear business decisions",
+    ],
+    aboutDraft: "Data Analyst with 4+ years of experience driving business intelligence, KPI reporting, and customer insight initiatives across SaaS and fintech teams. I work with SQL, Python, Tableau, and Power BI to turn fragmented data into clear dashboards, recurring reporting, and actionable recommendations for product, finance, and leadership stakeholders. My work focuses on improving decision quality, identifying trends, and translating operational data into measurable business outcomes.",
+    quickWins: [
+      { title: "Headline gap", text: "Add one more keyword aligned to the target role if it reflects your actual experience." },
+      { title: "Evidence upgrade", text: "Add a concrete metric or business outcome to the strongest experience bullet." },
+      { title: "Skill prioritization", text: "Reorder skills to surface your highest-impact tools first for better search relevance." },
+    ],
+    beforeAfter: { before: 62, after: 84, delta: 22 },
+    simSearch: { title: true, skill: true, headline: true, experience: true, location: true, keywordCoverage: 82 },
+  });
 
-  const startAnalysis = () => {
-    if (!url.trim()) return;
-    setStep("analyzing"); setProgress(0);
-    let p = 0;
-    const iv = setInterval(() => {
-      p += Math.random() * 15 + 6;
-      if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => setStep("results"), 400); }
-      setProgress(Math.min(p, 100));
-    }, 250);
+  const evaluateProfile = (profile: string, role: string, selectedSkills: string, currentUrl: string, currentLocation: string) => {
+    const text = `${profile} ${role} ${selectedSkills} ${currentUrl} ${currentLocation}`.toLowerCase();
+    const matched = ["sql", "python", "tableau", "data analysis", "business intelligence", "dashboards", "reporting", "kpi", "analytics"].filter((term) => text.includes(term));
+    const partial = ["power bi", "statistical analysis", "product analytics", "snowflake", "dbt"].filter((term) => text.includes(term));
+    const missing = ["snowflake", "dbt", "statistical analysis", "product analytics"].filter((term) => !text.includes(term));
+
+    const headlineScore = text.includes(role.toLowerCase()) ? 88 : 74;
+    const aboutScore = Math.min(92, 60 + matched.length * 5);
+    const experienceScore = Math.min(95, 62 + (matched.length > 5 ? 18 : 10));
+    const skillsScore = Math.min(92, 52 + partial.length * 7 + matched.length * 3);
+    const educationScore = 76;
+    const completenessScore = profile.length > 100 ? 74 : 64;
+    const total = Math.round(
+      headlineScore * 0.2 +
+      aboutScore * 0.15 +
+      experienceScore * 0.3 +
+      skillsScore * 0.15 +
+      educationScore * 0.1 +
+      completenessScore * 0.1
+    );
+
+    return {
+      overallScore: total,
+      recruiterScore: Math.min(95, total + 4),
+      completeness: Math.min(95, completenessScore),
+      keywordCoverage: Math.min(96, Math.round((matched.length / 7) * 100)),
+      sectionScores: [
+        { name: "Headline & Title", score: headlineScore, color: headlineScore >= 80 ? C.green : C.amber, tips: ["Title is aligned with the target role", "Add one more high-value keyword for stronger recruiter discovery."] },
+        { name: "About / Summary", score: aboutScore, color: aboutScore >= 80 ? C.green : C.amber, tips: ["Add measurable outcomes and stronger impact language", "Mention target-role keywords naturally and clearly."] },
+        { name: "Experience", score: experienceScore, color: experienceScore >= 80 ? C.green : C.cyan, tips: ["Strong relevance and business context", "Add a few metrics and stronger verbs if available."] },
+        { name: "Skills & Endorsements", score: skillsScore, color: skillsScore >= 80 ? C.green : C.amber, tips: ["Prioritize high-value tools and add missing keywords", "Only add skills that reflect genuine expertise."] },
+        { name: "Education & Certs", score: educationScore, color: C.cyan, tips: ["Good base; consider role-relevant credentials where available."] },
+        { name: "Profile Completeness", score: completenessScore, color: C.cyan, tips: ["Improve final profile polish details", "Complete missing sections and verify custom branding."] },
+      ],
+      matchedKeywords: matched.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
+      partialKeywords: partial.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
+      missingKeywords: missing.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
+      checklist: [
+        { title: "Headline", status: "good", text: "Headline is relevant and includes the target role signal.", reason: "This affects recruiter discovery in search results.", action: "Add one more keyword if the role requires it." },
+        { title: "About section", status: aboutScore >= 75 ? "good" : "needs-work", text: aboutScore >= 75 ? "The summary is clear and role-aware." : "The summary would benefit from stronger evidence and impact language.", reason: "The summary explains your value proposition quickly.", action: aboutScore >= 75 ? "Keep it but tighten the impact framing." : "Add measurable outputs and keyword context." },
+        { title: "Experience bullets", status: "good", text: "Experience shows real business context with reporting and analytics work.", reason: "Detailed proof points are strong recruiter signals.", action: "Quantify one or two major outcomes where possible." },
+        { title: "Skills", status: "needs-work", text: "Relevant abilities are present, but a few role-critical keywords are still missing.", reason: "Search results rely heavily on visible skill coverage.", action: "Add only technologies and tools you truly use or have used." },
+        { title: "Completeness", status: "warning", text: "The profile is mostly complete, but final polish can improve trust.", reason: "Completeness signals professionalism and readiness.", action: "Fill in the remaining profile details and verify brand consistency." },
+      ],
+      headlineOptions: [
+        `${role.replace(/\w/g, (l) => l.toUpperCase())} | SQL, Python, Tableau & BI Reporting`,
+        "Data Analyst specializing in SQL, Python, dashboards, and business insights",
+        `${role.replace(/\w/g, (l) => l.toUpperCase())} delivering actionable insight from data and stakeholder reporting`,
+      ],
+      aboutDraft: `Data Analyst with experience translating data into business decisions across analytics and product teams. I work with SQL, Python, Tableau, and BI dashboards to turn raw operational data into KPI reporting, decision support, and clear stakeholder-ready insights. My work focuses on improving visibility into trends, supporting leadership with data-informed recommendations, and connecting analysis to business outcomes.`,
+      quickWins: [
+        { title: "Keyword gap", text: "Add a missing high-priority keyword only if it reflects real experience, such as Snowflake or dbt." },
+        { title: "Quantified outcomes", text: "Add one concrete metric to the strongest role section to improve trust and impact perception." },
+        { title: "Brand clarity", text: "A sharper headline and summary will materially improve search relevance and recruiter understanding." },
+      ],
+      beforeAfter: { before: 62, after: total, delta: Math.max(0, total - 62) },
+      simSearch: { title: true, skill: true, headline: true, experience: true, location: true, keywordCoverage: Math.min(96, Math.round((matched.length / 7) * 100)) },
+    };
   };
 
-  const scoreColor = overallScore >= 80 ? C.green : overallScore >= 60 ? C.amber : C.red;
+  const startAnalysis = () => {
+    if (!profileText.trim()) return;
+    setStep("analyzing");
+    setProgress(0);
+    let p = 0;
+    const iv = setInterval(() => {
+      p += 18;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(iv);
+        const next = evaluateProfile(profileText, targetRole, skillsInput, url, location);
+        setAnalysis(next);
+        setTimeout(() => setStep("results"), 400);
+      }
+      setProgress(Math.min(p, 100));
+    }, 220);
+  };
+
+  const scoreColor = analysis.overallScore >= 80 ? C.green : analysis.overallScore >= 60 ? C.amber : C.red;
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
       <div className="p-6 space-y-6">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(34,211,238,.12)", color: C.cyan }}><Linkedin size={18} /></div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(34,211,238,.12)", color: C.cyan }}>
+                <Linkedin size={18} />
+              </div>
               <h1 className="text-xl font-bold text-white">LinkedIn Profile Analyzer</h1>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Optimise your LinkedIn to <Grad>attract top recruiters</Grad> and stand out from the crowd.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>
+              Improve recruiter discoverability, keyword alignment, and profile completeness with a transparent, evidence-based score.
+            </p>
           </div>
           {step === "results" && (
-            <button onClick={() => setStep("input")}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+            <button onClick={() => setStep("input")} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
               <RefreshCw size={14} /> Re-analyze
             </button>
           )}
         </div>
 
-        {/* Input step */}
         {step === "input" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-8 flex flex-col gap-6"
-              style={{ background: "linear-gradient(135deg,rgba(34,211,238,.06),rgba(168,85,247,.04))", border: "1px solid rgba(34,211,238,.25)" }}>
-              <div className="flex items-center gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <Card className="xl:col-span-7 p-6" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.06),rgba(168,85,247,.04))", border: "1px solid rgba(34,211,238,.25)" }}>
+              <div className="flex items-center gap-4 mb-5">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "rgba(34,211,238,.12)" }}>
                   <Linkedin size={26} style={{ color: C.cyan }} />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-white">Enter Your LinkedIn URL</div>
-                  <div className="text-xs" style={{ color: C.muted }}>Public profile analysis â€” no login required</div>
+                  <div className="text-base font-bold text-white">Profile intelligence</div>
+                  <div className="text-xs" style={{ color: C.muted }}>Paste text, profile notes, or a public profile URL.</div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Profile URL</label>
-                <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <Globe size={14} style={{ color: C.muted, flexShrink: 0 }} />
-                  <span className="text-xs" style={{ color: C.muted }}>linkedin.com/in/</span>
-                  <input value={url.replace("linkedin.com/in/", "")}
-                    onChange={e => setUrl("linkedin.com/in/" + e.target.value)}
-                    placeholder="your-username"
-                    className="flex-1 text-sm outline-none bg-transparent"
-                    style={{ color: C.text, fontFamily: "'Inter',sans-serif" }} />
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Target role</label>
+                  <input value={targetRole} onChange={(e) => setTargetRole(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Location</label>
+                    <input value={location} onChange={(e) => setLocation(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>LinkedIn URL</label>
+                    <input value={url} onChange={(e) => setUrl(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Skills</label>
+                  <input value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Profile text</label>
+                  <textarea value={profileText} onChange={(e) => setProfileText(e.target.value)} rows={9} className="w-full p-3 rounded-xl outline-none text-sm resize-none" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                </div>
+
+                <button onClick={startAnalysis} className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 6px 20px rgba(34,211,238,.25)" }}>
+                  <Sparkles size={15} /> Analyze profile
+                </button>
               </div>
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-white">Or analyze a sample profile:</div>
-                {["linkedin.com/in/dhruti-shah-cs", "linkedin.com/in/tech-grad-sample"].map((u, i) => (
-                  <button key={i} onClick={() => setUrl(u)}
-                    className="w-full flex items-center gap-2 p-3 rounded-xl text-left text-xs"
-                    style={{ background: url === u ? "rgba(34,211,238,.1)" : C.surface, border: `1px solid ${url === u ? C.cyan + "40" : C.border}`, color: url === u ? C.cyan : C.muted }}>
-                    <Linkedin size={12} /> {u}
-                  </button>
-                ))}
-              </div>
-              <button onClick={startAnalysis}
-                className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 6px 20px rgba(34,211,238,.25)" }}>
-                <Sparkles size={15} /> Analyze Profile
-              </button>
             </Card>
 
-            <div className="space-y-4">
+            <div className="xl:col-span-5 space-y-4">
               <Card className="p-5">
-                <div className="text-sm font-bold text-white mb-3">What Gets Analyzed</div>
+                <div className="text-sm font-bold text-white mb-3">What the analyzer checks</div>
                 <div className="space-y-2">
                   {LINKEDIN_SECTIONS.map((s, i) => (
                     <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -5436,44 +5549,53 @@ function LinkedInAnalyzerPage() {
                   ))}
                 </div>
               </Card>
+
+              <Card className="p-4" style={{ background: "rgba(245,158,11,.06)", border: "1px solid rgba(245,158,11,.2)" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Star size={14} style={{ color: C.amber }} />
+                  <span className="text-xs font-bold text-white">Important note</span>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
+                  This is a simulated recruiter-readiness score based on your provided data and selected target role. It is not LinkedIn’s proprietary ranking algorithm.
+                </p>
+              </Card>
             </div>
           </div>
         )}
 
-        {/* Analyzing */}
         {step === "analyzing" && (
-          <Card className="p-12 flex flex-col items-center gap-6"
-            style={{ background: "linear-gradient(135deg,rgba(34,211,238,.07),rgba(168,85,247,.05))", border: "1px solid rgba(34,211,238,.25)" }}>
+          <Card className="p-12 flex flex-col items-center gap-6" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.07),rgba(168,85,247,.05))", border: "1px solid rgba(34,211,238,.25)" }}>
             <div className="relative w-20 h-20">
               <div className="w-20 h-20 rounded-full animate-spin" style={{ border: `3px solid ${C.border}`, borderTopColor: C.cyan }} />
               <div className="absolute inset-0 flex items-center justify-center"><Linkedin size={28} style={{ color: C.cyan }} /></div>
             </div>
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">Scanning LinkedIn profileâ€¦</div>
-              <div className="text-sm" style={{ color: C.muted }}>Analyzing {url}</div>
+              <div className="text-base font-bold text-white mb-1">Scanning profile…</div>
+              <div className="text-sm" style={{ color: C.cyan }}>Comparing {targetRole} alignment, keyword coverage, and searchability.</div>
             </div>
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processingâ€¦</span><span style={{ color: C.cyan }}>{Math.round(progress)}%</span></div>
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}>
+                <span>Processing</span>
+                <span style={{ color: C.cyan }}>{Math.round(progress)}%</span>
+              </div>
               <div className="h-2 rounded-full" style={{ background: C.border }}>
-                <div className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%`, background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 0 10px rgba(34,211,238,.5)" }} />
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 0 10px rgba(34,211,238,.5)" }} />
               </div>
             </div>
           </Card>
         )}
 
-        {/* Results */}
         {step === "results" && (
-          <>
+          <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Profile Strength", value: `${overallScore}/100`, color: scoreColor, sub: "Needs improvement", grade: "C+" },
-                { label: "Recruiter Visibility", value: "38%", color: C.amber, sub: "Low â€” below average", grade: "D+" },
-                { label: "Profile Completeness", value: "71%", color: C.cyan, sub: "Missing 3 key sections", grade: "Bâˆ’" },
-                { label: "Keyword Optimisation", value: "52%", color: C.red, sub: "Add role-specific keywords", grade: "D" },
-              ].map(s => (
-                <Card key={s.label} className="p-5" style={{ border: `1px solid ${s.color}30` }}>
-                  <div className="flex justify-between items-start mb-3">
+                { label: "Profile Strength", value: `${analysis.overallScore}/100`, color: scoreColor, sub: "Estimated readiness score", grade: analysis.overallScore >= 80 ? "A" : analysis.overallScore >= 60 ? "B" : "C" },
+                { label: "Recruiter Search", value: `${analysis.recruiterScore}/100`, color: C.cyan, sub: "Simulated visibility", grade: "B+" },
+                { label: "Completeness", value: `${analysis.completeness}/100`, color: C.green, sub: "Missing details tracked", grade: "B" },
+                { label: "Keyword Coverage", value: `${analysis.keywordCoverage}%`, color: C.amber, sub: `${analysis.matchedKeywords.length} matched`, grade: "B" },
+              ].map((s) => (
+                <Card key={s.label} className="p-5" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.05),rgba(168,85,247,.05))", border: `1px solid ${s.color}30` }}>
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold" style={{ color: C.muted }}>{s.label}</span>
                     <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${s.color}18`, color: s.color }}>{s.grade}</span>
                   </div>
@@ -5483,115 +5605,187 @@ function LinkedInAnalyzerPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Section scores */}
-              <Card className="md:col-span-2 p-5">
-                <SecHead icon={<Linkedin size={16} />} title="Section Scores" sub="Click a section to see specific tips" />
-                <div className="grid grid-cols-2 gap-2">
-                  {LINKEDIN_SECTIONS.map((s, i) => (
-                    <button key={i} onClick={() => setActiveIdx(i)}
-                      className="flex items-center gap-3 p-3 rounded-xl text-left transition-all"
-                      style={{ background: activeIdx === i ? `${s.color}10` : C.surface, border: `1px solid ${activeIdx === i ? s.color + "40" : C.border}` }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${s.color}15`, color: s.color }}>{s.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-xs font-semibold text-white truncate">{s.name}</span>
-                          <span className="text-xs font-black flex-shrink-0 ml-1" style={{ color: s.color }}>{s.score}</span>
-                        </div>
-                        <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                          <div className="h-full rounded-full" style={{ width: `${s.score}%`, background: s.color }} />
-                        </div>
+            <Card className="p-5" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.08),rgba(168,85,247,.05))", border: "1px solid rgba(34,211,238,.25)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={16} style={{ color: C.cyan }} />
+                <span className="text-sm font-bold text-white">AI profile assessment</span>
+                <span className="text-xs ml-auto" style={{ color: C.muted }}>{url}</span>
+              </div>
+              <p className="text-sm leading-relaxed text-gray-200">
+                “Your profile is strategically relevant and close to target-role fit. The biggest gains come from making your headline sharper, adding measurable evidence in the summary, and making your skill coverage more explicit for recruiter searchability.”
+              </p>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <Card className="lg:col-span-7 p-5">
+                <SecHead icon={<BarChart3 size={16} />} title="Section scores" sub="Score breakdown by profile strength" />
+                <div className="space-y-3">
+                  {analysis.sectionScores.map((section, index) => (
+                    <button key={index} onClick={() => setActiveIdx(index)} className="w-full text-left p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-white">{section.name}</span>
+                        <span className="text-xs font-bold" style={{ color: section.color }}>{section.score}/100</span>
+                      </div>
+                      <div className="h-2 rounded-full" style={{ background: C.border }}>
+                        <div className="h-full rounded-full" style={{ width: `${section.score}%`, background: section.color }} />
                       </div>
                     </button>
                   ))}
                 </div>
               </Card>
 
-              {/* Tips + overall ring */}
-              <div className="space-y-5">
-                <Card className="p-5 flex flex-col items-center gap-3"
-                  style={{ background: "linear-gradient(135deg,rgba(34,211,238,.07),rgba(168,85,247,.05))", border: "1px solid rgba(34,211,238,.2)" }}>
-                  <div className="relative" style={{ width: 100, height: 100 }}>
-                    <svg width={100} height={100} style={{ transform: "rotate(-90deg)" }}>
-                      <circle cx={50} cy={50} r={38} fill="none" stroke={C.border} strokeWidth={8} />
-                      <circle cx={50} cy={50} r={38} fill="none" stroke="url(#li_ringGrad)" strokeWidth={8}
-                        strokeLinecap="round"
-                        strokeDasharray={`${(overallScore / 100) * 2 * Math.PI * 38} ${2 * Math.PI * 38}`} />
-                      <defs><linearGradient id="li_ringGrad" x1="1" y1="0" x2="0" y2="1">
-                        <stop stopColor={C.cyan} /><stop offset="1" stopColor={C.purple} />
-                      </linearGradient></defs>
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-xl font-black" style={{ color: scoreColor }}>{overallScore}</div>
-                      <div className="text-xs" style={{ color: C.muted }}>/ 100</div>
-                    </div>
-                  </div>
-                  <div className="text-xs font-bold text-white">LinkedIn Score</div>
-                  <div className="text-xs text-center" style={{ color: C.muted }}>You're in the bottom 42% of profiles in your field. Use the tips below to improve.</div>
-                </Card>
-
-                <Card className="p-5" style={{ background: `${LINKEDIN_SECTIONS[activeIdx].color}08`, border: `1px solid ${LINKEDIN_SECTIONS[activeIdx].color}30` }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div style={{ color: LINKEDIN_SECTIONS[activeIdx].color }}>{LINKEDIN_SECTIONS[activeIdx].icon}</div>
-                    <span className="text-sm font-bold text-white">{LINKEDIN_SECTIONS[activeIdx].name}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {LINKEDIN_SECTIONS[activeIdx].tips.map((t, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: `${LINKEDIN_SECTIONS[activeIdx].color}08`, border: `1px solid ${LINKEDIN_SECTIONS[activeIdx].color}20` }}>
-                        <ArrowRight size={11} style={{ color: LINKEDIN_SECTIONS[activeIdx].color, flexShrink: 0, marginTop: 1 }} />
-                        <span className="text-xs text-white leading-snug">{t}</span>
+              <div className="lg:col-span-5 space-y-5">
+                <Card className="p-5" style={{ background: `${C.cyan}08`, border: `1px solid ${C.cyan}35` }}>
+                  <SecHead icon={<Lightbulb size={15} />} title={analysis.sectionScores[activeIdx]?.name || "Focus area"} sub="Evidence-backed improvement notes" />
+                  <div className="space-y-2.5">
+                    {(analysis.sectionScores[activeIdx]?.tips || []).map((tip, i) => (
+                      <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${C.cyan}10`, border: `1px solid ${C.cyan}20` }}>
+                        <ArrowRight size={13} style={{ color: C.cyan, flexShrink: 0, marginTop: 2 }} />
+                        <span className="text-xs leading-relaxed text-white">{tip}</span>
                       </div>
                     ))}
+                  </div>
+                </Card>
+
+                <Card className="p-5">
+                  <SecHead icon={<Search size={15} />} title="Keyword coverage" sub={`Compared with ${targetRole}`} />
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5"><Check size={12} className="text-emerald-400" /> Matched</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {analysis.matchedKeywords.map((word, i) => (
+                          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(52,211,153,.12)", border: `1px solid ${C.green}40`, color: C.green }}>
+                            <Check size={10} /> {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5"><Star size={12} className="text-amber-400" /> Partial</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {analysis.partialKeywords.map((word, i) => (
+                          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(245,158,11,.12)", border: `1px solid ${C.amber}40`, color: C.amber }}>
+                            <Star size={10} /> {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5"><XCircle size={12} className="text-red-400" /> Missing</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {analysis.missingKeywords.map((word, i) => (
+                          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(239,68,68,.1)", border: `1px solid ${C.red}35`, color: C.red }}>
+                            <Plus size={10} /> {word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </Card>
               </div>
             </div>
 
-            {/* Radar + quick wins */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <Card className="p-5">
-                <SecHead icon={<BarChart3 size={16} />} title="Profile Radar" sub="8 key dimensions" />
-                <ResponsiveContainer width="100%" height={230}>
-                  <RadarChart id="li-profile-radar" data={LINKEDIN_SECTIONS.map(s => ({ axis: s.name.split(" ")[0], score: s.score }))} margin={{ top: 16, right: 24, bottom: 16, left: 24 }}>
-                    <PolarGrid stroke={C.border} />
-                    <PolarAngleAxis dataKey="axis" tick={{ fill: C.muted, fontSize: 9 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                    <Radar dataKey="score" stroke={C.cyan} fill={C.cyan} fillOpacity={0.18} strokeWidth={2} name="Your Score" />
-                    <Tooltip content={<ChartTip />} />
-                  </RadarChart>
-                </ResponsiveContainer>
+                <SecHead icon={<Target size={16} />} title="Headline suggestions" sub="AI-generated and role-aware" />
+                <div className="space-y-2">
+                  {analysis.headlineOptions.map((headline, idx) => (
+                    <div key={idx} className="p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                      <div className="text-xs font-semibold text-white mb-1">Option {idx + 1}</div>
+                      <div className="text-xs leading-relaxed" style={{ color: C.muted }}>{headline}</div>
+                    </div>
+                  ))}
+                </div>
               </Card>
 
               <Card className="p-5">
-                <SecHead icon={<Zap size={16} />} title="Quick Wins" sub="Highest impact improvements" />
+                <SecHead icon={<FileText size={16} />} title="About draft" sub="Short, professional, and truthful" />
+                <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{analysis.aboutDraft}</p>
+              </Card>
+
+              <Card className="p-5">
+                <SecHead icon={<Shield size={16} />} title="Simulated recruiter search" sub="Search relevance model" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: C.muted }}>Title match</span>
+                    <span style={{ color: C.green }}>{analysis.simSearch.title ? "✓" : "!"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: C.muted }}>Skill match</span>
+                    <span style={{ color: C.green }}>{analysis.simSearch.skill ? "✓" : "!"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: C.muted }}>Headline fit</span>
+                    <span style={{ color: C.green }}>{analysis.simSearch.headline ? "✓" : "!"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: C.muted }}>Location match</span>
+                    <span style={{ color: C.green }}>{analysis.simSearch.location ? "✓" : "!"}</span>
+                  </div>
+                  <div className="mt-2 text-xs font-semibold" style={{ color: C.cyan }}>Keyword coverage: {analysis.simSearch.keywordCoverage}%</div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Card className="p-5">
+                <SecHead icon={<CheckSquare size={16} />} title="Optimization checklist" sub="Live profile review" />
                 <div className="space-y-2.5">
-                  {LINKEDIN_SECTIONS.filter(s => s.score < 70).sort((a, b) => a.score - b.score).slice(0, 5).map((s, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                        style={{ background: i < 2 ? C.red : C.amber }}>#{i + 1}</div>
+                  {analysis.checklist.map((item, i) => (
+                    <div key={i} className="p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-white">{item.title}</span>
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: item.status === "good" ? "rgba(52,211,153,.12)" : item.status === "warning" ? "rgba(245,158,11,.12)" : "rgba(239,68,68,.1)", color: item.status === "good" ? C.green : item.status === "warning" ? C.amber : C.red }}>
+                          {item.status === "good" ? "Good" : item.status === "warning" ? "Warning" : "Needs work"}
+                        </span>
+                      </div>
+                      <div className="text-xs leading-relaxed" style={{ color: C.muted }}>{item.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <SecHead icon={<TrendingUp size={16} />} title="Before / after" sub="Estimated optimization gain" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span style={{ color: C.muted }}>Before</span>
+                      <span className="font-bold text-white">{analysis.beforeAfter.before}/100</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span style={{ color: C.muted }}>After</span>
+                      <span className="font-bold text-emerald-400">{analysis.beforeAfter.after}/100</span>
+                    </div>
+                    <div className="h-2 rounded-full" style={{ background: C.border }}>
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, analysis.beforeAfter.after)}%`, background: "linear-gradient(135deg,#34D399,#22D3EE,#A855F7)" }} />
+                    </div>
+                    <div className="text-xs font-bold" style={{ color: C.green }}>+{analysis.beforeAfter.delta} points</div>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-2.5">
+                  {analysis.quickWins.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0" style={{ background: idx === 0 ? C.red : idx === 1 ? C.amber : C.green }}>#{idx + 1}</div>
                       <div className="flex-1">
-                        <div className="text-xs font-bold text-white mb-0.5">{s.name} â€” {s.score}%</div>
-                        <div className="text-xs" style={{ color: C.muted }}>{s.tips[0]}</div>
+                        <div className="text-xs font-semibold text-white">{item.title}</div>
+                        <div className="text-xs leading-relaxed" style={{ color: C.muted }}>{item.text}</div>
                       </div>
                     </div>
                   ))}
                 </div>
-                <button className="w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                  style={{ background: "linear-gradient(135deg,#22D3EE,#A855F7)" }}>
-                  <Download size={14} /> Download LinkedIn Report
-                </button>
               </Card>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// PROJECT ANALYZER PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const PROJECT_SAMPLES = [
   { name: "E-Commerce Web App", tech: ["React", "Node.js", "MongoDB", "Express"], desc: "Full-stack e-commerce platform with cart, auth, and payment integration.", type: "Full Stack" },
   { name: "AI Chatbot", tech: ["Python", "FastAPI", "OpenAI", "React"], desc: "LLM-powered chatbot with context memory and document Q&A features.", type: "AI/ML" },

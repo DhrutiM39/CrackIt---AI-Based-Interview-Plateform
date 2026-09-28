@@ -3,6 +3,14 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const {
+  analyzeResume,
+  validateSuggestion,
+  setAppConfig,
+  defaultConfig,
+  getScoreHistory,
+  recordScoreHistory,
+} = require('./atsService');
 
 const PORT = process.env.PORT || 8000;
 
@@ -384,20 +392,74 @@ const server = http.createServer((req, res) => {
   }
 
   const reqUrl = req.url || '/';
+  const url = new URL(reqUrl, 'http://localhost');
 
-  // GET / or GET /health
   if (req.method === 'GET' && (reqUrl === '/' || reqUrl === '/health')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'success',
       message: 'CrackIt Backend API is running 🚀',
       service: 'Resume Analyzer & Evaluation Engine',
-      gemini_configured: Boolean(GEMINI_API_KEY && !GEMINI_API_KEY.startsWith('your-'))
+      gemini_configured: Boolean(GEMINI_API_KEY && !GEMINI_API_KEY.startsWith('your-')),
+      useBenchmark: defaultConfig.useBenchmark,
     }));
     return;
   }
 
-  // POST /resume/sample
+  if (req.method === 'POST' && reqUrl.startsWith('/config/setBenchmarkFlag')) {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const buffer = Buffer.concat(chunks).toString('utf8');
+      let body = {};
+      try {
+        body = JSON.parse(buffer || '{}');
+      } catch (err) {
+        body = {};
+      }
+      const useBenchmark = Boolean(body.useBenchmark ?? body.use_benchmark ?? false);
+      setAppConfig({ useBenchmark });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, useBenchmark, message: 'Benchmark flag updated.' }));
+    });
+    return;
+  }
+
+  if (req.method === 'GET' && reqUrl.startsWith('/resume/scoreHistory')) {
+    const resumeId = url.searchParams.get('resumeId') || url.searchParams.get('resume_id') || 'default';
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(getScoreHistory(resumeId)));
+    return;
+  }
+
+  if (req.method === 'POST' && reqUrl.startsWith('/resume/validateRecommendation')) {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const buffer = Buffer.concat(chunks).toString('utf8');
+      let payload = {};
+      try {
+        payload = JSON.parse(buffer || '{}');
+      } catch (err) {
+        payload = {};
+      }
+
+      const suggestionText = payload.newText || payload.new_text || payload.text || payload.suggestion || '';
+      const resume = payload.resume || {};
+      const validation = validateSuggestion({ text: suggestionText }, resume);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        isValid: validation.isValid,
+        missingFacts: validation.missingFacts,
+        recommendationSource: validation.recommendationSource,
+        recommendations: validation.recommendations,
+        success: true,
+      }));
+    });
+    return;
+  }
+
   if (req.method === 'POST' && reqUrl.startsWith('/resume/sample')) {
     let body = [];
     req.on('data', chunk => body.push(chunk));
@@ -418,72 +480,108 @@ EDUCATION: BS Computer Science, UC Berkeley, 2021.`;
         analysis = evaluateResumeLocally(sampleText, 'Full Stack Developer', 'Alexander_Chen_Resume.pdf');
       }
 
+      const result = analyzeResume({
+        headline: 'Full Stack Software Engineer',
+        summary: 'Full Stack Engineer with 3+ years building distributed applications using React and TypeScript.',
+        about: 'Full Stack Engineer with experience in React, TypeScript, Python, and PostgreSQL.',
+        experience: ['Engineered real-time workspace for 120k DAU.', 'Reduced p99 latency by 65%.'],
+        skills: ['React', 'TypeScript', 'Python', 'FastAPI', 'PostgreSQL', 'Docker', 'AWS', 'Git'],
+        education: 'BS Computer Science, UC Berkeley, 2021',
+        projects: ['AI Code Assistant with 1,400+ stars on GitHub.'],
+        text: sampleText,
+      }, { title: 'Full Stack Developer', text: 'React, TypeScript, FastAPI, PostgreSQL, Docker, AWS' }, { useBenchmark: defaultConfig.useBenchmark });
+
+      if (result && result.totalScore) {
+        recordScoreHistory('sample-resume', result);
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         success: true,
         resume_id: null,
-        ats_score: analysis.ats_score,
-        overall_score: analysis.overall_score,
-        ai_feedback: analysis.summary_feedback,
-        full_analysis: analysis,
+        ats_score: result.ats_score,
+        overall_score: result.overall_score,
+        totalScore: result.totalScore,
+        breakdown: result.breakdown,
+        ai_feedback: analysis?.summary_feedback || result.recommendations?.[0]?.message,
+        full_analysis: analysis || result,
         persisted: false,
+        useBenchmark: result.useBenchmark,
+        ...(result.useBenchmark ? { estimatedPercentile: result.estimatedPercentile, benchmarkMessage: result.benchmarkMessage } : {}),
         message: 'Sample resume evaluated successfully'
       }));
     });
     return;
   }
 
-  // POST /resume/analyze
   if (req.method === 'POST' && reqUrl.startsWith('/resume/analyze')) {
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
     req.on('end', async () => {
       const buffer = Buffer.concat(chunks);
+      let parsedBody = {};
       let filename = 'resume.docx';
-      let targetRole = 'Full Stack Developer';
+      let targetRole = '';
       let fileData = buffer;
 
-      const boundaryMatch = req.headers['content-type']?.match(/boundary=(.+)$/);
-      if (boundaryMatch) {
-        const boundary = boundaryMatch[1].trim();
-        const parsed = parseMultipart(buffer, boundary);
-        filename = parsed.filename;
-        targetRole = parsed.targetRole;
-        fileData = parsed.fileBuffer || buffer;
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        try {
+          parsedBody = JSON.parse(buffer.toString('utf8') || '{}');
+        } catch (err) {
+          parsedBody = {};
+        }
+      } else {
+        const boundaryMatch = contentType.match(/boundary=(.+)$/);
+        if (boundaryMatch) {
+          const boundary = boundaryMatch[1].trim();
+          const parsed = parseMultipart(buffer, boundary);
+          filename = parsed.filename;
+          targetRole = parsed.targetRole;
+          fileData = parsed.fileBuffer || buffer;
+          parsedBody.resume = { text: extractTextFromBuffer(fileData, filename) };
+        }
       }
 
-      console.log(`[API] Processing resume upload: "${filename}" for role: "${targetRole}" (${fileData.length} bytes)`);
+      const resumeInput = parsedBody.resume || {};
+      const jobTitle = parsedBody.jobTitle || parsedBody.job_title || parsedBody.targetRole || targetRole || '';
+      const jobDescription = parsedBody.jobDescription || parsedBody.jobDesc || parsedBody.job_description || parsedBody.jobDescText || '';
 
-      // Extract text from uploaded document
-      const extractedText = extractTextFromBuffer(fileData, filename);
-      console.log(`[API] Extracted ${extractedText.length} characters from "${filename}"`);
+      const resume = {
+        headline: resumeInput.headline || resumeInput.title || '',
+        summary: resumeInput.summary || resumeInput.about || '',
+        about: resumeInput.about || resumeInput.summary || '',
+        experience: resumeInput.experience || [],
+        skills: resumeInput.skills || [],
+        education: resumeInput.education || '',
+        projects: resumeInput.projects || [],
+        text: resumeInput.text || extractTextFromBuffer(fileData, filename),
+      };
 
-      // Run Gemini API evaluation or local semantic analyzer
-      let analysis;
-      try {
-        analysis = await callGeminiAPI(extractedText, targetRole);
-        console.log('[API] Evaluated with Google Gemini API');
-      } catch (err) {
-        console.log('[API] Using local semantic evaluation engine:', err.message);
-        analysis = evaluateResumeLocally(extractedText, targetRole, filename);
+      const result = analyzeResume(resume, { title: jobTitle, text: jobDescription }, { useBenchmark: defaultConfig.useBenchmark });
+
+      if (parsedBody.resumeId) {
+        recordScoreHistory(parsedBody.resumeId, result);
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         success: true,
-        resume_id: null,
-        ats_score: analysis.ats_score,
-        overall_score: analysis.overall_score,
-        ai_feedback: analysis.summary_feedback,
-        full_analysis: analysis,
-        persisted: false,
+        resume_id: parsedBody.resumeId || null,
+        totalScore: result.totalScore,
+        ats_score: result.ats_score,
+        overall_score: result.overall_score,
+        breakdown: result.breakdown,
+        recommendations: result.recommendations,
+        claim: result.note,
+        useBenchmark: result.useBenchmark,
+        ...(result.useBenchmark ? { estimatedPercentile: result.estimatedPercentile, benchmarkMessage: result.benchmarkMessage } : {}),
         message: `Resume "${filename}" evaluated successfully`
       }));
     });
     return;
   }
 
-  // 404
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Not found' }));
 });
