@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any
 from datetime import datetime
 
 # ==========================================
@@ -65,6 +65,8 @@ class QuestionBase(BaseModel):
     topic_id: int
     
 class QuestionResponse(QuestionBase):
+    question_type: Optional[Literal["MCQ", "Theory"]] = None
+    options: List[str] = Field(default_factory=list)
     completed: bool = False
     score: Optional[float] = None
     

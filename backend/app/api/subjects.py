@@ -148,6 +148,8 @@ async def get_subject_questions(subject_id: int, current_user: dict = Depends(ge
                 question=q["question"],
                 difficulty=q.get("difficulty"),
                 topic_id=q["topic_id"],
+                question_type=q.get("question_type") or "Theory",
+                options=q.get("options") or [],
                 completed=p.get("completed", False),
                 score=p.get("score")
             ))
