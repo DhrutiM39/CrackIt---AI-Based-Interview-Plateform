@@ -139,6 +139,8 @@ Run the SQL files in the Supabase SQL editor in this order:
 
 For an existing database, apply migrations from `database/migrations/` after the base schema. The interview lifecycle migration adds duplicate-answer protection, question sequence protection, score validation, and interview query indexes.
 
+The subject-wise NPTEL ingestion pipeline uses the existing `subjects`, `topics`, and `questions` columns from `database/schema.sql`; no additional question columns are required. A topic must belong to a valid subject because `topics.subject_id` is a required foreign key.
+
 Review Row-Level Security policies before deployment. Use the Supabase service-role key only on the backend.
 
 ## Local Development
@@ -202,6 +204,17 @@ The FastAPI application groups endpoints by feature:
 | Notifications | `/notifications` |
 
 The complete request and response schemas are available in Swagger UI at `/docs` while the backend is running.
+
+### Import NPTEL subject material
+
+Copy `backend/.env.example` to `backend/.env`, then set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `GEMINI_API_KEY`. The service-role key bypasses RLS, so keep it backend-only and never expose it to frontend code or commit it. The pipeline accepts a YouTube playlist, one or more video IDs, and/or local text-based PDF files. From `backend/`, run:
+
+```powershell
+python -m app.services.subject_ingestion.main --subject "Control Systems" --playlist-id PL_PLAYLIST_ID
+python -m app.services.subject_ingestion.main --subject "Control Systems" --video-id VIDEO_ID --pdf "..\materials\assignment.pdf"
+```
+
+Each source is transcribed/extracted, parsed by Gemini into validated preparation records, and written to `subjects`, `topics`, and `questions`. Re-running a source updates its questions using stable source-scoped IDs. Videos without available transcripts are skipped; the command fails if no transcript can be fetched.
 
 ## Security and Privacy
 
