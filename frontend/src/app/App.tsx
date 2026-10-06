@@ -226,59 +226,79 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
 const SUBJECTS = [
   {
     id: "dsa", name: "Data Structures & Algorithms", icon: "DSA", color: C.purple,
-    progress: 68, difficulty: "Hard", total: 120, done: 82, streak: 7,
+    progress: 0, difficulty: "Hard", total: 120, done: 0, streak: 0,
     tags: ["Arrays", "Trees", "Graphs", "DP"],
+    description: "Master the foundation of every technical interview — arrays, trees, graphs, DP and more.",
+    ytLink: "https://www.youtube.com/playlist?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA",
   },
   {
     id: "dbms", name: "DBMS", icon: "DB", color: C.cyan,
-    progress: 55, difficulty: "Medium", total: 80, done: 44, streak: 3,
+    progress: 0, difficulty: "Medium", total: 80, done: 0, streak: 0,
     tags: ["Normalization", "Transactions", "Indexing"],
+    description: "Understand relational databases, SQL, normalization and transaction management.",
+    ytLink: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y",
   },
   {
     id: "os", name: "Operating Systems", icon: "OS", color: C.green,
-    progress: 72, difficulty: "Hard", total: 95, done: 68, streak: 5,
+    progress: 0, difficulty: "Hard", total: 95, done: 0, streak: 0,
     tags: ["Processes", "Memory", "Scheduling"],
+    description: "Deep dive into process management, memory, scheduling and OS internals.",
+    ytLink: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiGz9donHRrE9I3Mwn6XdP8p",
   },
   {
     id: "cn", name: "Computer Networks", icon: "NET", color: C.amber,
-    progress: 41, difficulty: "Medium", total: 75, done: 31, streak: 0,
+    progress: 0, difficulty: "Medium", total: 75, done: 0, streak: 0,
     tags: ["OSI Model", "TCP/IP", "DNS"],
+    description: "Learn networking from OSI layers to TCP/IP protocols and web security.",
+    ytLink: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiGFBD2-2joCpWOLUrDLvVV_",
   },
   {
     id: "oop", name: "Object-Oriented Programming", icon: "OOP", color: C.indigo,
-    progress: 88, difficulty: "Easy", total: 60, done: 53, streak: 12,
+    progress: 0, difficulty: "Easy", total: 60, done: 0, streak: 0,
     tags: ["Polymorphism", "Inheritance", "SOLID"],
+    description: "Grasp OOP pillars, design patterns and SOLID principles used in real systems.",
+    ytLink: "https://www.youtube.com/playlist?list=PLu0W_9lII9ahfRrhFcoB-4lpp9YaBmdCP",
   },
   {
     id: "sql", name: "SQL", icon: "SQL", color: C.teal,
-    progress: 61, difficulty: "Medium", total: 70, done: 43, streak: 2,
+    progress: 0, difficulty: "Medium", total: 70, done: 0, streak: 0,
     tags: ["Joins", "Aggregations", "Indexes"],
+    description: "Write efficient SQL queries covering joins, aggregations and query optimization.",
+    ytLink: "https://www.youtube.com/watch?v=KKgN_w71x3E&list=PLjVLYmrlmjGeyCPgdHL2vWmEGKxcpsC0E",
   },
   {
     id: "apt", name: "Aptitude", icon: "APT", color: C.pink,
-    progress: 45, difficulty: "Easy", total: 100, done: 45, streak: 1,
+    progress: 0, difficulty: "Easy", total: 100, done: 0, streak: 0,
     tags: ["Quant", "Logical", "Verbal"],
+    description: "Sharpen your quantitative, logical and verbal reasoning for campus placements.",
+    ytLink: "https://www.youtube.com/playlist?list=PLpyc33gOcbVA4qXMoQ5vmhefTruk5t9lt",
   },
   {
     id: "hr", name: "HR Interview", icon: "HR", color: C.amber,
-    progress: 79, difficulty: "Easy", total: 50, done: 39, streak: 8,
+    progress: 0, difficulty: "Easy", total: 50, done: 0, streak: 0,
     tags: ["STAR Method", "Behavioral", "Situational"],
+    description: "Prepare for behavioural interviews using STAR method and situational responses.",
+    ytLink: "https://www.youtube.com/results?search_query=TCS+HR+interview+questions+freshers+playlist",
   },
 ];
 
 const diffColor = (d: string) => d === "Hard" ? C.red : d === "Medium" ? C.amber : C.green;
 
-function SubjectCard({ s, onSelect, selected }: { s: typeof SUBJECTS[0]; onSelect: () => void; selected: boolean }) {
+function SubjectCard({ s, onSelect, selected, enrolled, onEnroll, onContinue }: {
+  s: typeof SUBJECTS[0]; onSelect: () => void; selected: boolean;
+  enrolled: boolean; onEnroll: () => void; onContinue: () => void;
+}) {
   return (
     <div
-      onClick={onSelect}
+      onClick={enrolled ? onSelect : onEnroll}
       className="rounded-2xl p-5 cursor-pointer transition-all hover:scale-[1.02] flex flex-col gap-4"
       style={{
-        background: selected
+        background: selected && enrolled
           ? `linear-gradient(135deg,${s.color}18,${s.color}08)`
           : C.card,
-        border: selected ? `1px solid ${s.color}50` : `1px solid ${C.border}`,
-        boxShadow: selected ? `0 0 32px ${s.color}18` : "0 4px 20px rgba(0,0,0,.25)",
+        border: selected && enrolled ? `1px solid ${s.color}50` : `1px solid ${C.border}`,
+        boxShadow: selected && enrolled ? `0 0 32px ${s.color}18` : "0 4px 20px rgba(0,0,0,.25)",
+        opacity: enrolled ? 1 : 0.85,
       }}
     >
       {/* Top row */}
@@ -292,7 +312,7 @@ function SubjectCard({ s, onSelect, selected }: { s: typeof SUBJECTS[0]; onSelec
             style={{ background: `${diffColor(s.difficulty)}15`, color: diffColor(s.difficulty) }}>
             {s.difficulty}
           </span>
-          {s.streak > 0 && (
+          {enrolled && s.streak > 0 && (
             <div className="flex items-center gap-1 text-xs" style={{ color: C.amber }}>
               <Flame size={11} /> {s.streak}d
             </div>
@@ -311,39 +331,63 @@ function SubjectCard({ s, onSelect, selected }: { s: typeof SUBJECTS[0]; onSelec
         </div>
       </div>
 
-      {/* Progress */}
-      <div>
-        <div className="flex justify-between text-xs mb-1.5">
-          <span style={{ color: C.muted }}>{s.done}/{s.total} topics</span>
-          <span className="font-bold" style={{ color: s.color }}>{s.progress}%</span>
+      {/* Progress (only if enrolled) */}
+      {enrolled ? (
+        <div>
+          <div className="flex justify-between text-xs mb-1.5">
+            <span style={{ color: C.muted }}>{s.done}/{s.total} topics</span>
+            <span className="font-bold" style={{ color: s.color }}>{s.progress}%</span>
+          </div>
+          <div className="h-2 rounded-full" style={{ background: C.border }}>
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${s.progress}%`, background: s.color, boxShadow: `0 0 8px ${s.color}50` }} />
+          </div>
         </div>
-        <div className="h-2 rounded-full" style={{ background: C.border }}>
-          <div className="h-full rounded-full transition-all"
-            style={{ width: `${s.progress}%`, background: s.color, boxShadow: `0 0 8px ${s.color}50` }} />
+      ) : (
+        <div className="flex items-center gap-2 text-xs" style={{ color: C.muted }}>
+          <Lock size={11} /> {s.total} topics · Not enrolled
         </div>
-      </div>
+      )}
 
       {/* CTA */}
-      <button
-        onClick={e => { e.stopPropagation(); onSelect(); }}
-        className="w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
-        style={{ background: selected ? s.color : C.surface, border: `1px solid ${selected ? s.color : C.border}`, color: selected ? "#fff" : C.muted }}>
-        <Play size={11} fill={selected ? "#fff" : "none"} />
-        {s.progress > 0 ? "Continue Learning" : "Start Learning"}
-      </button>
+      {enrolled ? (
+        <button
+          onClick={e => { e.stopPropagation(); onContinue(); }}
+          className="w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
+          style={{ background: selected ? s.color : C.surface, border: `1px solid ${selected ? s.color : C.border}`, color: selected ? "#fff" : C.muted }}>
+          <Play size={11} fill={selected ? "#fff" : "none"} />
+          {s.progress > 0 ? "Continue Learning" : "Start Learning"}
+        </button>
+      ) : (
+        <button
+          onClick={e => { e.stopPropagation(); onEnroll(); }}
+          className="w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
+          style={{ background: `${s.color}15`, border: `1px solid ${s.color}30`, color: s.color }}>
+          <Plus size={11} /> Enroll in this Course
+        </button>
+      )}
     </div>
   );
 }
 
 function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
-  const [topics, setTopics] = useState([
-    { name: "Arrays & Strings", done: true, q: 24, current: false },
-    { name: "Linked Lists", done: true, q: 18, current: false },
-    { name: "Binary Trees", done: true, q: 21, current: false },
-    { name: "Binary Search Trees", done: false, q: 15, current: true },
-    { name: "Heaps & Priority Queues", done: false, q: 12, current: false },
-    { name: "Graphs (BFS/DFS)", done: false, q: 20, current: false },
-    { name: "Dynamic Programming", done: false, q: 28, current: false },
+  const [topics, setTopics] = useState(s.id === "hr" ? [
+    { name: "TCS HR Interview Questions", done: false, q: 15, current: true, ytLink: "https://www.youtube.com/results?search_query=TCS+HR+interview+questions+freshers+playlist" },
+    { name: "Infosys HR Interview Questions", done: false, q: 12, current: false, ytLink: "https://www.youtube.com/results?search_query=Infosys+HR+interview+questions+freshers+playlist" },
+    { name: "Accenture HR Interview Questions", done: false, q: 10, current: false, ytLink: "https://www.youtube.com/results?search_query=Accenture+HR+interview+questions+freshers+playlist" },
+    { name: "Cognizant GenC HR Interview", done: false, q: 18, current: false, ytLink: "https://www.youtube.com/results?search_query=Cognizant+GenC+HR+interview+questions+playlist" },
+    { name: "Capgemini HR Interview", done: false, q: 14, current: false, ytLink: "https://www.youtube.com/results?search_query=Capgemini+HR+interview+questions+freshers+playlist" },
+    { name: "Wipro HR Interview", done: false, q: 10, current: false, ytLink: "https://www.youtube.com/results?search_query=Wipro+HR+interview+questions+freshers+playlist" },
+    { name: "HCLTech HR Interview", done: false, q: 8, current: false, ytLink: "https://www.youtube.com/results?search_query=HCLTech+HR+interview+questions+freshers+playlist" },
+    { name: "Tech Mahindra HR Interview", done: false, q: 11, current: false, ytLink: "https://www.youtube.com/results?search_query=Tech+Mahindra+HR+interview+questions+freshers+playlist" }
+  ] : [
+    { name: "Arrays & Strings", done: true, q: 24, current: false, ytLink: s.ytLink },
+    { name: "Linked Lists", done: true, q: 18, current: false, ytLink: s.ytLink },
+    { name: "Binary Trees", done: true, q: 21, current: false, ytLink: s.ytLink },
+    { name: "Binary Search Trees", done: false, q: 15, current: true, ytLink: s.ytLink },
+    { name: "Heaps & Priority Queues", done: false, q: 12, current: false, ytLink: s.ytLink },
+    { name: "Graphs (BFS/DFS)", done: false, q: 20, current: false, ytLink: s.ytLink },
+    { name: "Dynamic Programming", done: false, q: 28, current: false, ytLink: s.ytLink },
   ]);
   const [questions, setQuestions] = useState<any[]>([]);
 
@@ -398,11 +442,13 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
       </div>
 
       {/* Topic progress tracker */}
-      <Card className="p-5">
+      <Card id="topic-tracker" className="p-5">
         <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} — chapter by chapter`} />
         <div className="space-y-2">
           {topics.map(t => (
-            <div key={t.name} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
+            <div key={t.name} 
+              onClick={() => { if (t.ytLink) window.open(t.ytLink, "_blank"); }}
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.ytLink ? "cursor-pointer hover:scale-[1.01]" : ""}`}
               style={{ background: t.current ? `${s.color}10` : C.surface, border: `1px solid ${t.current ? s.color + "40" : C.border}` }}>
               <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: t.done ? `${C.green}20` : t.current ? `${s.color}20` : C.border, border: `1px solid ${t.done ? C.green : t.current ? s.color : C.border}` }}>
@@ -411,6 +457,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
               <span className="flex-1 text-xs font-medium" style={{ color: t.done ? C.muted : t.current ? C.text : C.muted }}>
                 {t.name}
               </span>
+              {t.ytLink && <Pill label="Watch Playlist" color={C.red} />}
               {t.current && <Pill label="In Progress" color={s.color} />}
               <span className="text-xs" style={{ color: C.muted }}>{t.q} questions</span>
               {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>✓ Done</span>}
@@ -638,41 +685,93 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
   );
 }
 
-function SubjectPrepPage() {
-  const [subjectsList, setSubjectsList] = useState<any[]>(SUBJECTS);
-  const [selected, setSelected] = useState("dsa");
+function SubjectPrepPage({
+  enrolled, setEnrolled, subjectsList, setSubjectsList
+}: {
+  enrolled: Set<string>; setEnrolled: React.Dispatch<React.SetStateAction<Set<string>>>;
+  subjectsList: typeof SUBJECTS; setSubjectsList: React.Dispatch<React.SetStateAction<typeof SUBJECTS>>;
+}) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [enrollPreview, setEnrollPreview] = useState<string | null>(null); // id of subject pending enrollment confirm
 
-  useEffect(() => {
-    subjectsApi.getAll().then(res => {
-      if (res && res.length > 0) {
-        const mapped = res.map((s: any, i: number) => ({
-          id: String(s.id),
-          name: s.subject_name,
-          icon: s.icon || "📚",
-          color: [C.purple, C.cyan, C.green, C.amber, C.indigo, C.teal, C.pink, C.amber][i % 8],
-          progress: s.progress,
-          difficulty: s.difficulty || "Medium",
-          total: s.total_topics || 1,
-          done: s.done_topics || 0,
-          streak: s.streak || 0,
-          tags: s.tags || []
-        }));
-        setSubjectsList(mapped);
-        setSelected(mapped[0].id);
-      }
-    }).catch(err => console.error("Error fetching subjects:", err));
-  }, []);
+  const enrolledSubjects = subjectsList.filter(s => enrolled.has(s.id));
+  const selectedSubject = selected ? subjectsList.find(s => s.id === selected) : null;
 
-  const selectedSubject = subjectsList.find(s => s.id === selected) || subjectsList[0];
+  const overallProgress = enrolledSubjects.length > 0
+    ? Math.round(enrolledSubjects.reduce((a, s) => a + s.progress, 0) / enrolledSubjects.length)
+    : 0;
+  const totalDone = enrolledSubjects.reduce((a, s) => a + s.done, 0);
+  const totalTopics = enrolledSubjects.reduce((a, s) => a + s.total, 0);
 
-  const overallProgress = subjectsList.length > 0 ? Math.round(subjectsList.reduce((a, s) => a + s.progress, 0) / subjectsList.length) : 0;
-  const totalDone = subjectsList.reduce((a, s) => a + s.done, 0);
-  const totalTopics = subjectsList.reduce((a, s) => a + s.total, 0);
+  const radarData = enrolledSubjects.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
 
-  const radarData = subjectsList.slice(0, 6).map(s => ({ subject: s.name.split(" ")[0], A: s.progress }));
+  const handleEnroll = (id: string) => {
+    setEnrolled(prev => new Set([...prev, id]));
+    setEnrollPreview(null);
+    setSelected(id);
+  };
+
+  const previewSubject = enrollPreview ? subjectsList.find(s => s.id === enrollPreview) : null;
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+      {/* Enrollment Confirmation Modal */}
+      {previewSubject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(13,23,36,0.88)", backdropFilter: "blur(12px)" }}>
+          <div className="w-full max-w-md rounded-2xl p-8"
+            style={{ background: C.card, border: `1px solid ${previewSubject.color}40`, boxShadow: "0 32px 80px rgba(0,0,0,.6)" }}>
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ background: `${previewSubject.color}18`, border: `1px solid ${previewSubject.color}30`, boxShadow: `0 0 40px ${previewSubject.color}20` }}>
+                {previewSubject.icon}
+              </div>
+            </div>
+            {/* Text */}
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-black text-white mb-2">{previewSubject.name}</h2>
+              <p className="text-sm mb-4" style={{ color: C.muted }}>{previewSubject.description}</p>
+              {/* Course meta */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                {[
+                  { label: "Topics", value: `${previewSubject.total}`, icon: <BookOpen size={14} /> },
+                  { label: "Difficulty", value: previewSubject.difficulty, icon: <Zap size={14} /> },
+                  { label: "Free", value: "100%", icon: <Check size={14} /> },
+                ].map(m => (
+                  <div key={m.label} className="p-3 rounded-xl text-center"
+                    style={{ background: `${previewSubject.color}10`, border: `1px solid ${previewSubject.color}25` }}>
+                    <div className="flex justify-center mb-1" style={{ color: previewSubject.color }}>{m.icon}</div>
+                    <div className="text-sm font-black text-white">{m.value}</div>
+                    <div className="text-xs" style={{ color: C.muted }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Tags */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {previewSubject.tags.map((t: string) => (
+                <span key={t} className="text-xs px-2.5 py-1 rounded-lg"
+                  style={{ background: `${previewSubject.color}15`, color: previewSubject.color, border: `1px solid ${previewSubject.color}30` }}>{t}</span>
+              ))}
+            </div>
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button onClick={() => setEnrollPreview(null)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold"
+                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                Not now
+              </button>
+              <button onClick={() => handleEnroll(previewSubject.id)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                style={{ background: C.grad, boxShadow: "0 8px 20px rgba(49,83,109,.4)" }}>
+                <Plus size={14} /> Enroll Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-6">
         {/* Page header */}
         <div className="flex items-start justify-between mb-6">
@@ -685,105 +784,175 @@ function SubjectPrepPage() {
               <h1 className="text-xl font-bold text-white">Subject-wise Preparation</h1>
             </div>
             <p className="text-sm ml-12" style={{ color: C.muted }}>
-              Master core computer science subjects with <Grad>AI-powered learning</Grad>.
+              Enroll in subjects and master core CS topics with <Grad>AI-powered learning</Grad>.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-              style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-              <Download size={14} /> Export Progress
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background: C.grad }}>
-              <Play size={14} /> Continue Learning
-            </button>
+            {enrolledSubjects.length > 0 && selectedSubject && (
+              <button 
+                onClick={() => {
+                  // Simulate progress increment when launching learning content
+                  const step = Math.ceil(selectedSubject.total * 0.1); // add 10% progress
+                  const newDone = Math.min(selectedSubject.done + step, selectedSubject.total);
+                  const newProgress = Math.round((newDone / selectedSubject.total) * 100);
+                  const newStreak = Math.max(selectedSubject.streak, 1);
+                  
+                  setSubjectsList(prev => prev.map(s => 
+                    s.id === selectedSubject.id ? { ...s, done: newDone, progress: newProgress, streak: newStreak } : s
+                  ));
+                  
+                  if (selectedSubject.id === "hr") {
+                    document.getElementById("topic-tracker")?.scrollIntoView({ behavior: "smooth" });
+                    return;
+                  }
+                  
+                  // Open YouTube playlist link in new tab
+                  window.open(selectedSubject.ytLink, "_blank");
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-transform hover:scale-105"
+                style={{ background: C.grad }}>
+                <Play size={16} fill="#fff" /> {selectedSubject.progress > 0 ? "Continue Learning" : "Start Learning"}
+              </button>
+            )}
+            {enrolledSubjects.length > 0 && (
+              <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
+                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                <Download size={14} /> Export
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Overall stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "Overall Progress", value: `${overallProgress}%`, icon: <TrendingUp size={16} />, color: C.purple },
-            { label: "Topics Completed", value: `${totalDone}/${totalTopics}`, icon: <Check size={16} />, color: C.cyan },
-            { label: "Current Streak", value: "14 days", icon: <Flame size={16} />, color: C.amber },
-            { label: "Subjects Active", value: `${subjectsList.filter(s => s.progress > 0).length}/${subjectsList.length}`, icon: <BookOpen size={16} />, color: C.green },
-          ].map(s => (
-            <Card key={s.label} className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${s.color}18`, color: s.color }}>{s.icon}</div>
-              <div>
-                <div className="text-lg font-black text-white">{s.value}</div>
-                <div className="text-xs" style={{ color: C.muted }}>{s.label}</div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        {/* Overall stats — only shown after at least one enrollment */}
+        {enrolledSubjects.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: "Overall Progress", value: `${overallProgress}%`, icon: <TrendingUp size={16} />, color: C.purple },
+              { label: "Topics Completed", value: `${totalDone}/${totalTopics}`, icon: <Check size={16} />, color: C.cyan },
+              { label: "Enrolled Subjects", value: `${enrolledSubjects.length}/${subjectsList.length}`, icon: <BookOpen size={16} />, color: C.green },
+              { label: "Active Streak", value: `${enrolledSubjects.reduce((max, s) => Math.max(max, s.streak), 0)}d`, icon: <Flame size={16} />, color: C.amber },
+            ].map(st => (
+              <Card key={st.label} className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${st.color}18`, color: st.color }}>{st.icon}</div>
+                <div>
+                  <div className="text-lg font-black text-white">{st.value}</div>
+                  <div className="text-xs" style={{ color: C.muted }}>{st.label}</div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="mb-6 p-5 rounded-2xl flex items-center gap-4"
+            style={{ background: `${C.purple}08`, border: `1px solid ${C.purple}25` }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${C.purple}18`, color: C.purple }}>
+              <BookOpen size={22} />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-white mb-1">Start by enrolling in a subject</div>
+              <div className="text-xs" style={{ color: C.muted }}>Click any subject card below to preview and enroll. Each course is completely free.</div>
+            </div>
+          </div>
+        )}
 
         {/* Subject cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
           {subjectsList.map(s => (
-            <SubjectCard key={s.id} s={s} selected={selected === s.id} onSelect={() => setSelected(s.id)} />
+            <SubjectCard
+              key={s.id}
+              s={s}
+              selected={selected === s.id}
+              enrolled={enrolled.has(s.id)}
+              onSelect={() => setSelected(s.id)}
+              onEnroll={() => setEnrollPreview(s.id)}
+              onContinue={() => {
+                const step = Math.ceil(s.total * 0.1); 
+                const newDone = Math.min(s.done + step, s.total);
+                const newProgress = Math.round((newDone / s.total) * 100);
+                const newStreak = Math.max(s.streak, 1);
+                setSubjectsList(prev => prev.map(sub => sub.id === s.id ? { ...sub, done: newDone, progress: newProgress, streak: newStreak } : sub));
+                
+                if (s.id === "hr") {
+                  setSelected(s.id);
+                  setTimeout(() => {
+                    document.getElementById("topic-tracker")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 100);
+                  return;
+                }
+                
+                window.open(s.ytLink, "_blank");
+              }}
+            />
           ))}
         </div>
 
-        {/* Recent Learning Progress + Radar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<BarChart3 size={16} />} title="Recent Learning Progress"
-              sub="Weekly topic completion trend" />
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart id="sp-progress-area"
-                data={[
-                  { day: "Mon", dsa: 4, dbms: 2, os: 3 },
-                  { day: "Tue", dsa: 6, dbms: 3, os: 2 },
-                  { day: "Wed", dsa: 3, dbms: 4, os: 5 },
-                  { day: "Thu", dsa: 7, dbms: 2, os: 4 },
-                  { day: "Fri", dsa: 5, dbms: 5, os: 3 },
-                  { day: "Sat", dsa: 8, dbms: 3, os: 6 },
-                  { day: "Sun", dsa: 4, dbms: 6, os: 2 },
-                ]}
-                margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-                <XAxis dataKey="day" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTip />} />
-                <Area type="monotone" dataKey="dsa" stroke={C.purple} fill={C.purple} fillOpacity={0.15} strokeWidth={2} name="DSA" />
-                <Area type="monotone" dataKey="os" stroke={C.cyan} fill={C.cyan} fillOpacity={0.12} strokeWidth={2} name="OS" />
-                <Area type="monotone" dataKey="dbms" stroke={C.green} fill="none" strokeWidth={2} name="DBMS" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
+        {/* Charts & Detail — only shown if enrolled in at least one subject */}
+        {enrolledSubjects.length > 0 ? (
+          <>
+            {/* Recent Learning Progress + Radar */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+              <Card className="md:col-span-2 p-5">
+                <SecHead icon={<BarChart3 size={16} />} title="Recent Learning Progress"
+                  sub="Weekly topic completion trend" />
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart id="sp-progress-area"
+                    data={[
+                      { day: "Mon", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Tue", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Wed", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Thu", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Fri", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Sat", dsa: 0, dbms: 0, os: 0 },
+                      { day: "Sun", dsa: 0, dbms: 0, os: 0 },
+                    ]}
+                    margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                    <XAxis dataKey="day" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<ChartTip />} />
+                    <Area type="monotone" dataKey="dsa" stroke={C.purple} fill={C.purple} fillOpacity={0.15} strokeWidth={2} name="DSA" />
+                    <Area type="monotone" dataKey="os" stroke={C.cyan} fill={C.cyan} fillOpacity={0.12} strokeWidth={2} name="OS" />
+                    <Area type="monotone" dataKey="dbms" stroke={C.green} fill="none" strokeWidth={2} name="DBMS" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Card>
 
-          <Card className="p-5">
-            <SecHead icon={<Crosshair size={16} />} title="Subject Mastery Radar" />
-            <ResponsiveContainer width="100%" height={200}>
-              <RadarChart id="sp-mastery-radar" data={radarData} margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
-                <PolarGrid stroke={C.border} />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: C.muted, fontSize: 9 }} />
-                <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                <Radar dataKey="A" stroke={C.purple} fill={C.purple} fillOpacity={0.18} strokeWidth={2} />
-                <Tooltip content={<ChartTip />} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        {/* Detail panel for selected subject */}
-        <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
-          style={{ background: `${selectedSubject.color}10`, border: `1px solid ${selectedSubject.color}35` }}>
-          <span className="text-2xl">{selectedSubject.icon}</span>
-          <div>
-            <div className="text-sm font-bold text-white">Detailed View: {selectedSubject.name}</div>
-            <div className="text-xs" style={{ color: C.muted }}>
-              {selectedSubject.progress}% complete · {selectedSubject.done}/{selectedSubject.total} topics
+              <Card className="p-5">
+                <SecHead icon={<Crosshair size={16} />} title="Subject Mastery Radar" />
+                <ResponsiveContainer width="100%" height={200}>
+                  <RadarChart id="sp-mastery-radar" data={radarData} margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
+                    <PolarGrid stroke={C.border} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: C.muted, fontSize: 9 }} />
+                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                    <Radar dataKey="A" stroke={C.purple} fill={C.purple} fillOpacity={0.18} strokeWidth={2} />
+                    <Tooltip content={<ChartTip />} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </Card>
             </div>
-          </div>
-          <div className="ml-auto">
-            <Pill label={selectedSubject.difficulty} color={diffColor(selectedSubject.difficulty)} />
-          </div>
-        </div>
-        <SubjectDetailPanel s={selectedSubject} />
+
+            {/* Detail panel for selected subject */}
+            {selectedSubject && (
+              <>
+                <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
+                  style={{ background: `${selectedSubject.color}10`, border: `1px solid ${selectedSubject.color}35` }}>
+                  <span className="text-2xl">{selectedSubject.icon}</span>
+                  <div>
+                    <div className="text-sm font-bold text-white">Detailed View: {selectedSubject.name}</div>
+                    <div className="text-xs" style={{ color: C.muted }}>
+                      {selectedSubject.progress}% complete · {selectedSubject.done}/{selectedSubject.total} topics
+                    </div>
+                  </div>
+                  <div className="ml-auto">
+                    <Pill label={selectedSubject.difficulty} color={diffColor(selectedSubject.difficulty)} />
+                  </div>
+                </div>
+                <SubjectDetailPanel key={selectedSubject.id} s={selectedSubject} />
+              </>
+            )}
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -3046,41 +3215,29 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 // ─── Data ───
 const WEEK_ACTIVITY = [
-  { day: "Mon", topics: 4, mock: 1 }, { day: "Tue", topics: 6, mock: 0 },
-  { day: "Wed", topics: 3, mock: 1 }, { day: "Thu", topics: 7, mock: 0 },
-  { day: "Fri", topics: 5, mock: 2 }, { day: "Sat", topics: 8, mock: 1 },
-  { day: "Sun", topics: 2, mock: 0 },
+  { day: "Mon", topics: 0, mock: 0 }, { day: "Tue", topics: 0, mock: 0 },
+  { day: "Wed", topics: 0, mock: 0 }, { day: "Thu", topics: 0, mock: 0 },
+  { day: "Fri", topics: 0, mock: 0 }, { day: "Sat", topics: 0, mock: 0 },
+  { day: "Sun", topics: 0, mock: 0 },
 ];
 const MONTHLY_PROG = [
-  { week: "Week 1", progress: 42, target: 60 }, { week: "Week 2", progress: 58, target: 65 },
-  { week: "Week 3", progress: 67, target: 70 }, { week: "Week 4", progress: 79, target: 75 },
+  { week: "Week 1", progress: 0, target: 0 }, { week: "Week 2", progress: 0, target: 0 },
+  { week: "Week 3", progress: 0, target: 0 }, { week: "Week 4", progress: 0, target: 0 },
 ];
 const SKILLS_GROWTH = [
-  { month: "Mar", DSA: 38, System: 20, OOP: 55, SQL: 45 },
-  { month: "Apr", DSA: 48, System: 28, OOP: 62, SQL: 52 },
-  { month: "May", DSA: 57, System: 35, OOP: 70, SQL: 58 },
-  { month: "Jun", DSA: 63, System: 44, OOP: 75, SQL: 62 },
-  { month: "Jul", DSA: 72, System: 52, OOP: 82, SQL: 68 },
-  { month: "Aug", DSA: 78, System: 60, OOP: 88, SQL: 74 },
+  { month: "Week 1", DSA: 0, System: 0, OOP: 0, SQL: 0 },
 ];
 const ACHIEVEMENTS_LIST = [
-  { title: "First Mock", icon: "01", earned: true, date: "Jun 12" },
-  { title: "7-Day Streak", icon: "07", earned: true, date: "Jul 3" },
-  { title: "DSA Beginner", icon: "DSA", earned: true, date: "May 28" },
-  { title: "Resume Pro", icon: "CV", earned: true, date: "Apr 15" },
-  { title: "LinkedIn Ready", icon: "IN", earned: true, date: "May 1" },
+  { title: "First Mock", icon: "01", earned: false, date: null },
+  { title: "7-Day Streak", icon: "07", earned: false, date: null },
+  { title: "DSA Beginner", icon: "DSA", earned: false, date: null },
+  { title: "Resume Pro", icon: "CV", earned: false, date: null },
+  { title: "LinkedIn Ready", icon: "IN", earned: false, date: null },
   { title: "30-Day Streak", icon: "30", earned: false, date: null },
   { title: "Perfect Score", icon: "100", earned: false, date: null },
   { title: "Top 10%", icon: "TOP", earned: false, date: null },
 ];
-const RECENT_ACTS = [
-  { icon: <Mic size={13} />, label: "Technical Mock Interview — Score: 81", time: "2h ago", color: C.purple },
-  { icon: <BookOpen size={13} />, label: "DSA: Binary Trees module — 68%", time: "5h ago", color: C.cyan },
-  { icon: <FileText size={13} />, label: "Resume AI Score updated — 87/100", time: "Yesterday", color: C.green },
-  { icon: <GraduationCap size={13} />, label: "Web Dev Domain — 72% complete", time: "2 days ago", color: C.amber },
-  { icon: <Linkedin size={13} />, label: "LinkedIn Profile Analysis — 74", time: "3 days ago", color: C.blue },
-  { icon: <FolderOpen size={13} />, label: "E-commerce Project analyzed — 82", time: "4 days ago", color: C.pink },
-];
+const RECENT_ACTS: { icon: React.ReactNode; label: string; time: string; color: string }[] = [];
 
 const CAREER_GOALS_LIST = [
   { id: "sde", label: "Software Engineer", icon: "SWE", color: C.purple, companies: "Google | Meta | Amazon" },
@@ -3126,9 +3283,14 @@ const NOTIFICATIONS_DATA = [
 // ═══
 // PAGE 5: PROGRESS DASHBOARD
 // ═══
-function ProgressDashboardPage() {
+function ProgressDashboardPage({ 
+  enrolled, onNavigate, subjectsList 
+}: { 
+  enrolled: Set<string>; onNavigate: (p: string) => void; subjectsList: typeof SUBJECTS 
+}) {
+  const { user } = useAuth();
   const [range, setRange] = useState<"week" | "month" | "all">("week");
-  const overallPct = 68;
+  const overallPct = 0;
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -3163,10 +3325,10 @@ function ProgressDashboardPage() {
         {/* Only the few numbers needed to orient the user */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Overall progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Across your preparation" },
-            { label: "Mock interviews", value: "6", icon: <Mic size={16} />, color: C.cyan, sub: "Average score 74" },
-            { label: "Study streak", value: "14 days", icon: <Flame size={16} />, color: C.amber, sub: "Keep it going" },
-            { label: "Next goal", value: "3 tasks", icon: <Target size={16} />, color: C.green, sub: "Due this week" },
+            { label: "Overall progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Start studying to track progress" },
+            { label: "Mock interviews", value: "0", icon: <Mic size={16} />, color: C.cyan, sub: "Take your first mock interview" },
+            { label: "Study streak", value: `${user?.streak_count || 0} days`, icon: <Flame size={16} />, color: C.amber, sub: "Study daily to build a streak" },
+            { label: "Next goal", value: "Set goal", icon: <Target size={16} />, color: C.green, sub: "Visit Roadmap to set your goal" },
           ].map(s => (
             <Card key={s.label} className="p-4">
               <div className="flex items-center gap-2.5 mb-3">
@@ -3205,68 +3367,37 @@ function ProgressDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Interview history */}
           <Card className="p-5">
-            <SecHead icon={<Mic size={15} />} title="Interview History" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
-            <div className="space-y-2">
-                {[
-                { type: "Technical", score: 81, date: "Aug 1", grade: "A−", color: C.cyan },
-                { type: "Behavioral", score: 76, date: "Jul 28", grade: "B+", color: C.green },
-                { type: "Mixed", score: 71, date: "Jul 22", grade: "B", color: C.purple },
-                { type: "HR Interview", score: 84, date: "Jul 15", grade: "A", color: C.amber },
-              ].map((h, i) => (
-                <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${h.color}18`, color: h.color }}><Mic size={12} /></div>
-                  <div className="flex-1 min-w-0"><div className="text-xs font-semibold text-white">{h.type}</div><div className="text-xs" style={{ color: C.muted }}>{h.date}</div></div>
-                  <div className="text-right"><div className="text-sm font-black text-white">{h.score}</div><span className="text-xs font-bold" style={{ color: h.color }}>{h.grade}</span></div>
-                </div>
-              ))}
+            <SecHead icon={<Mic size={15} />} title="Interview History" />
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: `${C.cyan}18` }}>
+                <Mic size={20} style={{ color: C.cyan }} />
+              </div>
+              <div className="text-sm font-semibold text-white mb-1">No interviews yet</div>
+              <div className="text-xs" style={{ color: C.muted }}>Take your first mock interview to see results here.</div>
             </div>
           </Card>
 
           {/* Analysis history */}
           <Card className="p-5">
-            <SecHead icon={<FileText size={15} />} title="Analysis History" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
-            <div className="text-xs font-bold mb-2" style={{ color: C.muted }}>Resume Uploads</div>
-            <div className="space-y-1.5 mb-4">
-              {[["Resume_v3.pdf", 87, C.green, "Jul 30"], ["Resume_v2.pdf", 72, C.amber, "Jul 10"], ["Resume_v1.pdf", 58, C.red, "Jun 18"]].map(([n, s, c, d], i) => (
-                <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <FileText size={12} style={{ color: c as string, flexShrink: 0 }} />
-                  <span className="flex-1 text-xs text-white truncate">{n}</span>
-                  <span className="text-xs font-black" style={{ color: c as string }}>{s}</span>
-                  <span className="text-xs" style={{ color: C.muted }}>{d}</span>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs font-bold mb-2" style={{ color: C.muted }}>Project Analyses</div>
-            <div className="space-y-1.5">
-              {[["E-commerce App", 82, C.purple], ["Chat Application", 74, C.cyan]].map(([n, s, c], i) => (
-                <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <FolderOpen size={12} style={{ color: c as string, flexShrink: 0 }} />
-                  <span className="flex-1 text-xs text-white truncate">{n}</span>
-                  <span className="text-xs font-black" style={{ color: c as string }}>{s}</span>
-                </div>
-              ))}
+            <SecHead icon={<FileText size={15} />} title="Analysis History" />
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: `${C.green}18` }}>
+                <FileText size={20} style={{ color: C.green }} />
+              </div>
+              <div className="text-sm font-semibold text-white mb-1">No analyses yet</div>
+              <div className="text-xs" style={{ color: C.muted }}>Upload your resume or LinkedIn profile to get started.</div>
             </div>
           </Card>
 
           {/* Recent activity */}
           <Card className="p-5">
-            <SecHead icon={<Zap size={15} />} title="Recent Activity" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
-            <div className="relative pl-6">
-              <div className="absolute left-[9px] top-1 bottom-1 w-0.5" style={{ background: C.border }} />
-              <div className="space-y-3">
-                {RECENT_ACTS.map((a, i) => (
-                  <div key={i} className="flex items-start gap-3 relative">
-                    <div className="absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center z-10 flex-shrink-0"
-                      style={{ background: `${a.color}20`, border: `1.5px solid ${a.color}` }}>
-                      <div style={{ color: a.color }}>{a.icon}</div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-white leading-snug">{a.label}</div>
-                      <div className="text-xs mt-0.5" style={{ color: C.muted }}>{a.time}</div>
-                    </div>
-                  </div>
-                ))}
+            <SecHead icon={<Zap size={15} />} title="Recent Activity" />
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: `${C.purple}18` }}>
+                <Zap size={20} style={{ color: C.purple }} />
               </div>
+              <div className="text-sm font-semibold text-white mb-1">No recent activity</div>
+              <div className="text-xs" style={{ color: C.muted }}>Your study and interview activity will appear here.</div>
             </div>
           </Card>
         </div>
@@ -3274,22 +3405,33 @@ function ProgressDashboardPage() {
         {/* Compact preparation summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Card className="p-5">
-            <SecHead icon={<BookOpen size={15} />} title="Subject Completion" sub="8 core subjects" />
+            <SecHead icon={<BookOpen size={15} />} title="Subject Completion" sub={enrolled.size > 0 ? `${enrolled.size} subjects enrolled` : "No subjects enrolled yet"} />
             <div className="space-y-2.5">
-              {SUBJECTS.slice(0, 5).map(s => (
-                <div key={s.id}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{s.name.split(" ").slice(0, 2).join(" ")}</span><span className="font-bold" style={{ color: s.color }}>{s.progress}%</span></div>
-                  <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${s.progress}%`, background: s.color, boxShadow: `0 0 6px ${s.color}50` }} /></div>
+              {enrolled.size === 0 ? (
+                <div className="text-center py-4">
+                  <div className="text-xs" style={{ color: C.muted, marginBottom: 8 }}>You haven't enrolled in any subjects yet.</div>
+                  <button onClick={() => onNavigate("subject")} className="px-4 py-1.5 rounded-lg text-xs font-semibold" style={{ background: `${C.purple}15`, color: C.purple, border: `1px solid ${C.purple}30` }}>Explore Subjects</button>
                 </div>
-              ))}
-              <button className="w-full mt-1 py-2 rounded-xl text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>View all 8 subjects</button>
+              ) : (
+                subjectsList.filter(s => enrolled.has(s.id)).slice(0, 5).map(s => (
+                  <div key={s.id}>
+                    <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{s.name.split(" ").slice(0, 2).join(" ")}</span><span className="font-bold" style={{ color: s.color }}>{s.progress}%</span></div>
+                    <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full transition-all" style={{ width: `${s.progress}%`, background: s.color }} /></div>
+                  </div>
+                ))
+              )}
+              {enrolled.size > 0 && (
+                <button onClick={() => onNavigate("subject")} className="w-full mt-1 py-2 rounded-xl text-xs font-semibold hover:opacity-80 transition-opacity" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                  View enrolled subjects →
+                </button>
+              )}
             </div>
           </Card>
 
           <Card className="p-5">
             <SecHead icon={<GraduationCap size={15} />} title="Preparation progress" sub="Your main study areas" />
             <div className="space-y-3">
-              {[['Subjects', 68, C.purple], ['Domain skills', 44, C.cyan], ['Interview practice', 81, C.green]].map(([label, progress, color]) => (
+              {[['Subjects', 0, C.purple], ['Domain skills', 0, C.cyan], ['Interview practice', 0, C.green]].map(([label, progress, color]) => (
                 <div key={label as string}>
                   <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{label}</span><span className="font-bold" style={{ color: color as string }}>{progress}%</span></div>
                   <div className="h-2 rounded-full" style={{ background: C.border }}><div className="h-full rounded-full" style={{ width: `${progress}%`, background: color as string }} /></div>
@@ -3298,9 +3440,9 @@ function ProgressDashboardPage() {
             </div>
           </Card>
           <Card className="p-5">
-            <SecHead icon={<Target size={15} />} title="Next actions" sub="A short list to keep momentum" />
+            <SecHead icon={<Target size={15} />} title="Suggested first steps" sub="Get started on your journey" />
             <div className="space-y-2.5">
-              {['Complete DSA: Binary Trees module', 'Take one technical mock interview', 'Upload your latest resume'].map((action, index) => (
+              {['Complete your profile (LinkedIn, Resume, Skills)', 'Pick a career goal from the Roadmap page', 'Take your first mock interview'].map((action, index) => (
                 <div key={action} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${C.purple}18`, color: C.purple }}>{index + 1}</div>
                   <span className="text-xs font-medium text-white">{action}</span>
@@ -3797,12 +3939,8 @@ function ProfilePage() {
     transition: "all .2s",
   };
 
-  const skills = ["React", "TypeScript", "Node.js", "Python", "DSA", "SQL", "System Design", "Docker", "Git", "REST APIs"];
-  const certs = [
-    { name: "AWS Cloud Practitioner", org: "Amazon Web Services", date: "Mar 2024", color: C.amber },
-    { name: "Google Data Analytics", org: "Coursera · Google", date: "Jan 2024", color: C.blue },
-    { name: "Meta Frontend Developer", org: "Meta Platforms", date: "Nov 2023", color: C.cyan },
-  ];
+  const skills: string[] = [];
+  const certs: { name: string; org: string; date: string; color: string }[] = [];
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -3855,12 +3993,12 @@ function ProfilePage() {
               <div className="text-xs font-bold mb-3 text-white">Performance Stats</div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: "Interviews", value: "6", color: C.purple },
-                  { label: "Avg Score", value: "74", color: C.cyan },
-                  { label: "Streak", value: "14d", color: C.amber },
-                  { label: "Progress", value: "68%", color: C.green },
-                  { label: "Badges", value: "5", color: C.pink },
-                  { label: "Solved", value: "243", color: C.indigo },
+                  { label: "Interviews", value: "0", color: C.purple },
+                  { label: "Avg Score", value: "—", color: C.cyan },
+                  { label: "Streak", value: `${user?.streak_count || 0}d`, color: C.amber },
+                  { label: "Progress", value: "0%", color: C.green },
+                  { label: "Badges", value: "0", color: C.pink },
+                  { label: "Solved", value: "0", color: C.indigo },
                 ].map(s => (
                   <div key={s.label} className="p-3 rounded-xl text-center" style={{ background: `${s.color}10`, border: `1px solid ${s.color}25` }}>
                     <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
@@ -3896,15 +4034,25 @@ function ProfilePage() {
             {/* Achievements */}
             <Card className="p-5">
               <div className="text-xs font-bold mb-3 text-white">Earned Badges</div>
-              <div className="grid grid-cols-4 gap-2">
-                {ACHIEVEMENTS_LIST.filter(a => a.earned).map((a, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-xl"
-                    style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.18)" }}>
-                    <span className="text-xl">{a.icon}</span>
-                    <div className="text-xs text-center leading-tight" style={{ color: C.muted, fontSize: 9 }}>{a.title}</div>
+              {ACHIEVEMENTS_LIST.filter(a => a.earned).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: `${C.amber}18` }}>
+                    <Award size={18} style={{ color: C.amber }} />
                   </div>
-                ))}
-              </div>
+                  <div className="text-xs font-semibold text-white mb-1">No badges yet</div>
+                  <div className="text-xs" style={{ color: C.muted }}>Complete interviews and study modules to earn badges.</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {ACHIEVEMENTS_LIST.filter(a => a.earned).map((a, i) => (
+                    <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-xl"
+                      style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.18)" }}>
+                      <span className="text-xl">{a.icon}</span>
+                      <div className="text-xs text-center leading-tight" style={{ color: C.muted, fontSize: 9 }}>{a.title}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </div>
 
@@ -3966,7 +4114,7 @@ function ProfilePage() {
                 <div className="text-xs font-bold mb-3 text-white">Resume</div>
                 <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(168,85,247,.15)", color: C.purple }}><FileText size={18} /></div>
-                  <div className="flex-1"><div className="text-sm font-semibold text-white">{user?.full_name ? `Resume_${user.full_name.replace(/\s+/g, '_')}.pdf` : "Resume.pdf"}</div><div className="text-xs" style={{ color: C.muted }}>Uploaded recently · AI Score: 87/100</div></div>
+                  <div className="flex-1"><div className="text-sm font-semibold text-white">No resume uploaded yet</div><div className="text-xs" style={{ color: C.muted }}>Upload your resume to get an AI-powered score</div></div>
                   <div className="flex gap-2">
                     <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(168,85,247,.12)", color: C.purple }}>View</button>
                     {editing && <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>Replace</button>}
@@ -6236,13 +6384,251 @@ const ALL_PAGES: Page[] = [
   "notifications", "profile", "settings", "404",
 ];
 
+// ─── Onboarding Modal ────────────────────────────────────────────────────────
+const ONBOARDING_STEPS = [
+  {
+    id: "welcome",
+    title: "Welcome to CrackIt! 🎉",
+    subtitle: "Let's set up your profile so we can personalise your interview prep journey.",
+    icon: <Sparkles size={28} />,
+    color: C.purple,
+  },
+  {
+    id: "personal",
+    title: "Tell us about yourself",
+    subtitle: "Add basic info so your profile feels complete and professional.",
+    icon: <User size={28} />,
+    color: C.cyan,
+  },
+  {
+    id: "resume",
+    title: "Upload your Resume & LinkedIn",
+    subtitle: "AI will analyse them and give you personalised feedback.",
+    icon: <FileText size={28} />,
+    color: C.green,
+  },
+  {
+    id: "goals",
+    title: "Set your career goal",
+    subtitle: "Pick a target role and we'll generate a personalised roadmap for you.",
+    icon: <Target size={28} />,
+    color: C.amber,
+  },
+];
+
+function OnboardingModal({ onComplete, onNavigate }: { onComplete: () => void; onNavigate: (page: string) => void }) {
+  const { user } = useAuth();
+  const [step, setStep] = useState(0);
+  const current = ONBOARDING_STEPS[step];
+  const isLast = step === ONBOARDING_STEPS.length - 1;
+
+  const handleNext = () => {
+    if (isLast) {
+      onComplete();
+    } else {
+      setStep(s => s + 1);
+    }
+  };
+
+  const handleGoToProfile = () => {
+    onComplete();
+    onNavigate("profile");
+  };
+
+  const handleGoToResume = () => {
+    onComplete();
+    onNavigate("resume");
+  };
+
+  const handleGoToLinkedIn = () => {
+    onComplete();
+    onNavigate("linkedin");
+  };
+
+  const handleGoToRoadmap = () => {
+    onComplete();
+    onNavigate("roadmap");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(13,23,36,0.88)", backdropFilter: "blur(12px)" }}>
+      <div className="w-full max-w-lg rounded-2xl p-8 relative"
+        style={{ background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 32px 80px rgba(0,0,0,.6)" }}>
+
+        {/* Step dots */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {ONBOARDING_STEPS.map((_, i) => (
+            <div key={i} className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: i === step ? 28 : 8, background: i <= step ? C.purple : C.border }} />
+          ))}
+        </div>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-6">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center"
+            style={{ background: `${current.color}18`, border: `1px solid ${current.color}30`, color: current.color,
+              boxShadow: `0 0 40px ${current.color}20` }}>
+            {current.icon}
+          </div>
+        </div>
+
+        {/* Text */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-black text-white mb-2">{current.title}</h2>
+          <p className="text-sm" style={{ color: C.muted }}>{current.subtitle}</p>
+          {step === 0 && (
+            <div className="mt-4 px-5 py-3 rounded-xl text-sm" style={{ background: `${C.purple}12`, border: `1px solid ${C.purple}25`, color: C.text }}>
+              Hello, <span className="font-bold" style={{ color: C.purple }}>{user?.full_name?.split(" ")[0] || "there"}</span>! Complete your profile in just a few steps.
+            </div>
+          )}
+        </div>
+
+        {/* Step-specific actions */}
+        {step === 1 && (
+          <div className="grid grid-cols-1 gap-3 mb-6">
+            <button onClick={handleGoToProfile}
+              className="flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.02]"
+              style={{ background: `${C.cyan}10`, border: `1px solid ${C.cyan}30` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${C.cyan}20`, color: C.cyan }}><User size={18} /></div>
+              <div>
+                <div className="text-sm font-bold text-white">Complete your profile</div>
+                <div className="text-xs" style={{ color: C.muted }}>Add your name, city, college, degree, and bio</div>
+              </div>
+              <ArrowRight size={16} style={{ color: C.cyan, marginLeft: "auto" }} />
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button onClick={handleGoToResume}
+              className="flex flex-col items-center gap-3 p-4 rounded-xl text-center transition-all hover:scale-[1.02]"
+              style={{ background: `${C.green}10`, border: `1px solid ${C.green}30` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${C.green}20`, color: C.green }}><FileText size={18} /></div>
+              <div>
+                <div className="text-sm font-bold text-white">Upload Resume</div>
+                <div className="text-xs" style={{ color: C.muted }}>Get AI score & tips</div>
+              </div>
+            </button>
+            <button onClick={handleGoToLinkedIn}
+              className="flex flex-col items-center gap-3 p-4 rounded-xl text-center transition-all hover:scale-[1.02]"
+              style={{ background: `${C.blue}10`, border: `1px solid ${C.blue}30` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${C.blue}20`, color: C.blue }}><Linkedin size={18} /></div>
+              <div>
+                <div className="text-sm font-bold text-white">Analyse LinkedIn</div>
+                <div className="text-xs" style={{ color: C.muted }}>Score & optimise</div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="grid grid-cols-1 gap-3 mb-6">
+            <button onClick={handleGoToRoadmap}
+              className="flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.02]"
+              style={{ background: `${C.amber}10`, border: `1px solid ${C.amber}30` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${C.amber}20`, color: C.amber }}><Map size={18} /></div>
+              <div>
+                <div className="text-sm font-bold text-white">Open AI Roadmap</div>
+                <div className="text-xs" style={{ color: C.muted }}>Select your target role and get a personalised path</div>
+              </div>
+              <ArrowRight size={16} style={{ color: C.amber, marginLeft: "auto" }} />
+            </button>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex items-center gap-3">
+          <button onClick={onComplete}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+            {isLast ? "Start exploring" : "Skip for now"}
+          </button>
+          <button onClick={handleNext}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all flex items-center justify-center gap-2"
+            style={{ background: C.grad, boxShadow: "0 8px 20px rgba(49,83,109,.4)" }}>
+            {isLast ? <><Check size={14} /> Done</> : <>Next <ArrowRight size={14} /></>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
   const [col, setCol] = useState(false);
   const [page, setPage] = useState<Page>("dashboard");
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   // Track most recently generated report ID to auto-open it in Reports page
   const [activeReportId, setActiveReportId] = useState<number | undefined>(undefined);
+  // Onboarding for new users
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  // Enrolled subjects state lifted from SubjectPrepPage
+  const [enrolledSubjects, setEnrolledSubjects] = useState<Set<string>>(new Set());
+  const [subjectsList, setSubjectsList] = useState(SUBJECTS);
+
+  // Sync state with local storage based on logged in user
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const keyEnrolled = `crackit_enrolled_${user.id}`;
+      const savedEnrolled = localStorage.getItem(keyEnrolled);
+      if (savedEnrolled) {
+        try {
+          setEnrolledSubjects(new Set(JSON.parse(savedEnrolled)));
+        } catch(e) {}
+      } else {
+        setEnrolledSubjects(new Set());
+      }
+      
+      const keySubjects = `crackit_subjects_${user.id}`;
+      const savedSubjects = localStorage.getItem(keySubjects);
+      if (savedSubjects) {
+        try {
+          const parsed = JSON.parse(savedSubjects);
+          const merged = SUBJECTS.map(baseSub => {
+            const savedSub = parsed.find((s: any) => s.id === baseSub.id);
+            return savedSub ? { ...baseSub, progress: savedSub.progress, done: savedSub.done, streak: savedSub.streak } : baseSub;
+          });
+          setSubjectsList(merged);
+        } catch(e) {}
+      } else {
+        setSubjectsList(SUBJECTS);
+      }
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      localStorage.setItem(`crackit_enrolled_${user.id}`, JSON.stringify(Array.from(enrolledSubjects)));
+    }
+  }, [enrolledSubjects, isAuthenticated, user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      localStorage.setItem(`crackit_subjects_${user.id}`, JSON.stringify(subjectsList));
+    }
+  }, [subjectsList, isAuthenticated, user]);
+
+  // Detect new user: no streak and no target role means first login
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const key = `crackit_onboarded_${user.id}`;
+      const alreadyOnboarded = sessionStorage.getItem(key);
+      const isNewUser = !user.streak_count && !user.target_job_role;
+      if (!alreadyOnboarded && isNewUser) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [isAuthenticated, user]);
+
+  const handleOnboardingComplete = () => {
+    if (user) {
+      sessionStorage.setItem(`crackit_onboarded_${user.id}`, "1");
+    }
+    setShowOnboarding(false);
+  };
 
   const handleNav = (id: string) => {
     if (id !== "reports") setActiveReportId(undefined); // Clear when navigating away
@@ -6274,11 +6660,11 @@ export default function App() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar onToggle={() => setCol(!col)} />
         <div key={page} className="flex flex-1 overflow-hidden crackit-page-enter">
-          {page === "dashboard" && <ProgressDashboardPage />}
+          {page === "dashboard" && <ProgressDashboardPage enrolled={enrolledSubjects} onNavigate={handleNav} subjectsList={subjectsList} />}
           {page === "resume" && <ResumeAnalyzerPage />}
           {page === "linkedin" && <LinkedInAnalyzerPage />}
           {page === "projects" && <ProjectAnalyzerPage />}
-          {page === "subject" && <SubjectPrepPage />}
+          {page === "subject" && <SubjectPrepPage enrolled={enrolledSubjects} setEnrolled={setEnrolledSubjects} subjectsList={subjectsList} setSubjectsList={setSubjectsList} />}
           {page === "domain" && <DomainPrepPage />}
           {page === "mock" && <MockInterviewPage onFinish={(reportId) => {
             setActiveReportId(reportId);
@@ -6296,6 +6682,13 @@ export default function App() {
         </div>
         <Footer />
       </div>
+      {/* Onboarding modal for new users */}
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleOnboardingComplete}
+          onNavigate={(p) => { handleOnboardingComplete(); handleNav(p); }}
+        />
+      )}
     </div>
   );
 }
