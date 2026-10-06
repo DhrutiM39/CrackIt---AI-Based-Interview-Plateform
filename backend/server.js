@@ -12,7 +12,7 @@ const {
   recordScoreHistory,
 } = require('./atsService');
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.ATS_PORT || process.env.PORT || 8001;
 
 // Load .env if present
 let GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';

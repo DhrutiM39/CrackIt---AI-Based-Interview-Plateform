@@ -131,7 +131,7 @@ export default function LoginPage({ onGoSignup }: LoginPageProps) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder=""
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{
                   background: C.surface,
@@ -165,7 +165,7 @@ export default function LoginPage({ onGoSignup }: LoginPageProps) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder=""
                   className="w-full px-4 py-3 pr-12 rounded-xl text-sm outline-none transition-all"
                   style={{
                     background: C.surface,

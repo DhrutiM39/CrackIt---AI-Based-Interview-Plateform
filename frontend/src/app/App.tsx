@@ -28,7 +28,7 @@ import {
 import { subjectsApi, domainsApi, aiPrepApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi, roadmapApi } from "../lib/api";
 import type { Report, ReportSummary, DashboardMetrics } from "../lib/api";
 
-// â”€â”€â”€ Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tokens ───
 const C = {
   bg: "#0D1724", card: "#132131", surface: "#1A2B3D",
   border: "#2A3D52", muted: "#9EACBA", text: "#EDF2F4",
@@ -39,7 +39,7 @@ const C = {
   gradSubtle: "linear-gradient(135deg,rgba(95,139,137,.14) 0%,rgba(49,83,109,.14) 100%)",
 };
 
-// â”€â”€â”€ Primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Primitives ───
 const Grad = ({ children }: { children: React.ReactNode }) => (
   <span style={{ backgroundImage: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{children}</span>
 );
@@ -72,7 +72,7 @@ const SecHead = ({ icon, title, sub, action }: { icon: React.ReactNode; title: s
   </div>
 );
 
-// â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Sidebar ───
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "resume", label: "Resume Analyzer", icon: FileText },
@@ -154,7 +154,7 @@ function Sidebar({ col, active, onNav, onToggle }: { col: boolean; active: strin
   );
 }
 
-// â”€â”€â”€ Topbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Topbar ───
 function Topbar({ onToggle }: { onToggle: () => void }) {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -219,9 +219,9 @@ function Topbar({ onToggle }: { onToggle: () => void }) {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 1: SUBJECT-WISE PREPARATION
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
 const SUBJECTS = [
   {
@@ -399,7 +399,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
 
       {/* Topic progress tracker */}
       <Card className="p-5">
-        <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} â€” chapter by chapter`} />
+        <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} — chapter by chapter`} />
         <div className="space-y-2">
           {topics.map(t => (
             <div key={t.name} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
@@ -413,7 +413,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
               </span>
               {t.current && <Pill label="In Progress" color={s.color} />}
               <span className="text-xs" style={{ color: C.muted }}>{t.q} questions</span>
-              {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>âœ“ Done</span>}
+              {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>✓ Done</span>}
             </div>
           ))}
         </div>
@@ -565,7 +565,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                 <Flame size={18} style={{ color: C.amber }} />
                 <span className="text-sm font-bold text-white">Study Streak</span>
               </div>
-              <div className="text-xs" style={{ color: C.muted }}>Keep it going â€” consistency beats intensity</div>
+              <div className="text-xs" style={{ color: C.muted }}>Keep it going — consistency beats intensity</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-black" style={{ color: C.amber }}>{s.streak}</div>
@@ -578,7 +578,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
                 style={{ background: i < s.streak ? C.amber : C.border, opacity: i < s.streak ? 0.7 + i * 0.02 : 1 }} />
             ))}
           </div>
-          <div className="text-xs mt-2" style={{ color: C.muted }}>Last 14 days â€” {s.streak} active</div>
+          <div className="text-xs mt-2" style={{ color: C.muted }}>Last 14 days — {s.streak} active</div>
         </Card>
 
         {/* Daily Goal */}
@@ -618,10 +618,10 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
           sub={`Key concepts for ${s.name}`} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
-            { title: "Big O Cheat Sheet", preview: "O(1) < O(log n) < O(n) < O(n log n) < O(nÂ²)...", tag: "Complexity" },
+            { title: "Big O Cheat Sheet", preview: "O(1) < O(log n) < O(n) < O(n log n) < O(n²)...", tag: "Complexity" },
             { title: "Sorting Algorithms", preview: "QuickSort avg O(n log n), MergeSort stable O(n log n), HeapSort...", tag: "Sorting" },
             { title: "Tree Traversals", preview: "Inorder (LNR), Preorder (NLR), Postorder (LRN). BFS uses queue...", tag: "Trees" },
-            { title: "Graph Representations", preview: "Adjacency matrix: O(VÂ²) space. Adjacency list: O(V+E) space...", tag: "Graphs" },
+            { title: "Graph Representations", preview: "Adjacency matrix: O(V²) space. Adjacency list: O(V+E) space...", tag: "Graphs" },
           ].map(n => (
             <div key={n.title} className="p-3.5 rounded-xl cursor-pointer hover:border-purple-500/40 transition-colors"
               style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -648,7 +648,7 @@ function SubjectPrepPage() {
         const mapped = res.map((s: any, i: number) => ({
           id: String(s.id),
           name: s.subject_name,
-          icon: s.icon || "ðŸ“š",
+          icon: s.icon || "📚",
           color: [C.purple, C.cyan, C.green, C.amber, C.indigo, C.teal, C.pink, C.amber][i % 8],
           progress: s.progress,
           difficulty: s.difficulty || "Medium",
@@ -776,7 +776,7 @@ function SubjectPrepPage() {
           <div>
             <div className="text-sm font-bold text-white">Detailed View: {selectedSubject.name}</div>
             <div className="text-xs" style={{ color: C.muted }}>
-              {selectedSubject.progress}% complete Â· {selectedSubject.done}/{selectedSubject.total} topics
+              {selectedSubject.progress}% complete · {selectedSubject.done}/{selectedSubject.total} topics
             </div>
           </div>
           <div className="ml-auto">
@@ -789,58 +789,58 @@ function SubjectPrepPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 2: DOMAIN-WISE PREPARATION
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
 const DOMAINS = [
   {
     id: "web", name: "Web Development", icon: "WEB", color: C.purple,
     progress: 72, difficulty: "Intermediate", time: "8 weeks left",
     skills: ["React", "Node.js", "TypeScript", "CSS", "REST APIs"],
-    demand: 96, salary: "â‚¹18â€“35 LPA",
+    demand: 96, salary: "₹18–35 LPA",
   },
   {
     id: "ai", name: "AI / Machine Learning", icon: "AI", color: C.cyan,
     progress: 38, difficulty: "Advanced", time: "14 weeks left",
     skills: ["Python", "PyTorch", "Transformers", "MLOps"],
-    demand: 99, salary: "â‚¹25â€“60 LPA",
+    demand: 99, salary: "₹25–60 LPA",
   },
   {
     id: "ds", name: "Data Science", icon: "DATA", color: C.green,
     progress: 51, difficulty: "Intermediate", time: "10 weeks left",
     skills: ["Python", "SQL", "Pandas", "Statistics", "Power BI"],
-    demand: 94, salary: "â‚¹15â€“30 LPA",
+    demand: 94, salary: "₹15–30 LPA",
   },
   {
     id: "cloud", name: "Cloud Computing", icon: "CLOUD", color: C.blue,
     progress: 29, difficulty: "Intermediate", time: "12 weeks left",
     skills: ["AWS", "GCP", "Terraform", "Docker", "Kubernetes"],
-    demand: 92, salary: "â‚¹20â€“45 LPA",
+    demand: 92, salary: "₹20–45 LPA",
   },
   {
     id: "cyber", name: "Cybersecurity", icon: "SEC", color: C.red,
     progress: 18, difficulty: "Advanced", time: "16 weeks left",
     skills: ["Penetration Testing", "SIEM", "Cryptography", "OWASP"],
-    demand: 88, salary: "â‚¹20â€“50 LPA",
+    demand: 88, salary: "₹20–50 LPA",
   },
   {
     id: "devops", name: "DevOps", icon: "OPS", color: C.amber,
     progress: 44, difficulty: "Intermediate", time: "9 weeks left",
     skills: ["CI/CD", "Docker", "Kubernetes", "Ansible", "Monitoring"],
-    demand: 91, salary: "â‚¹18â€“40 LPA",
+    demand: 91, salary: "₹18–40 LPA",
   },
   {
     id: "mobile", name: "Mobile App Development", icon: "MOB", color: C.pink,
     progress: 63, difficulty: "Intermediate", time: "7 weeks left",
     skills: ["React Native", "Flutter", "Swift", "Kotlin"],
-    demand: 84, salary: "â‚¹15â€“28 LPA",
+    demand: 84, salary: "₹15–28 LPA",
   },
   {
     id: "test", name: "Software Testing", icon: "QA", color: C.teal,
     progress: 57, difficulty: "Beginner", time: "6 weeks left",
     skills: ["Selenium", "Jest", "Cypress", "Postman", "JUnit"],
-    demand: 79, salary: "â‚¹10â€“22 LPA",
+    demand: 79, salary: "₹10–22 LPA",
   },
 ];
 
@@ -908,17 +908,17 @@ function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect:
 
 function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
   const roadmap = [
-    { phase: "Foundation", topics: ["Core concepts", "Setup & tooling", "First project"], done: true, weeks: "Weeks 1â€“2" },
-    { phase: "Core Skills", topics: ["Key frameworks", "Best practices", "Mini projects"], done: true, weeks: "Weeks 3â€“5" },
-    { phase: "Advanced", topics: ["Architecture patterns", "Performance", "Real-world projects"], done: false, current: true, weeks: "Weeks 6â€“9" },
-    { phase: "Portfolio", topics: ["Capstone project", "Deployment", "Documentation"], done: false, weeks: "Weeks 10â€“12" },
-    { phase: "Interview Prep", topics: ["Domain questions", "Mock interviews", "Case studies"], done: false, weeks: "Weeks 13â€“14" },
+    { phase: "Foundation", topics: ["Core concepts", "Setup & tooling", "First project"], done: true, weeks: "Weeks 1–2" },
+    { phase: "Core Skills", topics: ["Key frameworks", "Best practices", "Mini projects"], done: true, weeks: "Weeks 3–5" },
+    { phase: "Advanced", topics: ["Architecture patterns", "Performance", "Real-world projects"], done: false, current: true, weeks: "Weeks 6–9" },
+    { phase: "Portfolio", topics: ["Capstone project", "Deployment", "Documentation"], done: false, weeks: "Weeks 10–12" },
+    { phase: "Interview Prep", topics: ["Domain questions", "Mock interviews", "Case studies"], done: false, weeks: "Weeks 13–14" },
   ];
 
   const courses = [
     { name: "The Complete Guide to " + d.name.split(" ")[0], platform: "Udemy", rating: 4.8, students: "124K", free: false },
     { name: d.name + " Fundamentals", platform: "Coursera", rating: 4.7, students: "89K", free: false },
-    { name: "Official " + d.skills[0] + " Documentation", platform: "Official Docs", rating: 5.0, students: "â€”", free: true },
+    { name: "Official " + d.skills[0] + " Documentation", platform: "Official Docs", rating: 5.0, students: "—", free: true },
   ];
 
   const companies = [
@@ -1029,7 +1029,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-white leading-snug truncate">{c.name}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs" style={{ color: C.amber }}>â˜… {c.rating}</span>
+                    <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
                     <span className="text-xs" style={{ color: C.muted }}>{c.students} students</span>
                     {c.free && <Pill label="Free" color={C.green} />}
                   </div>
@@ -1115,7 +1115,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
               );
             })()}
             <div className="text-xs text-center" style={{ color: C.muted }}>
-              {d.demand >= 90 ? "ðŸ”¥ Extremely high demand" : d.demand >= 80 ? "ðŸ“ˆ High demand" : "ðŸ“Š Moderate demand"}
+              {d.demand >= 90 ? "🔥 Extremely high demand" : d.demand >= 80 ? "📈 High demand" : "📊 Moderate demand"}
             </div>
             <div className="w-full space-y-2">
               {[{ l: "Job Postings", v: d.demand }, { l: "Salary Growth", v: 78 }, { l: "Future Outlook", v: 88 }].map(m => (
@@ -1184,7 +1184,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                 <div className="flex justify-between text-xs mb-2">
                   <span className="font-medium text-white">{sg.skill}</span>
                   <span style={{ color: C.muted }}>
-                    <span style={{ color: sg.color }}>{sg.current}%</span> â†’ <span style={{ color: C.green }}>{sg.target}%</span>
+                    <span style={{ color: sg.color }}>{sg.current}%</span> → <span style={{ color: C.green }}>{sg.target}%</span>
                   </span>
                 </div>
                 <div className="relative h-2.5 rounded-full" style={{ background: C.border }}>
@@ -1239,14 +1239,14 @@ function DomainPrepPage() {
         const mapped = res.map((d: any, i: number) => ({
           id: String(d.id),
           name: d.domain_name,
-          icon: d.icon || ["ðŸŒ","ðŸ¤–","ðŸ“Š","â˜ï¸","ðŸ”’","âš™ï¸","ðŸ“±","ðŸ§ª"][i % 8],
+          icon: d.icon || ["🌐","🤖","📊","☁️","🔒","⚙️","📱","🧪"][i % 8],
           color: [C.purple, C.cyan, C.green, C.blue, C.red, C.amber, C.pink, C.teal][i % 8],
           progress: d.progress,
           difficulty: "Intermediate",
           time: "10 weeks left",
           skills: ["Core Skills"],
           demand: 90,
-          salary: "â‚¹15â€“35 LPA",
+          salary: "₹15–35 LPA",
         }));
         setDomainsList(mapped);
         setSelected(mapped[0].id);
@@ -1372,9 +1372,9 @@ function DomainPrepPage() {
               style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>
               <span className="text-2xl">{dom.icon}</span>
               <div>
-                <div className="text-sm font-bold text-white">{dom.name} â€” Detailed Learning Path</div>
+                <div className="text-sm font-bold text-white">{dom.name} — Detailed Learning Path</div>
                 <div className="text-xs" style={{ color: C.muted }}>
-                  {dom.progress}% complete Â· {dom.time} to finish Â· {dom.skills.length} core skills
+                  {dom.progress}% complete · {dom.time} to finish · {dom.skills.length} core skills
                 </div>
               </div>
               <div className="ml-auto flex gap-2">
@@ -1390,9 +1390,9 @@ function DomainPrepPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 3: AI MOCK INTERVIEW
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
 function useTimer(running: boolean) {
   const [secs, setSecs] = useState(0);
@@ -1583,7 +1583,7 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
               },
               {
                 label: "Experience Level", val: exp, onChange: setExp,
-                options: ["Fresher", "0â€“1 year", "1â€“2 years", "2â€“4 years", "4â€“7 years", "7+ years"],
+                options: ["Fresher", "0–1 year", "1–2 years", "2–4 years", "4–7 years", "7+ years"],
               },
               {
                 label: "Duration", val: duration, onChange: setDuration,
@@ -1625,14 +1625,14 @@ function InterviewSetup({ onStart }: { onStart: (cfg: any) => void }) {
 const CODING_PROBLEM = {
   title: "Two Sum",
   difficulty: "Easy",
-  tag: "Arrays Â· Hash Map",
+  tag: "Arrays · Hash Map",
   timeLimit: "30 min",
   description:
     "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
   constraints: [
-    "2 â‰¤ nums.length â‰¤ 10â´",
-    "-10â¹ â‰¤ nums[i] â‰¤ 10â¹",
-    "-10â¹ â‰¤ target â‰¤ 10â¹",
+    "2 ≤ nums.length ≤ 10⁴",
+    "-10⁹ ≤ nums[i] ≤ 10⁹",
+    "-10⁹ ≤ target ≤ 10⁹",
     "Only one valid answer exists.",
   ],
   examples: [
@@ -1696,7 +1696,7 @@ function CodingChallengePanel() {
 
       {/* Split pane: Problem + Editor */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left â€” problem description */}
+        {/* Left — problem description */}
         <div className="w-2/5 overflow-y-auto p-4 space-y-4 flex-shrink-0"
           style={{ borderRight: `1px solid ${C.border}`, scrollbarWidth: "none" }}>
           <div>
@@ -1745,7 +1745,7 @@ function CodingChallengePanel() {
           </div>
         </div>
 
-        {/* Right â€” code editor */}
+        {/* Right — code editor */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Editor toolbar */}
           <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0"
@@ -1813,7 +1813,7 @@ function CodingChallengePanel() {
                       </div>
                       <div className="flex-1 font-mono">
                         <span style={{ color: C.muted }}>Input: </span><span style={{ color: C.text }}>{tc.input}</span>
-                        <span className="mx-2" style={{ color: C.border }}>â†’</span>
+                        <span className="mx-2" style={{ color: C.border }}>→</span>
                         <span style={{ color: C.muted }}>Expected: </span><span style={{ color: C.cyan }}>{tc.expected}</span>
                       </div>
                       <Pill label={tc.status === "pending" ? "Not run" : tc.status} color={tc.status === "pass" ? C.green : tc.status === "fail" ? C.red : C.muted} />
@@ -1826,7 +1826,7 @@ function CodingChallengePanel() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle2 size={14} style={{ color: C.green }} />
-                        <span className="text-xs font-bold" style={{ color: C.green }}>All 2 test cases passed Â· Runtime: 42ms Â· Memory: 14.3 MB</span>
+                        <span className="text-xs font-bold" style={{ color: C.green }}>All 2 test cases passed · Runtime: 42ms · Memory: 14.3 MB</span>
                       </div>
                       {[
                         { case: "Case 1", input: "[2,7,11,15], 9", got: "[0,1]", ok: true },
@@ -1837,8 +1837,8 @@ function CodingChallengePanel() {
                           <CheckCircle2 size={12} style={{ color: C.green }} />
                           <span style={{ color: C.muted }}>{r.case}:</span>
                           <span style={{ color: C.text }}>{r.input}</span>
-                          <span style={{ color: C.border }}>â†’</span>
-                          <span style={{ color: C.green }}>{r.got} âœ“</span>
+                          <span style={{ color: C.border }}>→</span>
+                          <span style={{ color: C.green }}>{r.got} ✓</span>
                         </div>
                       ))}
                     </div>
@@ -1855,7 +1855,7 @@ function CodingChallengePanel() {
             {/* Run/Submit bar */}
             <div className="flex items-center justify-between px-3 pb-3">
               <span className="text-xs" style={{ color: C.muted }}>
-                {ran ? "âœ“ Passed 2/2 test cases" : "Ready to run"}
+                {ran ? "✓ Passed 2/2 test cases" : "Ready to run"}
               </span>
               <div className="flex gap-2">
                 <button onClick={runCode}
@@ -1878,8 +1878,8 @@ function CodingChallengePanel() {
 }
 
 function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) => void }) {
-  const [speaking, setSpeaking] = useState(true);
-  const [micOn, setMicOn] = useState(true);
+  const [speaking, setSpeaking] = useState(false);
+  const [micOn, setMicOn] = useState(false);
   const [camOn, setCamOn] = useState(true);
   const [qIndex, setQIndex] = useState(0);
   const [aiQuestions, setAiQuestions] = useState<any[]>([]);
@@ -1892,8 +1892,97 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
   const [inputMsg, setInputMsg] = useState("");
   const timer = useTimer(true);
   const chatRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
 
-  // â”€â”€ Session tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Text-To-Speech helper
+  const speakText = (text: string) => {
+    if (!ttsEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/[*_#`]/g, "");
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onstart = () => setSpeaking(true);
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = () => setSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      setSpeaking(false);
+    }
+  };
+
+  // Webcam stream effect
+  useEffect(() => {
+    if (camOn && typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          mediaStreamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        })
+        .catch(() => {
+          // Graceful fallback to avatar when permission denied
+        });
+    } else {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+      }
+    }
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [camOn]);
+
+  // Speech-To-Text (Web Speech API)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (micOn) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.onresult = (event: any) => {
+          let transcript = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (transcript.trim()) {
+            setInputMsg(prev => (prev ? prev + " " + transcript.trim() : transcript.trim()));
+          }
+        };
+        recognition.onerror = () => setMicOn(false);
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (err) {
+        console.warn("Speech recognition initialization error", err);
+      }
+    } else {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+        recognitionRef.current = null;
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+    };
+  }, [micOn]);
+
+  // Session tracking
   const sessionIdRef = useRef<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
@@ -1914,7 +2003,9 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
       sessionIdRef.current = result.session.id;
       setTotalQuestions(result.total_questions ?? 5);
       setAiQuestions(result.question ? [result.question] : []);
-      setMessages([{ role: "ai", text: result.question?.question_text ?? "No question was generated." }]);
+      const qText = result.question?.question_text ?? "No question was generated.";
+      setMessages([{ role: "ai", text: qText }]);
+      speakText(qText);
     }).catch(err => {
       setSaveError(err?.message ?? "Could not start the AI interview.");
     });
@@ -1941,6 +2032,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
         setAiQuestions(q => [...q, result.next_question]);
         setQIndex(i => i + 1);
         setMessages(m => [...m, { role: "ai", text: result.next_question.question_text }]);
+        speakText(result.next_question.question_text);
       }
     } catch (err: any) {
       setSaveError(err?.message ?? "Answer evaluation failed.");
@@ -1979,7 +2071,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // â”€â”€ Saving overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Saving overlay ───
   if (saving) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-6" style={{ background: C.bg }}>
@@ -2043,7 +2135,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2.5">
-          <span className="text-xs hidden md:block" style={{ color: C.muted }}>{cfg.role} Â· {cfg.exp}</span>
+          <span className="text-xs hidden md:block" style={{ color: C.muted }}>{cfg.role} · {cfg.exp}</span>
           <button onClick={handleEndInterview}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90"
             style={{ background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.4)", color: C.red }}>
@@ -2054,7 +2146,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* â”€â”€ INTERVIEW TAB â”€â”€ */}
+        {/* ─── INTERVIEW TAB ─── */}
         {mainTab === "interview" && (
           <>
             {/* Main content */}
@@ -2077,16 +2169,23 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                       <div className="w-1.5 h-1.5 rounded-full transition-colors"
                         style={{ background: speaking ? C.green : C.muted }} />
                       <span className="text-xs transition-colors" style={{ color: speaking ? C.green : C.muted }}>
-                        {speaking ? "Speakingâ€¦" : "Listening"}
+                        {speaking ? "Speaking…" : "Listening"}
                       </span>
                     </div>
                   </div>
                   <Waveform active={speaking} bars={22} />
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setSpeaking(!speaking)}
+                    <button onClick={() => {
+                      if (speaking) {
+                        try { window.speechSynthesis?.cancel(); } catch {}
+                        setSpeaking(false);
+                      } else {
+                        speakText(currentQ.question_text);
+                      }
+                    }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                       style={{ background: speaking ? "rgba(239,68,68,.1)" : "rgba(52,211,153,.1)", border: `1px solid ${speaking ? C.red + "35" : C.green + "35"}`, color: speaking ? C.red : C.green }}>
-                      {speaking ? <><XCircle size={11} /> Pause</> : <><Play size={11} /> Resume</>}
+                      {speaking ? <><XCircle size={11} /> Mute AI Voice</> : <><Play size={11} /> Read Question</>}
                     </button>
                   </div>
                 </Card>
@@ -2097,8 +2196,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                     style={{ height: 112, background: "linear-gradient(135deg,#0D1117,#1C2433)", border: `1px solid ${C.border}` }}>
                     {camOn ? (
                       <>
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-black text-white"
-                          style={{ background: C.grad }}>DS</div>
+                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover rounded-xl" />
                         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-md"
                           style={{ background: "rgba(52,211,153,.12)", border: "1px solid rgba(52,211,153,.3)" }}>
                           <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.green }} />
@@ -2112,13 +2210,13 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                       </div>
                     )}
                   </div>
-                  <div className="text-sm font-bold text-white">Dhruti Shah</div>
+                  <div className="text-sm font-bold text-white">Candidate</div>
                   <Waveform active={micOn} bars={22} />
                   <div className="flex items-center gap-3">
                     <button onClick={() => setMicOn(!micOn)}
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all"
-                      style={{ background: micOn ? "rgba(168,85,247,.12)" : "rgba(239,68,68,.12)", border: `1px solid ${micOn ? C.purple + "40" : C.red + "40"}`, color: micOn ? C.purple : C.red }}>
-                      <Mic size={13} />{micOn ? "Mute" : "Unmute"}
+                      style={{ background: micOn ? "rgba(52,211,153,.15)" : "rgba(239,68,68,.12)", border: `1px solid ${micOn ? C.green + "50" : C.red + "40"}`, color: micOn ? C.green : C.red }}>
+                      <Mic size={13} />{micOn ? "Listening (Click to Mute)" : "Enable Voice Mic"}
                     </button>
                     <button onClick={() => setCamOn(!camOn)}
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all"
@@ -2182,7 +2280,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 <div className="flex gap-2 mt-3">
                   <input value={inputMsg} onChange={e => setInputMsg(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && sendMsg()}
-                    placeholder="Type your answer, or speak using the microphoneâ€¦"
+                    placeholder="Type your answer, or speak using the microphone…"
                     className="flex-1 px-3 py-2 rounded-xl text-xs outline-none"
                     style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   <button onClick={() => setMicOn(v => !v)}
@@ -2204,7 +2302,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                   sub="Your private notepad during the interview"
                   action={<Pill label={`${notes.split("\n").filter(Boolean).length} lines`} color={C.muted} />} />
                 <textarea value={notes} onChange={e => setNotes(e.target.value)}
-                  placeholder="â€¢ Key points to remember&#10;â€¢ Terms to research later&#10;â€¢ Follow-up topics"
+                  placeholder="• Key points to remember&#10;• Terms to research later&#10;• Follow-up topics"
                   rows={4}
                   className="w-full px-3.5 py-3 rounded-xl text-xs outline-none resize-none leading-relaxed"
                   style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
@@ -2260,9 +2358,9 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 <SecHead icon={<Lightbulb size={14} />} title="Interview Tips" />
                 <div className="space-y-2">
                   {[
-                    { tip: "Use the STAR method for behavioural answers", icon: "â­" },
+                    { tip: "Use the STAR method for behavioural answers", icon: "⭐" },
                     { tip: "Think out loud - process matters as much as the answer", icon: "THINK" },
-                    { tip: "Ask clarifying questions before jumping in", icon: "â“" },
+                    { tip: "Ask clarifying questions before jumping in", icon: "❓" },
                     { tip: "Keep eye contact with the camera", icon: "FOCUS" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl"
@@ -2313,7 +2411,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                 </div>
                 <div className="flex justify-between text-xs mt-1" style={{ color: C.muted }}>
                   <span>60</span>
-                  <span style={{ color: C.green }}>Ideal: 120â€“160 wpm</span>
+                  <span style={{ color: C.green }}>Ideal: 120–160 wpm</span>
                   <span>200</span>
                 </div>
               </Card>
@@ -2343,7 +2441,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
           </>
         )}
 
-        {/* â”€â”€ CODING CHALLENGE TAB â”€â”€ */}
+        {/* ─── CODING CHALLENGE TAB ─── */}
         {mainTab === "coding" && (
           <>
             <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: "none" }}>
@@ -2370,7 +2468,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                   {[
                     { tip: "Clarify constraints before coding", icon: "PLAN" },
                     { tip: "Start with brute force, optimise later", icon: "ITERATE" },
-                    { tip: "Write clean, readable variable names", icon: "âœï¸" },
+                    { tip: "Write clean, readable variable names", icon: "✏️" },
                     { tip: "Handle edge cases explicitly", icon: "ALERT" },
                   ].map((t, i) => (
                     <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl"
@@ -2391,7 +2489,7 @@ function ActiveInterview({ cfg, onEnd }: { cfg: any; onEnd: (reportId?: number) 
                     { label: "O(log n)", desc: "Logarithmic", color: C.cyan },
                     { label: "O(n)", desc: "Linear", color: C.purple },
                     { label: "O(n log n)", desc: "Linearithmic", color: C.amber },
-                    { label: "O(nÂ²)", desc: "Quadratic", color: C.red },
+                    { label: "O(n²)", desc: "Quadratic", color: C.red },
                   ].map(c => (
                     <div key={c.label} className="flex items-center justify-between text-xs">
                       <span className="font-mono font-bold" style={{ color: c.color }}>{c.label}</span>
@@ -2435,9 +2533,9 @@ function MockInterviewPage({ onFinish }: { onFinish: (reportId?: number) => void
     : <ActiveInterview cfg={cfg} onEnd={onFinish} />;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 4: AI EVALUATION & REPORTS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
 function HalfGauge({ value, size, color, label }: { value: number; size: number; color: string; label: string }) {
   const r = (size / 2) - 8;
@@ -2465,7 +2563,7 @@ const SCORE_CARDS = [
   { label: "Communication", score: 88, grade: "A", color: C.green, icon: <Mic size={16} /> },
   { label: "Confidence", score: 78, grade: "B+", color: C.purple, icon: <Zap size={16} /> },
   { label: "Problem Solving", score: 73, grade: "B", color: C.amber, icon: <Brain size={16} /> },
-  { label: "Body Language", score: 82, grade: "Aâˆ’", color: C.pink, icon: <User size={16} /> },
+  { label: "Body Language", score: 82, grade: "A−", color: C.pink, icon: <User size={16} /> },
   { label: "Voice Clarity", score: 91, grade: "A+", color: C.teal, icon: <Sparkles size={16} /> },
   { label: "Logical Depth", score: 74, grade: "B", color: C.indigo, icon: <Layers size={16} /> },
   { label: "Professionalism", score: 87, grade: "A", color: C.blue, icon: <Award size={16} /> },
@@ -2554,13 +2652,13 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
     return C.red;
   };
 
-  // â”€â”€ Detail view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Detail view ───
   if (loadingDetail) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ background: C.bg }}>
         <div className="flex flex-col items-center gap-4">
           <Loader2 size={36} className="animate-spin" style={{ color: C.purple }} />
-          <span className="text-sm font-medium" style={{ color: C.muted }}>Loading reportâ€¦</span>
+          <span className="text-sm font-medium" style={{ color: C.muted }}>Loading report…</span>
         </div>
       </div>
     );
@@ -2575,7 +2673,7 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
           <div className="text-xs mb-4" style={{ color: C.muted }}>{detailError}</div>
           <button onClick={() => { setDetailError(null); setSelectedReport(null); }}
             className="px-4 py-2 rounded-xl text-xs font-semibold text-white"
-            style={{ background: C.grad }}>â† Back to Reports</button>
+            style={{ background: C.grad }}>← Back to Reports</button>
         </Card>
       </div>
     );
@@ -2719,7 +2817,7 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
                     {q.answer_text && (
                       <div className="text-xs mb-2 p-2 rounded-lg" style={{ background: C.bg, color: C.muted }}>
                         <span className="font-semibold" style={{ color: C.cyan }}>Your answer: </span>
-                        {q.answer_text.length > 200 ? q.answer_text.slice(0, 200) + "â€¦" : q.answer_text}
+                        {q.answer_text.length > 200 ? q.answer_text.slice(0, 200) + "…" : q.answer_text}
                       </div>
                     )}
                     {q.score !== undefined && q.score !== null && (
@@ -2807,7 +2905,7 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
     );
   }
 
-  // â”€â”€ List view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── List view ───
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
       <div className="p-6 space-y-6">
@@ -2837,7 +2935,7 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
               <Loader2 size={32} className="animate-spin" style={{ color: C.purple }} />
-              <span className="text-sm" style={{ color: C.muted }}>Loading reportsâ€¦</span>
+              <span className="text-sm" style={{ color: C.muted }}>Loading reports…</span>
             </div>
           </div>
         )}
@@ -2886,7 +2984,7 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
                     {/* Score circle */}
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-lg font-black"
                       style={{ background: `${scoreColor(r.overall_score)}18`, color: scoreColor(r.overall_score), border: `1px solid ${scoreColor(r.overall_score)}30` }}>
-                      {r.overall_score !== undefined ? Math.round(r.overall_score) : "â€“"}
+                      {r.overall_score !== undefined ? Math.round(r.overall_score) : "–"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -2927,13 +3025,13 @@ function ReportsPage({ onRetake, initialReportId }: { onRetake: () => void; init
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // SHARED UTILITIES FOR NEW PAGES
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // SHARED UTILITIES FOR NEW PAGES
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 
 function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -2946,7 +3044,7 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-// â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Data ───
 const WEEK_ACTIVITY = [
   { day: "Mon", topics: 4, mock: 1 }, { day: "Tue", topics: 6, mock: 0 },
   { day: "Wed", topics: 3, mock: 1 }, { day: "Thu", topics: 7, mock: 0 },
@@ -2976,12 +3074,12 @@ const ACHIEVEMENTS_LIST = [
   { title: "Top 10%", icon: "TOP", earned: false, date: null },
 ];
 const RECENT_ACTS = [
-  { icon: <Mic size={13} />, label: "Technical Mock Interview â€” Score: 81", time: "2h ago", color: C.purple },
-  { icon: <BookOpen size={13} />, label: "DSA: Binary Trees module â€” 68%", time: "5h ago", color: C.cyan },
-  { icon: <FileText size={13} />, label: "Resume AI Score updated â€” 87/100", time: "Yesterday", color: C.green },
-  { icon: <GraduationCap size={13} />, label: "Web Dev Domain â€” 72% complete", time: "2 days ago", color: C.amber },
-  { icon: <Linkedin size={13} />, label: "LinkedIn Profile Analysis â€” 74", time: "3 days ago", color: C.blue },
-  { icon: <FolderOpen size={13} />, label: "E-commerce Project analyzed â€” 82", time: "4 days ago", color: C.pink },
+  { icon: <Mic size={13} />, label: "Technical Mock Interview — Score: 81", time: "2h ago", color: C.purple },
+  { icon: <BookOpen size={13} />, label: "DSA: Binary Trees module — 68%", time: "5h ago", color: C.cyan },
+  { icon: <FileText size={13} />, label: "Resume AI Score updated — 87/100", time: "Yesterday", color: C.green },
+  { icon: <GraduationCap size={13} />, label: "Web Dev Domain — 72% complete", time: "2 days ago", color: C.amber },
+  { icon: <Linkedin size={13} />, label: "LinkedIn Profile Analysis — 74", time: "3 days ago", color: C.blue },
+  { icon: <FolderOpen size={13} />, label: "E-commerce Project analyzed — 82", time: "4 days ago", color: C.pink },
 ];
 
 const CAREER_GOALS_LIST = [
@@ -2992,16 +3090,16 @@ const CAREER_GOALS_LIST = [
   { id: "ml", label: "ML Engineer", icon: "ML", color: C.pink, companies: "OpenAI | HuggingFace | NVIDIA" },
 ];
 const ROADMAP_PHASES_LIST = [
-  { phase: 1, title: "Foundation Building", weeks: "Weeks 1â€“3", status: "done",
+  { phase: 1, title: "Foundation Building", weeks: "Weeks 1–3", status: "done",
     items: ["Big O notation mastery", "Arrays, Strings, Linked Lists", "Basic SQL queries", "Git & GitHub basics"] },
-  { phase: 2, title: "Core Data Structures", weeks: "Weeks 4â€“7", status: "current",
+  { phase: 2, title: "Core Data Structures", weeks: "Weeks 4–7", status: "current",
     items: ["Trees & Graphs", "Hash Maps & Sets", "Stacks & Queues", "Binary Search patterns"] },
-  { phase: 3, title: "Advanced Algorithms", weeks: "Weeks 8â€“12", status: "upcoming",
+  { phase: 3, title: "Advanced Algorithms", weeks: "Weeks 8–12", status: "upcoming",
     items: ["Dynamic Programming", "Graph algorithms (BFS/DFS)", "Greedy approaches", "Divide & Conquer"] },
-  { phase: 4, title: "System Design", weeks: "Weeks 13â€“16", status: "upcoming",
+  { phase: 4, title: "System Design", weeks: "Weeks 13–16", status: "upcoming",
     items: ["Scalability principles", "Database design patterns", "API design & REST", "Caching strategies"] },
-  { phase: 5, title: "Interview Preparation", weeks: "Weeks 17â€“20", status: "upcoming",
-    items: ["Mock interviews (Ã—10)", "Behavioural prep (STAR)", "Resume finalization", "Company research"] },
+  { phase: 5, title: "Interview Preparation", weeks: "Weeks 17–20", status: "upcoming",
+    items: ["Mock interviews (×10)", "Behavioural prep (STAR)", "Resume finalization", "Company research"] },
 ];
 const SKILL_GAP_RADAR = [
   { axis: "DSA", current: 78, target: 90 },
@@ -3019,15 +3117,15 @@ const NOTIFICATIONS_DATA = [
   { id: 4, type: "progress", title: "Weekly Progress Report", body: "You completed 78% of your weekly goal. Great work this week!", time: "5h ago", read: true, icon: <BarChart3 size={14} />, color: C.green },
   { id: 5, type: "resume", title: "Resume Score Updated", body: "Your resume score improved from 72 to 87 after the latest AI analysis.", time: "Yesterday", read: true, icon: <FileText size={14} />, color: C.blue },
   { id: 6, type: "interview", title: "Interview Results Ready", body: "Your Behavioral round evaluation is now available in Reports.", time: "Yesterday", read: true, icon: <ClipboardList size={14} />, color: C.purple },
-  { id: 7, type: "study", title: "Study Reminder", body: "You haven't studied today yet. Your streak is at risk â€” 14 days!", time: "2 days ago", read: true, icon: <BookOpen size={14} />, color: C.red },
+  { id: 7, type: "study", title: "Study Reminder", body: "You haven't studied today yet. Your streak is at risk — 14 days!", time: "2 days ago", read: true, icon: <BookOpen size={14} />, color: C.red },
   { id: 8, type: "ai", title: "AI Roadmap Updated", body: "Your personalized roadmap has been updated based on your latest performance.", time: "3 days ago", read: true, icon: <Map size={14} />, color: C.indigo },
   { id: 9, type: "progress", title: "Monthly Milestone Reached", body: "You hit 75% overall progress! You're in the top 22% of all users.", time: "4 days ago", read: true, icon: <Trophy size={14} />, color: C.amber },
   { id: 10, type: "resume", title: "LinkedIn Profile Tips", body: "AI found 5 improvements to boost your LinkedIn score from 74 to 86.", time: "5 days ago", read: true, icon: <Linkedin size={14} />, color: C.cyan },
 ];
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 5: PROGRESS DASHBOARD
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function ProgressDashboardPage() {
   const [range, setRange] = useState<"week" | "month" | "all">("week");
   const overallPct = 68;
@@ -3110,7 +3208,7 @@ function ProgressDashboardPage() {
             <SecHead icon={<Mic size={15} />} title="Interview History" action={<button className="text-xs" style={{ color: C.purple }}>View all</button>} />
             <div className="space-y-2">
                 {[
-                { type: "Technical", score: 81, date: "Aug 1", grade: "Aâˆ’", color: C.cyan },
+                { type: "Technical", score: 81, date: "Aug 1", grade: "A−", color: C.cyan },
                 { type: "Behavioral", score: 76, date: "Jul 28", grade: "B+", color: C.green },
                 { type: "Mixed", score: 71, date: "Jul 22", grade: "B", color: C.purple },
                 { type: "HR Interview", score: 84, date: "Jul 15", grade: "A", color: C.amber },
@@ -3216,9 +3314,9 @@ function ProgressDashboardPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 6: AI PERSONALIZED ROADMAP
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function RoadmapPage() {
   const [goalId, setGoalId] = useState("sde");
   const [level, setLevel] = useState(2);
@@ -3236,7 +3334,7 @@ function RoadmapPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.14)", color: C.purple }}><Map size={18} /></div>
               <h1 className="text-xl font-bold text-white">AI Personalized Learning Roadmap</h1>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Your <Grad>AI-generated path</Grad> to your dream job â€” tailored to your current skills.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>Your <Grad>AI-generated path</Grad> to your dream job — tailored to your current skills.</p>
           </div>
           <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: C.grad }}>
             <Sparkles size={14} /> Regenerate Plan
@@ -3329,8 +3427,8 @@ function RoadmapPage() {
             <div className="space-y-3 mb-5">
               {[
                 { label: "Preparation Duration", value: "20 weeks", color: C.purple },
-                { label: "Daily Study Time", value: "2â€“3 hours", color: C.cyan },
-                { label: "Weekly Mock Tests", value: "1â€“2 mocks", color: C.green },
+                { label: "Daily Study Time", value: "2–3 hours", color: C.cyan },
+                { label: "Weekly Mock Tests", value: "1–2 mocks", color: C.green },
                 { label: "Practice Problems", value: "150+ solved", color: C.amber },
                 { label: "Target Companies", value: "Top 10 FAANG", color: C.pink },
               ].map(s => (
@@ -3416,7 +3514,7 @@ function RoadmapPage() {
               {[
                 { name: "Grokking Algorithms & Patterns", platform: "Educative", rating: 4.9, free: false, color: C.purple },
                 { name: "System Design Interview Guide", platform: "Coursera", rating: 4.8, free: false, color: C.cyan },
-                { name: "CS Fundamentals â€” MIT 6.006", platform: "MIT OCW", rating: 5.0, free: true, color: C.green },
+                { name: "CS Fundamentals — MIT 6.006", platform: "MIT OCW", rating: 5.0, free: true, color: C.green },
                 { name: "FAANG Interview Bootcamp", platform: "Udemy", rating: 4.7, free: false, color: C.amber },
               ].map((c, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -3424,7 +3522,7 @@ function RoadmapPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-white leading-snug">{c.name}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs" style={{ color: C.amber }}>â˜… {c.rating}</span>
+                      <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
                       <span className="text-xs" style={{ color: C.muted }}>{c.platform}</span>
                       {c.free && <Pill label="Free" color={C.green} />}
                     </div>
@@ -3457,10 +3555,10 @@ function RoadmapPage() {
               <SecHead icon={<Calendar size={15} />} title="Daily Study Plan" sub="Recommended schedule" />
               <div className="space-y-2">
                 {[
-                  { time: "7:00 AM", task: "30 min â€” Revision notes", color: C.purple },
-                  { time: "6:00 PM", task: "1 hr â€” 2 LeetCode problems", color: C.cyan },
-                  { time: "8:00 PM", task: "1 hr â€” Course module / reading", color: C.green },
-                  { time: "9:30 PM", task: "30 min â€” Mock Q&A with AI", color: C.amber },
+                  { time: "7:00 AM", task: "30 min — Revision notes", color: C.purple },
+                  { time: "6:00 PM", task: "1 hr — 2 LeetCode problems", color: C.cyan },
+                  { time: "8:00 PM", task: "1 hr — Course module / reading", color: C.green },
+                  { time: "9:30 PM", task: "30 min — Mock Q&A with AI", color: C.amber },
                 ].map((d, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="text-xs font-mono font-bold w-16 flex-shrink-0" style={{ color: d.color }}>{d.time}</div>
@@ -3579,7 +3677,7 @@ function RoadmapPage() {
                   </div>
                   <button className="text-xs font-semibold px-3 py-1.5 rounded-lg"
                     style={{ background: `${proj.color}12`, color: proj.color, border: `1px solid ${proj.color}30` }}>
-                    View Guide â†’
+                    View Guide →
                   </button>
                 </div>
               </div>
@@ -3598,7 +3696,7 @@ function RoadmapPage() {
               </div>
               <div>
                 <div className="text-base font-bold text-white">AI Next-Step Recommendations</div>
-                <div className="text-xs" style={{ color: C.muted }}>Personalised actions based on your performance data â€” updated daily</div>
+                <div className="text-xs" style={{ color: C.muted }}>Personalised actions based on your performance data — updated daily</div>
               </div>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: "rgba(168,85,247,.12)", border: "1px solid rgba(168,85,247,.3)" }}>
@@ -3612,19 +3710,19 @@ function RoadmapPage() {
                 priority: "Do Today", icon: <Zap size={14} />, color: C.red,
                 action: "Solve 3 DP problems on LeetCode",
                 reason: "You've skipped DP for 4 days. Consistency drops sharply after 3 days of inactivity.",
-                time: "~90 min", cta: "Open LeetCode â†’",
+                time: "~90 min", cta: "Open LeetCode →",
               },
               {
                 priority: "This Week", icon: <Target size={14} />, color: C.amber,
                 action: "Complete System Design: URL Shortener module",
                 reason: "System Design is your weakest area at 45%. One module/week brings it to 65% in 6 weeks.",
-                time: "~3 hrs total", cta: "Start Module â†’",
+                time: "~3 hrs total", cta: "Start Module →",
               },
               {
                 priority: "Next Step", icon: <TrendingUp size={14} />, color: C.cyan,
                 action: "Schedule your 2nd Behavioral Mock Interview",
                 reason: "Your last behavioral round was 18 days ago. Regular practice improves scores by 22%.",
-                time: "45 min session", cta: "Book Now â†’",
+                time: "45 min session", cta: "Book Now →",
               },
             ].map((rec, i) => (
               <div key={i} className="flex flex-col gap-3 p-4 rounded-2xl"
@@ -3671,12 +3769,20 @@ function RoadmapPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 7: USER PROFILE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function ProfilePage() {
+  const { user } = useAuth();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<"personal" | "academic" | "skills" | "certs">("personal");
+
+  const nameParts = (user?.full_name || "User Profile").trim().split(/\s+/);
+  const firstName = nameParts[0] || "User";
+  const lastName = nameParts.slice(1).join(" ") || "";
+  const initials = (nameParts.map(p => p[0]).join("") || "U").toUpperCase().slice(0, 2);
+  const email = user?.email || "";
+  const role = user?.target_job_role || "Student · Developer";
 
   const inputStyle: React.CSSProperties = {
     background: editing ? C.surface : "transparent",
@@ -3694,7 +3800,7 @@ function ProfilePage() {
   const skills = ["React", "TypeScript", "Node.js", "Python", "DSA", "SQL", "System Design", "Docker", "Git", "REST APIs"];
   const certs = [
     { name: "AWS Cloud Practitioner", org: "Amazon Web Services", date: "Mar 2024", color: C.amber },
-    { name: "Google Data Analytics", org: "Coursera Â· Google", date: "Jan 2024", color: C.blue },
+    { name: "Google Data Analytics", org: "Coursera · Google", date: "Jan 2024", color: C.blue },
     { name: "Meta Frontend Developer", org: "Meta Platforms", date: "Nov 2023", color: C.cyan },
   ];
 
@@ -3725,7 +3831,7 @@ function ProfilePage() {
               style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.25)" }}>
               <div className="relative">
                 <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white"
-                  style={{ background: C.grad, boxShadow: "0 0 30px rgba(168,85,247,.4)" }}>DS</div>
+                  style={{ background: C.grad, boxShadow: "0 0 30px rgba(168,85,247,.4)" }}>{initials}</div>
                 {editing && (
                   <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center"
                     style={{ background: C.purple, border: `2px solid ${C.bg}` }}>
@@ -3735,10 +3841,10 @@ function ProfilePage() {
                 <div className="absolute top-0 right-0 w-4 h-4 rounded-full" style={{ background: C.green, border: `2px solid ${C.bg}` }} />
               </div>
               <div className="text-center">
-                <div className="text-lg font-black text-white">Dhruti Shah</div>
-                <div className="text-sm" style={{ color: C.muted }}>B.Tech Â· Computer Science</div>
+                <div className="text-lg font-black text-white">{user?.full_name || "User Profile"}</div>
+                <div className="text-sm" style={{ color: C.muted }}>{role}</div>
                 <div className="flex items-center justify-center gap-1.5 mt-1.5">
-                  <Pill label="Pro Plan" color={C.purple} />
+                  <Pill label={user?.experience_level || "Fresher"} color={C.purple} />
                   <Pill label="Active" color={C.green} />
                 </div>
               </div>
@@ -3769,17 +3875,17 @@ function ProfilePage() {
               <div className="text-xs font-bold mb-3 text-white">Connected Profiles</div>
               <div className="space-y-2.5">
                 {[
-                  { label: "LinkedIn", url: "linkedin.com/in/dhrutishah", icon: <Linkedin size={14} />, color: C.blue, connected: true },
-                  { label: "GitHub", url: "github.com/dhrutishah", icon: <GitBranch size={14} />, color: C.muted, connected: true },
-                  { label: "Portfolio", url: "dhrutishah.dev", icon: <Globe size={14} />, color: C.purple, connected: false },
+                  { label: "LinkedIn", url: user?.full_name ? `linkedin.com/in/${user.full_name.toLowerCase().replace(/[^a-z0-9]/g, "")}` : "", icon: <Linkedin size={14} />, color: C.blue, connected: !!user?.full_name },
+                  { label: "GitHub", url: user?.full_name ? `github.com/${user.full_name.toLowerCase().replace(/[^a-z0-9]/g, "")}` : "", icon: <GitBranch size={14} />, color: C.muted, connected: !!user?.full_name },
+                  { label: "Portfolio", url: "", icon: <Globe size={14} />, color: C.purple, connected: false },
                 ].map(l => (
                   <div key={l.label} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                     <div style={{ color: l.color }}>{l.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-semibold text-white">{l.label}</div>
-                      <div className="text-xs truncate" style={{ color: C.muted }}>{l.connected ? l.url : "Not connected"}</div>
+                      <div className="text-xs truncate" style={{ color: C.muted }}>{l.connected && l.url ? l.url : "Not connected"}</div>
                     </div>
-                    {l.connected
+                    {l.connected && l.url
                       ? <ExternalLink size={12} style={{ color: C.muted, flexShrink: 0 }} />
                       : <button className="text-xs px-2 py-1 rounded-lg flex-shrink-0" style={{ background: `${C.purple}18`, color: C.purple }}>Connect</button>}
                   </div>
@@ -3802,7 +3908,7 @@ function ProfilePage() {
             </Card>
           </div>
 
-          {/* Right panel â€” forms */}
+          {/* Right panel — forms */}
           <div className="md:col-span-2 space-y-5">
             {/* Tab nav */}
             <div className="flex gap-1 p-1 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -3821,20 +3927,20 @@ function ProfilePage() {
                 <SecHead icon={<User size={16} />} title="Personal Information" sub="Your basic profile details" />
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { label: "First Name", val: "Dhruti" }, { label: "Last Name", val: "Shah" },
-                    { label: "Email Address", val: "dhruti.shah@email.com" }, { label: "Phone Number", val: "+91 98765 43210" },
-                    { label: "City", val: "Ahmedabad" }, { label: "State", val: "Gujarat" },
-                    { label: "Date of Birth", val: "15 March 2002" }, { label: "Gender", val: "Female" },
+                    { label: "First Name", val: firstName }, { label: "Last Name", val: lastName },
+                    { label: "Email Address", val: email }, { label: "Phone Number", val: "" },
+                    { label: "City", val: "" }, { label: "State", val: "" },
+                    { label: "Date of Birth", val: "" }, { label: "Gender", val: "" },
                   ].map(f => (
                     <div key={f.label}>
                       <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{f.label}</label>
-                      <input defaultValue={f.val} readOnly={!editing} style={inputStyle} />
+                      <input defaultValue={f.val} placeholder={f.label} readOnly={!editing} style={inputStyle} />
                     </div>
                   ))}
                 </div>
                 <div className="mt-4">
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Bio / About Me</label>
-                  <textarea defaultValue="Final year B.Tech CSE student passionate about AI/ML and full-stack development. Currently preparing for product-based company placements." readOnly={!editing} rows={3}
+                  <textarea defaultValue="" placeholder="Tell us about yourself..." readOnly={!editing} rows={3}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
                     style={{ background: editing ? C.surface : "transparent", border: `1px solid ${editing ? C.border : "transparent"}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                 </div>
@@ -3847,20 +3953,20 @@ function ProfilePage() {
                 <SecHead icon={<GraduationCap size={16} />} title="Academic Details" sub="Your educational background" />
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   {[
-                    { label: "Degree", val: "B.Tech" }, { label: "Specialisation", val: "Computer Science & Engineering" },
-                    { label: "University", val: "Gujarat Technological University" }, { label: "College", val: "LDRP Institute of Technology" },
-                    { label: "Graduation Year", val: "2025" }, { label: "Current CGPA", val: "8.7 / 10" },
+                    { label: "Degree", val: "" }, { label: "Specialisation", val: "" },
+                    { label: "University", val: "" }, { label: "College", val: "" },
+                    { label: "Graduation Year", val: "" }, { label: "Current CGPA", val: "" },
                   ].map(f => (
                     <div key={f.label}>
                       <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{f.label}</label>
-                      <input defaultValue={f.val} readOnly={!editing} style={inputStyle} />
+                      <input defaultValue={f.val} placeholder={f.label} readOnly={!editing} style={inputStyle} />
                     </div>
                   ))}
                 </div>
                 <div className="text-xs font-bold mb-3 text-white">Resume</div>
                 <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(168,85,247,.15)", color: C.purple }}><FileText size={18} /></div>
-                  <div className="flex-1"><div className="text-sm font-semibold text-white">Resume_v3_Dhruti_Shah.pdf</div><div className="text-xs" style={{ color: C.muted }}>Uploaded Jul 30, 2025 Â· AI Score: 87/100</div></div>
+                  <div className="flex-1"><div className="text-sm font-semibold text-white">{user?.full_name ? `Resume_${user.full_name.replace(/\s+/g, '_')}.pdf` : "Resume.pdf"}</div><div className="text-xs" style={{ color: C.muted }}>Uploaded recently · AI Score: 87/100</div></div>
                   <div className="flex gap-2">
                     <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(168,85,247,.12)", color: C.purple }}>View</button>
                     {editing && <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>Replace</button>}
@@ -3904,7 +4010,7 @@ function ProfilePage() {
                   {certs.map((c, i) => (
                     <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: `${c.color}08`, border: `1px solid ${c.color}25` }}>
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${c.color}18`, color: c.color }}><Award size={18} /></div>
-                      <div className="flex-1"><div className="text-sm font-bold text-white">{c.name}</div><div className="text-xs" style={{ color: C.muted }}>{c.org} Â· {c.date}</div></div>
+                      <div className="flex-1"><div className="text-sm font-bold text-white">{c.name}</div><div className="text-xs" style={{ color: C.muted }}>{c.org} · {c.date}</div></div>
                       <div className="flex gap-2">
                         <button className="px-3 py-1.5 rounded-lg text-xs" style={{ background: `${c.color}12`, color: c.color }}>View</button>
                         {editing && <button><Trash2 size={14} style={{ color: C.muted }} /></button>}
@@ -3929,10 +4035,11 @@ function ProfilePage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 8: SETTINGS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function SettingsPage() {
+  const { user } = useAuth();
   const [section, setSection] = useState("account");
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     emailMock: true, emailProgress: true, emailResume: false,
@@ -3984,15 +4091,20 @@ function SettingsPage() {
             <Card className="p-6">
               <SecHead icon={<User size={16} />} title="Profile Details" sub="Shown on your public profile" />
               <div className="grid grid-cols-2 gap-4">
-                {[["Full Name", "Dhruti Shah"], ["Display Name", "DhrutiS"], ["Email", "dhruti.shah@email.com"], ["Phone", "+91 98765 43210"]].map(([l, v]) => (
+                {[
+                  ["Full Name", user?.full_name || ""],
+                  ["Display Name", user?.full_name?.split(" ")[0] || ""],
+                  ["Email", user?.email || ""],
+                  ["Phone", ""]
+                ].map(([l, v]) => (
                   <div key={l}><label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{l}</label>
-                    <input defaultValue={v} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
+                    <input defaultValue={v} placeholder={l} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   </div>
                 ))}
               </div>
               <div className="mt-4">
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Profile Bio</label>
-                <textarea defaultValue="Final year B.Tech CSE student preparing for product-based company placements." rows={2}
+                <textarea defaultValue="" placeholder="Write a short bio..." rows={2}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
                   style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
               </div>
@@ -4023,7 +4135,7 @@ function SettingsPage() {
                 {["Current Password", "New Password", "Confirm New Password"].map(l => (
                   <div key={l}>
                     <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>{l}</label>
-                    <input type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    <input type="password" placeholder="" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                       style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   </div>
                 ))}
@@ -4047,11 +4159,11 @@ function SettingsPage() {
             <Card className="p-5">
               <SecHead icon={<Eye size={16} />} title="Active Sessions" sub="Devices currently logged in" />
               {[
-                { device: "MacBook Pro â€” Chrome", location: "Ahmedabad, IN", time: "Now", current: true },
-                { device: "iPhone 15 Pro â€” Safari", location: "Ahmedabad, IN", time: "2h ago", current: false },
+                { device: "MacBook Pro — Chrome", location: "Ahmedabad, IN", time: "Now", current: true },
+                { device: "iPhone 15 Pro — Safari", location: "Ahmedabad, IN", time: "2h ago", current: false },
               ].map((s, i) => (
                 <div key={i} className="flex items-center justify-between py-3 border-b last:border-b-0" style={{ borderColor: C.border }}>
-                  <div><div className="text-sm font-medium text-white">{s.device}</div><div className="text-xs" style={{ color: C.muted }}>{s.location} Â· {s.time}</div></div>
+                  <div><div className="text-sm font-medium text-white">{s.device}</div><div className="text-xs" style={{ color: C.muted }}>{s.location} · {s.time}</div></div>
                   {s.current ? <Pill label="Current" color={C.green} /> : <button className="text-xs font-semibold" style={{ color: C.red }}>Revoke</button>}
                 </div>
               ))}
@@ -4173,9 +4285,9 @@ function SettingsPage() {
             <Card className="p-5">
               <div className="space-y-3">
                 {[
-                  { label: "LinkedIn", icon: <Linkedin size={18} />, color: C.blue, connected: true, username: "linkedin.com/in/dhrutishah" },
-                  { label: "GitHub", icon: <GitBranch size={18} />, color: "#fff", connected: true, username: "github.com/dhrutishah" },
-                  { label: "Google", icon: <Globe size={18} />, color: C.red, connected: true, username: "dhruti.shah@gmail.com" },
+                  { label: "LinkedIn", icon: <Linkedin size={18} />, color: C.blue, connected: !!user?.full_name, username: user?.full_name ? `linkedin.com/in/${user.full_name.toLowerCase().replace(/[^a-z0-9]/g, "")}` : "" },
+                  { label: "GitHub", icon: <GitBranch size={18} />, color: "#fff", connected: !!user?.full_name, username: user?.full_name ? `github.com/${user.full_name.toLowerCase().replace(/[^a-z0-9]/g, "")}` : "" },
+                  { label: "Google", icon: <Globe size={18} />, color: C.red, connected: !!user?.email, username: user?.email || "" },
                   { label: "Portfolio Website", icon: <ExternalLink size={18} />, color: C.purple, connected: false, username: "" },
                 ].map((a, i) => (
                   <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
@@ -4196,7 +4308,7 @@ function SettingsPage() {
 
         {section === "danger" && (
           <div className="space-y-5 max-w-2xl">
-            <div><div className="text-lg font-bold" style={{ color: C.red }}>Danger Zone</div><div className="text-sm" style={{ color: C.muted }}>Irreversible actions â€” proceed with caution.</div></div>
+            <div><div className="text-lg font-bold" style={{ color: C.red }}>Danger Zone</div><div className="text-sm" style={{ color: C.muted }}>Irreversible actions — proceed with caution.</div></div>
             {[
               { title: "Clear All Progress Data", desc: "Permanently delete your learning progress, streaks and history. This cannot be undone.", btn: "Clear Data", color: C.amber },
               { title: "Deactivate Account", desc: "Temporarily disable your account. You can reactivate at any time.", btn: "Deactivate", color: C.amber },
@@ -4220,9 +4332,9 @@ function SettingsPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 9: NOTIFICATIONS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function NotificationsPage() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -4298,7 +4410,7 @@ function NotificationsPage() {
           <div className="relative flex-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search notifications by title or messageâ€¦"
+              placeholder="Search notifications by title or message…"
               className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
               style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
           </div>
@@ -4394,9 +4506,9 @@ function NotifCard({ n, onRead, onDelete }: { n: typeof NOTIFICATIONS_DATA[0]; o
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // PAGE 10: 404 NOT FOUND
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 function NotFoundPage({ onHome }: { onHome: () => void }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -4416,7 +4528,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         <rect x={150} y={130} width={60} height={65} rx={12} fill={C.card} stroke={C.border} strokeWidth={1.5} />
         {/* Robot belly screen */}
         <rect x={158} y={145} width={44} height={28} rx={7} fill="#0B1120" stroke="rgba(168,85,247,.4)" strokeWidth={1} />
-        {/* Screen content â€” sad face / error */}
+        {/* Screen content — sad face / error */}
         <text x={180} y={165} textAnchor="middle" fill={C.red} style={{ fontSize: 14, fontFamily: "monospace" }}>404</text>
 
         {/* Robot head */}
@@ -4429,7 +4541,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         <rect x={187} y={109} width={10} height={8} rx={4} fill={C.surface} />
         <circle cx={192} cy={113} r={3} fill={C.red} />
         <circle cx={193.5} cy={111.5} r={1} fill="rgba(255,255,255,.6)" />
-        {/* Mouth â€” flat sad */}
+        {/* Mouth — flat sad */}
         <path d="M170 126 Q180 122 190 126" stroke={C.muted} strokeWidth={1.5} strokeLinecap="round" fill="none" />
         {/* Antenna */}
         <line x1={180} y1={98} x2={180} y2={85} stroke={C.border} strokeWidth={1.5} />
@@ -4443,7 +4555,7 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
         {/* Arms */}
         <rect x={122} y={135} width={28} height={12} rx={6} fill={C.surface} stroke={C.border} strokeWidth={1} transform="rotate(-20 136 141)" />
         <rect x={210} y={135} width={28} height={12} rx={6} fill={C.surface} stroke={C.border} strokeWidth={1} transform="rotate(20 224 141)" />
-        {/* Hands â€” question mark bubbles */}
+        {/* Hands — question mark bubbles */}
         <circle cx={112} cy={152} r={10} fill={C.surface} stroke={C.border} strokeWidth={1} />
         <text x={112} y={156} textAnchor="middle" fill={C.amber} style={{ fontSize: 12, fontWeight: 700 }}>?</text>
         <circle cx={248} cy={152} r={10} fill={C.surface} stroke={C.border} strokeWidth={1} />
@@ -4500,14 +4612,14 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
       <div className="text-2xl font-bold text-white mb-2">Page Not Found</div>
       <p className="text-sm max-w-md mb-6 leading-relaxed" style={{ color: C.muted }}>
         Oops! This page seems to have taken a different career path.
-        Even our AI couldn't locate it â€” and it knows <em>everything</em>.
+        Even our AI couldn't locate it — and it knows <em>everything</em>.
       </p>
 
       {/* Error detail chip */}
       <div className="flex items-center gap-2 px-4 py-2 rounded-xl mb-8"
         style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", color: C.red }}>
         <AlertTriangle size={13} />
-        <span className="text-xs font-mono">Error 404 â€” Route not matched in navigation tree</span>
+        <span className="text-xs font-mono">Error 404 — Route not matched in navigation tree</span>
       </div>
 
       {/* Quick nav suggestions */}
@@ -4548,9 +4660,9 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // RESUME ANALYZER PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 const TARGET_ROLES = [
   "Full Stack Developer",
   "Frontend Developer",
@@ -4583,18 +4695,19 @@ const DEFAULT_RESUME_SECTIONS = [
 const getScoreGrade = (score: number) => {
   if (score >= 90) return "A+";
   if (score >= 85) return "A";
-  if (score >= 80) return "Aâˆ’";
+  if (score >= 80) return "A−";
   if (score >= 75) return "B+";
   if (score >= 70) return "B";
-  if (score >= 65) return "Bâˆ’";
+  if (score >= 65) return "B−";
   if (score >= 60) return "C+";
   return "C";
 };
 
 function ResumeAnalyzerPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState<"upload" | "analyzing" | "results">("upload");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [targetRole, setTargetRole] = useState("Full Stack Developer");
+  const [targetRole, setTargetRole] = useState(user?.target_job_role || "Full Stack Developer");
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressPhase, setProgressPhase] = useState("Preparing document...");
@@ -4628,7 +4741,7 @@ function ResumeAnalyzerPage() {
       { section: "Skills & Technologies", action: "Add keywords for CI/CD and Cloud infrastructure to pass initial ATS filters", potential_gain: 7, impact: "High" },
       { section: "Professional Summary", action: "Focus executive summary around target role business impact", potential_gain: 5, impact: "Medium" },
     ],
-    filename: "Alexander_Chen_Resume.pdf",
+    filename: user?.full_name ? `Resume_${user.full_name.replace(/\s+/g, '_')}.pdf` : "Resume.pdf",
   });
 
   const validateAndSetFile = (file: File) => {
@@ -4797,21 +4910,21 @@ function ResumeAnalyzerPage() {
     }
     setStep("analyzing");
     setProgress(15);
-    setProgressPhase("Extracting text and scanning document structureâ€¦");
+    setProgressPhase("Extracting text and scanning document structure…");
     setError(null);
 
     const iv = setInterval(() => {
       setProgress((p) => {
         if (p < 40) {
-          setProgressPhase("Scanning ATS formatting and parsing contact detailsâ€¦");
+          setProgressPhase("Scanning ATS formatting and parsing contact details…");
           return p + 6;
         }
         if (p < 75) {
-          setProgressPhase("Consulting Google Gemini 2.0 AI for semantic evaluationâ€¦");
+          setProgressPhase("Consulting Google Gemini 2.0 AI for semantic evaluation…");
           return p + 4;
         }
         if (p < 92) {
-          setProgressPhase("Analyzing technical keywords and synthesizing recommendationsâ€¦");
+          setProgressPhase("Analyzing technical keywords and synthesizing recommendations…");
           return p + 2;
         }
         return p;
@@ -4907,7 +5020,7 @@ function ResumeAnalyzerPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button onClick={() => setError(null)} className="text-xs text-gray-400 hover:text-white px-1">âœ•</button>
+              <button onClick={() => setError(null)} className="text-xs text-gray-400 hover:text-white px-1">✕</button>
             </div>
           </div>
         )}
@@ -4938,11 +5051,11 @@ function ResumeAnalyzerPage() {
                   </div>
                   <div className="text-sm" style={{ color: C.muted }}>
                     {selectedFile
-                      ? `${(selectedFile.size / 1024).toFixed(1)} KB Â· Ready to evaluate`
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready to evaluate`
                       : "Drag & drop your PDF, DOCX, DOC, or TXT document here"}
                   </div>
                   <div className="text-xs mt-1" style={{ color: C.muted }}>
-                    Supported formats: .pdf, .docx, .doc, .txt Â· Maximum size: 15MB
+                    Supported formats: .pdf, .docx, .doc, .txt · Maximum size: 15MB
                   </div>
                 </div>
 
@@ -4987,7 +5100,7 @@ function ResumeAnalyzerPage() {
                 </button>
 
                 <div className="text-xs text-center" style={{ color: C.muted }}>
-                  Instant ATS evaluation Â· Evaluates all resume formats
+                  Instant ATS evaluation · Evaluates all resume formats
                 </div>
               </Card>
 
@@ -5071,7 +5184,7 @@ function ResumeAnalyzerPage() {
             </div>
 
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">Gemini AI is analyzing your resumeâ€¦</div>
+              <div className="text-base font-bold text-white mb-1">Gemini AI is analyzing your resume…</div>
               <div className="text-sm" style={{ color: C.cyan }}>{progressPhase}</div>
               <div className="text-xs mt-1" style={{ color: C.muted }}>Evaluating against {targetRole} standards</div>
             </div>
@@ -5326,9 +5439,9 @@ function ResumeAnalyzerPage() {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 // LINKEDIN ANALYZER PAGE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══
 const LINKEDIN_SECTIONS = [
   { name: "Profile Photo", score: 100, icon: <Camera size={14} />, color: C.green, tips: ["Great professional photo detected"] },
   { name: "Headline", score: 65, icon: <Hash size={14} />, color: C.amber, tips: ["Add target role keywords", "Mention top skills", "Make it specific not generic"] },
@@ -5342,13 +5455,11 @@ const LINKEDIN_SECTIONS = [
 
 function LinkedInAnalyzerPage() {
   const [step, setStep] = useState<"input" | "analyzing" | "results">("input");
-  const [url, setUrl] = useState("linkedin.com/in/dhruti-shah-cs");
-  const [profileText, setProfileText] = useState(
-    "Senior Data Analyst with 4+ years of experience in SQL, Python, Tableau, and BI reporting for SaaS and fintech teams. Built dashboards and KPI frameworks used by product, finance, and leadership stakeholders. Strong background in business intelligence, experiment analysis, customer insights, and stakeholder communication. Experienced in translating raw data into recurring actionable reporting and executive narratives."
-  );
-  const [targetRole, setTargetRole] = useState("Senior Data Analyst");
-  const [location, setLocation] = useState("New York");
-  const [skillsInput, setSkillsInput] = useState("SQL, Python, Power BI, Tableau, BI, Data Analysis");
+  const [url, setUrl] = useState("");
+  const [profileText, setProfileText] = useState("");
+  const [targetRole, setTargetRole] = useState("");
+  const [location, setLocation] = useState("");
+  const [skillsInput, setSkillsInput] = useState("");
   const [progress, setProgress] = useState(0);
   const [activeIdx, setActiveIdx] = useState(0);
   const [analysis, setAnalysis] = useState({
@@ -5507,28 +5618,28 @@ function LinkedInAnalyzerPage() {
               <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Target role</label>
-                  <input value={targetRole} onChange={(e) => setTargetRole(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                  <input value={targetRole} onChange={(e) => setTargetRole(e.target.value)} placeholder="e.g. Senior Data Analyst" className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Location</label>
-                    <input value={location} onChange={(e) => setLocation(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                    <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. New York, NY" className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>LinkedIn URL</label>
-                    <input value={url} onChange={(e) => setUrl(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                    <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="e.g. linkedin.com/in/username" className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Skills</label>
-                  <input value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                  <input value={skillsInput} onChange={(e) => setSkillsInput(e.target.value)} placeholder="e.g. SQL, Python, Tableau, React" className="w-full p-3 rounded-xl outline-none text-sm" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>Profile text</label>
-                  <textarea value={profileText} onChange={(e) => setProfileText(e.target.value)} rows={9} className="w-full p-3 rounded-xl outline-none text-sm resize-none" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
+                  <textarea value={profileText} onChange={(e) => setProfileText(e.target.value)} placeholder="Paste your LinkedIn summary or experience here..." rows={9} className="w-full p-3 rounded-xl outline-none text-sm resize-none" style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text }} />
                 </div>
 
                 <button onClick={startAnalysis} className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg,#22D3EE,#A855F7)", boxShadow: "0 6px 20px rgba(34,211,238,.25)" }}>
@@ -5830,7 +5941,7 @@ function ProjectAnalyzerPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(52,211,153,.12)", color: C.green }}><FolderOpen size={18} /></div>
               <h1 className="text-xl font-bold text-white">Project Analyzer</h1>
             </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Get <Grad>AI-powered feedback</Grad> on your projects â€” know exactly how they'll land in interviews.</p>
+            <p className="text-sm ml-12" style={{ color: C.muted }}>Get <Grad>AI-powered feedback</Grad> on your projects — know exactly how they'll land in interviews.</p>
           </div>
           {step === "results" && (
             <button onClick={() => setStep("input")}
@@ -5933,11 +6044,11 @@ function ProjectAnalyzerPage() {
               <div className="absolute inset-0 flex items-center justify-center"><FolderOpen size={28} style={{ color: C.green }} /></div>
             </div>
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">AI is evaluating your projectâ€¦</div>
+              <div className="text-base font-bold text-white mb-1">AI is evaluating your project…</div>
               <div className="text-sm" style={{ color: C.muted }}>Analyzing: {name}</div>
             </div>
             <div className="w-full max-w-sm">
-              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processingâ€¦</span><span style={{ color: C.green }}>{Math.round(progress)}%</span></div>
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processing…</span><span style={{ color: C.green }}>{Math.round(progress)}%</span></div>
               <div className="h-2 rounded-full" style={{ background: C.border }}>
                 <div className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${progress}%`, background: "linear-gradient(135deg,#34D399,#A855F7)", boxShadow: "0 0 10px rgba(52,211,153,.5)" }} />
@@ -5952,7 +6063,7 @@ function ProjectAnalyzerPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Overall Score", value: `${overallScore}/100`, grade: "B", color: C.green, sub: "Above average project" },
-                { label: "Interview Impact", value: "88/100", grade: "Aâˆ’", color: C.purple, sub: "Will impress interviewers" },
+                { label: "Interview Impact", value: "88/100", grade: "A−", color: C.purple, sub: "Will impress interviewers" },
                 { label: "Technical Depth", value: "78/100", grade: "B+", color: C.cyan, sub: "Good complexity level" },
                 { label: "Improvement Potential", value: "+18 pts", grade: "", color: C.amber, sub: "With documentation fixes" },
               ].map(s => (
@@ -6024,9 +6135,9 @@ function ProjectAnalyzerPage() {
                   <div className="flex items-center gap-2 mb-3"><Sparkles size={14} style={{ color: C.purple }} /><span className="text-sm font-bold text-white">Interview Talking Points</span></div>
                   <div className="space-y-2">
                     {[
-                      `"I built ${name} to solve a real problem I facedâ€¦"`,
-                      `"The biggest challenge was implementing ${PROJECT_SAMPLES[selected].tech[0]} with real-time syncâ€¦"`,
-                      `"I learned about scalability when I had to handle concurrent usersâ€¦"`,
+                      `"I built ${name} to solve a real problem I faced…"`,
+                      `"The biggest challenge was implementing ${PROJECT_SAMPLES[selected].tech[0]} with real-time sync…"`,
+                      `"I learned about scalability when I had to handle concurrent users…"`,
                     ].map((p, i) => (
                       <div key={i} className="p-2.5 rounded-xl text-xs text-white leading-snug"
                         style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)" }}>{p}</div>
@@ -6091,7 +6202,7 @@ function ProjectAnalyzerPage() {
   );
 }
 
-// â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Footer ───
 function Footer() {
   return (
     <footer className="px-6 py-3 flex items-center justify-between flex-shrink-0"
@@ -6113,7 +6224,7 @@ function Footer() {
   );
 }
 
-// â”€â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── App ───
 type Page =
   | "dashboard" | "resume" | "linkedin" | "projects"
   | "subject" | "domain" | "mock" | "roadmap" | "reports"
