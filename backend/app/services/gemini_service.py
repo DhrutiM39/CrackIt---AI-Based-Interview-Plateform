@@ -52,6 +52,7 @@ class ProjectAnalysisAI(BaseModel):
     missing_features: List[str]
     interview_questions: List[str]
     suggested_improvements: List[str]
+    detected_technologies: List[str] = []
 
 
 class AnswerRubricAI(BaseModel):
@@ -300,9 +301,11 @@ class GeminiService:
 
     # ── Project Analysis ───────────────────────────────────────────────────────
 
-    def analyze_project(self, project_info: dict) -> ProjectAnalysisAI:
+    def analyze_project(self, project_info: dict, codebase: str = "") -> ProjectAnalysisAI:
         """Analyze a user's project for technical quality and interview readiness."""
         info_text = json.dumps(project_info, indent=2) if isinstance(project_info, dict) else str(project_info)
+        
+        codebase_section = f"\nCODEBASE CONTENTS:\n{codebase}\n" if codebase else ""
 
         prompt = f"""
         You are a senior software engineer and technical interviewer at a top tech company.
@@ -310,7 +313,7 @@ class GeminiService:
 
         PROJECT INFORMATION:
         {info_text}
-
+        {codebase_section}
         Evaluate:
         - overall_score: project quality (0-100)
         - technical_quality: code quality, architecture, tech choices (0-100)
@@ -322,6 +325,7 @@ class GeminiService:
         - missing_features: features that would improve the project
         - interview_questions: 5-8 interview questions a recruiter might ask about this project
         - suggested_improvements: 5-8 specific improvements
+        - detected_technologies: list of technologies, frameworks, and languages detected from the codebase or description
 
         Be honest and constructive. Focus on real-world engineering value.
         """

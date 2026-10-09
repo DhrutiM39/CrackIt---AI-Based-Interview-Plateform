@@ -384,6 +384,7 @@ export const linkedinApi = {
 
 export const projectsApi = {
   analyze: (payload: any) => api.post<any>("/projects/analyze", { body: payload }),
+  analyzeCodebase: (formData: FormData) => api.post<any>("/projects/analyze-codebase", { body: formData }),
   list: () => api.get<any[]>("/projects"),
   getById: (id: string | number) => api.get<any>(`/projects/${id}`),
 };

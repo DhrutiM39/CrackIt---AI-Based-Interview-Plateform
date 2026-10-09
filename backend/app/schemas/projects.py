@@ -27,6 +27,7 @@ class ProjectAnalysisResponse(BaseModel):
     missing_features: List[str]
     interview_questions: List[str]
     suggested_improvements: List[str]
+    detected_technologies: List[str] = []
     persisted: bool = False
 
 

@@ -6062,21 +6062,60 @@ const PROJECT_CRITERIA = [
 
 function ProjectAnalyzerPage() {
   const [step, setStep] = useState<"input" | "analyzing" | "results">("input");
-  const [selected, setSelected] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [name, setName] = useState(PROJECT_SAMPLES[0].name);
-  const [desc, setDesc] = useState(PROJECT_SAMPLES[0].desc);
-  const [activeC, setActiveC] = useState(0);
-  const overallScore = 74;
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [uploadType, setUploadType] = useState<"github" | "zip">("github");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
 
-  const startAnalysis = () => {
-    setStep("analyzing"); setProgress(0);
-    let p = 0;
+  const startAnalysis = async () => {
+    if (!name || !desc) {
+      setError("Name and description are required.");
+      return;
+    }
+    if (uploadType === "github" && !githubUrl) {
+      setError("GitHub URL is required.");
+      return;
+    }
+    if (uploadType === "zip" && !zipFile) {
+      setError("Please select a zip file.");
+      return;
+    }
+    
+    setError(null);
+    setStep("analyzing"); 
+    setProgress(0);
+    
     const iv = setInterval(() => {
-      p += Math.random() * 14 + 6;
-      if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => setStep("results"), 400); }
-      setProgress(Math.min(p, 100));
-    }, 230);
+      setProgress(p => Math.min(p + (Math.random() * 10 + 5), 90));
+    }, 500);
+
+    try {
+      const formData = new FormData();
+      formData.append("project_name", name);
+      formData.append("description", desc);
+      formData.append("technologies", ""); // Let backend auto-detect
+      
+      if (uploadType === "github") {
+        formData.append("github_url", githubUrl);
+      } else if (zipFile) {
+        formData.append("file", zipFile);
+      }
+
+      const result = await projectsApi.analyzeCodebase(formData);
+      setAnalysisResult(result);
+      clearInterval(iv);
+      setProgress(100);
+      setTimeout(() => setStep("results"), 400);
+    } catch (err: any) {
+      clearInterval(iv);
+      setError(err.message || "Failed to analyze project");
+      setStep("input");
+    }
   };
 
   return (
@@ -6104,8 +6143,13 @@ function ProjectAnalyzerPage() {
         {step === "input" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2 p-6" style={{ border: "1px solid rgba(52,211,153,.2)" }}>
-              <SecHead icon={<FolderOpen size={16} />} title="Project Details" sub="Describe your project for AI analysis" />
+              <SecHead icon={<FolderOpen size={16} />} title="Project Details" sub="Describe your project and provide codebase" />
               <div className="space-y-4">
+                {error && (
+                  <div className="p-3 rounded-xl text-sm text-red-400" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                    {error}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Project Name *</label>
                   <input value={name} onChange={e => setName(e.target.value)}
@@ -6118,61 +6162,50 @@ function ProjectAnalyzerPage() {
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
                     style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Tech Stack</label>
-                  <div className="flex flex-wrap gap-2 p-3 rounded-xl min-h-12" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                    {PROJECT_SAMPLES[selected].tech.map((t, i) => (
-                      <div key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
-                        style={{ background: "rgba(52,211,153,.1)", border: "1px solid rgba(52,211,153,.3)", color: C.green }}>
-                        <Code2 size={10} /> {t}
-                      </div>
-                    ))}
-                  </div>
+                
+                <div className="flex gap-4 mb-4">
+                  <button onClick={() => setUploadType("github")} 
+                    className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all" 
+                    style={{ background: uploadType === "github" ? `${C.green}20` : C.surface, border: `1px solid ${uploadType === "github" ? C.green : C.border}`, color: uploadType === "github" ? C.green : C.muted }}>
+                    GitHub Repository
+                  </button>
+                  <button onClick={() => setUploadType("zip")} 
+                    className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all" 
+                    style={{ background: uploadType === "zip" ? `${C.purple}20` : C.surface, border: `1px solid ${uploadType === "zip" ? C.purple : C.border}`, color: uploadType === "zip" ? C.purple : C.muted }}>
+                    Upload ZIP
+                  </button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                
+                {uploadType === "github" ? (
                   <div>
-                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Project Type</label>
-                    <select className="w-full px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
-                      style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }}>
-                      {["Full Stack", "Frontend", "Backend", "AI/ML", "Mobile", "DevOps", "Data Science"].map(o => <option key={o}>{o}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>GitHub Link (optional)</label>
-                    <input placeholder="github.com/username/project" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>GitHub URL *</label>
+                    <input placeholder="https://github.com/username/project" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                       style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Upload Project (.zip) *</label>
+                    <input type="file" accept=".zip" onChange={e => setZipFile(e.target.files?.[0] || null)} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                      style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.text, fontFamily: "'Inter',sans-serif" }} />
+                  </div>
+                )}
+                
                 <button onClick={startAnalysis}
                   className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
                   style={{ background: "linear-gradient(135deg,#34D399,#A855F7)", boxShadow: "0 6px 20px rgba(52,211,153,.25)" }}>
-                  <Sparkles size={15} /> Analyze Project
+                  <Sparkles size={15} /> Analyze Codebase
                 </button>
               </div>
             </Card>
-
+            
             <div className="space-y-4">
               <Card className="p-5">
-                <div className="text-sm font-bold text-white mb-3">Sample Projects</div>
-                <div className="space-y-2">
-                  {PROJECT_SAMPLES.map((p, i) => (
-                    <button key={i} onClick={() => { setSelected(i); setName(p.name); setDesc(p.desc); }}
-                      className="w-full p-3 rounded-xl text-left transition-all"
-                      style={{ background: selected === i ? "rgba(52,211,153,.08)" : C.surface, border: `1px solid ${selected === i ? C.green + "40" : C.border}` }}>
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <span className="text-xs font-bold text-white">{p.name}</span>
-                        <Pill label={p.type} color={C.green} />
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {p.tech.map(t => <span key={t} className="text-xs px-1.5 py-0.5 rounded-md" style={{ background: C.surface, color: C.muted, border: `1px solid ${C.border}` }}>{t}</span>)}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <div className="text-sm font-bold text-white mb-3">AI Stack Detection</div>
+                <p className="text-xs" style={{ color: C.muted }}>Our AI automatically analyzes your codebase to identify your tech stack. You don't need to manually enter any technologies!</p>
               </Card>
               <Card className="p-4">
                 <div className="text-xs font-bold text-white mb-2">What We Evaluate</div>
-                {["Technical Complexity", "Code Quality", "Documentation", "Innovation", "Scalability", "Interview Impact"].map((c, i) => (
+                {["Technical Complexity", "Code Quality", "Resume Value", "Tech Stack Usage"].map((c, i) => (
                   <div key={i} className="flex items-center gap-2 py-1.5 border-b last:border-b-0" style={{ borderColor: C.border }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: C.green }} />
                     <span className="text-xs" style={{ color: C.muted }}>{c}</span>
@@ -6192,8 +6225,8 @@ function ProjectAnalyzerPage() {
               <div className="absolute inset-0 flex items-center justify-center"><FolderOpen size={28} style={{ color: C.green }} /></div>
             </div>
             <div className="text-center">
-              <div className="text-base font-bold text-white mb-1">AI is evaluating your project…</div>
-              <div className="text-sm" style={{ color: C.muted }}>Analyzing: {name}</div>
+              <div className="text-base font-bold text-white mb-1">AI is scanning your codebase…</div>
+              <div className="text-sm" style={{ color: C.muted }}>Analyzing architecture & code patterns</div>
             </div>
             <div className="w-full max-w-sm">
               <div className="flex justify-between text-xs mb-2" style={{ color: C.muted }}><span>Processing…</span><span style={{ color: C.green }}>{Math.round(progress)}%</span></div>
@@ -6206,149 +6239,89 @@ function ProjectAnalyzerPage() {
         )}
 
         {/* Results */}
-        {step === "results" && (
+        {step === "results" && analysisResult && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Overall Score", value: `${overallScore}/100`, grade: "B", color: C.green, sub: "Above average project" },
-                { label: "Interview Impact", value: "88/100", grade: "A−", color: C.purple, sub: "Will impress interviewers" },
-                { label: "Technical Depth", value: "78/100", grade: "B+", color: C.cyan, sub: "Good complexity level" },
-                { label: "Improvement Potential", value: "+18 pts", grade: "", color: C.amber, sub: "With documentation fixes" },
-              ].map(s => (
-                <Card key={s.label} className="p-5" style={{ border: `1px solid ${s.color}30` }}>
+                { label: "Overall Score", value: `${analysisResult.overall_score}/100`, color: C.green, sub: "Project evaluation" },
+                { label: "Technical Depth", value: `${analysisResult.technical_quality}/100`, color: C.cyan, sub: "Code architecture" },
+                { label: "Resume Value", value: `${analysisResult.resume_value}/100`, color: C.purple, sub: "Impact potential" },
+                { label: "Complexity", value: `${analysisResult.complexity_score}/100`, color: C.amber, sub: "Scope and difficulty" },
+              ].map((s, i) => (
+                <Card key={i} className="p-5" style={{ border: `1px solid ${s.color}30` }}>
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-xs font-semibold" style={{ color: C.muted }}>{s.label}</span>
-                    {s.grade && <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${s.color}18`, color: s.color }}>{s.grade}</span>}
                   </div>
                   <div className="text-2xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</div>
                   <div className="text-xs" style={{ color: C.muted }}>{s.sub}</div>
                 </Card>
               ))}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Criteria */}
-              <Card className="md:col-span-2 p-5">
-                <SecHead icon={<BarChart3 size={16} />} title="Evaluation Criteria" sub="Click to see detailed feedback per dimension" />
-                <div className="space-y-3">
-                  {PROJECT_CRITERIA.map((c, i) => (
-                    <button key={i} onClick={() => setActiveC(i)}
-                      className="w-full flex items-center gap-4 p-3 rounded-xl text-left transition-all"
-                      style={{ background: activeC === i ? `${c.color}10` : C.surface, border: `1px solid ${activeC === i ? c.color + "40" : C.border}` }}>
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
-                        style={{ background: `${c.color}18`, color: c.color }}>{c.score}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between mb-1.5">
-                          <span className="text-sm font-semibold text-white">{c.name}</span>
-                          <span className="text-xs font-bold" style={{ color: c.color }}>{c.score}%</span>
-                        </div>
-                        <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                          <div className="h-full rounded-full" style={{ width: `${c.score}%`, background: c.color, boxShadow: `0 0 6px ${c.color}50` }} />
-                        </div>
-                        <div className="text-xs mt-1" style={{ color: C.muted }}>{c.desc}</div>
-                      </div>
-                    </button>
-                  ))}
+            
+            <Card className="p-6" style={{ background: `${C.green}08`, border: `1px solid ${C.green}30` }}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl flex flex-shrink-0 items-center justify-center" style={{ background: `${C.green}20` }}>
+                  <CheckSquare size={24} style={{ color: C.green }} />
                 </div>
-              </Card>
-
-              {/* Feedback panel */}
-              <div className="space-y-5">
-                <Card className="p-5"
-                  style={{ background: `${PROJECT_CRITERIA[activeC].color}08`, border: `1px solid ${PROJECT_CRITERIA[activeC].color}30` }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black"
-                      style={{ background: `${PROJECT_CRITERIA[activeC].color}18`, color: PROJECT_CRITERIA[activeC].color }}>
-                      {PROJECT_CRITERIA[activeC].score}
-                    </div>
-                    <span className="text-sm font-bold text-white">{PROJECT_CRITERIA[activeC].name}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {[
-                      `Strong use of ${PROJECT_SAMPLES[selected].tech[0]} and ${PROJECT_SAMPLES[selected].tech[1]}`,
-                      "Consider adding unit tests with Jest/Vitest",
-                      "Add environment variable documentation",
-                      "Include a live demo link in README",
-                    ].map((t, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl"
-                        style={{ background: `${PROJECT_CRITERIA[activeC].color}08`, border: `1px solid ${PROJECT_CRITERIA[activeC].color}20` }}>
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: PROJECT_CRITERIA[activeC].color }} />
-                        <span className="text-xs text-white leading-snug">{t}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                <Card className="p-5" style={{ background: "rgba(168,85,247,.07)", border: "1px solid rgba(168,85,247,.2)" }}>
-                  <div className="flex items-center gap-2 mb-3"><Sparkles size={14} style={{ color: C.purple }} /><span className="text-sm font-bold text-white">Interview Talking Points</span></div>
-                  <div className="space-y-2">
-                    {[
-                      `"I built ${name} to solve a real problem I faced…"`,
-                      `"The biggest challenge was implementing ${PROJECT_SAMPLES[selected].tech[0]} with real-time sync…"`,
-                      `"I learned about scalability when I had to handle concurrent users…"`,
-                    ].map((p, i) => (
-                      <div key={i} className="p-2.5 rounded-xl text-xs text-white leading-snug"
-                        style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)" }}>{p}</div>
-                    ))}
-                  </div>
-                </Card>
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-2">Summary</h3>
+                  <p className="text-sm" style={{ color: C.muted }}>{analysisResult.summary}</p>
+                  {analysisResult.detected_technologies && analysisResult.detected_technologies.length > 0 && (
+                     <div className="mt-4">
+                       <span className="text-xs font-semibold text-white mb-2 block">Detected Tech Stack:</span>
+                       <div className="flex flex-wrap gap-2">
+                         {analysisResult.detected_technologies.map((t: string, i: number) => (
+                           <span key={i} className="text-xs px-2 py-1 rounded-md font-semibold" style={{ background: `${C.green}20`, color: C.green, border: `1px solid ${C.green}40` }}>{t}</span>
+                         ))}
+                       </div>
+                     </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Radar + Action plan */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Card className="p-5">
-                <SecHead icon={<Crosshair size={16} />} title="Evaluation Radar" sub="6-dimension project analysis" />
-                <ResponsiveContainer width="100%" height={230}>
-                  <RadarChart id="pa-eval-radar" data={PROJECT_CRITERIA.map(c => ({ axis: c.name.split(" ")[0], score: c.score }))} margin={{ top: 16, right: 24, bottom: 16, left: 24 }}>
-                    <PolarGrid stroke={C.border} />
-                    <PolarAngleAxis dataKey="axis" tick={{ fill: C.muted, fontSize: 9 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                    <Radar dataKey="score" stroke={C.green} fill={C.green} fillOpacity={0.18} strokeWidth={2} name="Score" />
-                    <Tooltip content={<ChartTip />} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </Card>
-
-              <Card className="p-5">
-                <SecHead icon={<Lightbulb size={16} />} title="Improvement Action Plan" sub="3 quick wins to boost your score" />
-                <div className="space-y-3 mb-5">
-                  {[
-                    { action: "Write a comprehensive README", impact: "+8 pts", effort: "Low", color: C.green },
-                    { action: "Add unit tests (aim for 70% coverage)", impact: "+6 pts", effort: "Med", color: C.cyan },
-                    { action: "Deploy to Vercel / Netlify + add live link", impact: "+4 pts", effort: "Low", color: C.amber },
-                  ].map((a, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                        style={{ background: a.color }}>#{i + 1}</div>
-                      <div className="flex-1">
-                        <div className="text-xs font-semibold text-white">{a.action}</div>
-                        <div className="flex gap-2 mt-0.5">
-                          <span className="text-xs font-bold" style={{ color: C.green }}>{a.impact}</span>
-                          <span className="text-xs" style={{ color: C.muted }}>Effort: {a.effort}</span>
-                        </div>
-                      </div>
+                <SecHead icon={<Star size={16} />} title="Strengths" sub="What makes this project good" />
+                <div className="space-y-2">
+                  {analysisResult.strengths?.map((s: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: `${C.green}08`, border: `1px solid ${C.green}20` }}>
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: C.green }} />
+                      <span className="text-xs text-white leading-snug">{s}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-3">
-                  <button className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#34D399,#A855F7)" }}>
-                    <Download size={14} /> Download Report
-                  </button>
-                  <button className="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
-                    style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
-                    <Share2 size={14} /> Share
-                  </button>
+              </Card>
+
+              <Card className="p-5">
+                <SecHead icon={<Lightbulb size={16} />} title="Suggested Improvements" sub="How to make it better" />
+                <div className="space-y-2">
+                  {analysisResult.suggested_improvements?.map((s: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: `${C.amber}08`, border: `1px solid ${C.amber}20` }}>
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: C.amber }} />
+                      <span className="text-xs text-white leading-snug">{s}</span>
+                    </div>
+                  ))}
                 </div>
               </Card>
             </div>
+            
+            <Card className="p-5" style={{ background: "rgba(168,85,247,.07)", border: "1px solid rgba(168,85,247,.2)" }}>
+              <div className="flex items-center gap-2 mb-3"><Sparkles size={14} style={{ color: C.purple }} /><span className="text-sm font-bold text-white">Interview Questions They Might Ask</span></div>
+              <div className="space-y-2">
+                {analysisResult.interview_questions?.map((p: string, i: number) => (
+                  <div key={i} className="p-2.5 rounded-xl text-xs text-white leading-snug"
+                    style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)" }}>{p}</div>
+                ))}
+              </div>
+            </Card>
           </>
         )}
       </div>
     </div>
   );
 }
+
 
 // ─── Footer ───
 function Footer() {
