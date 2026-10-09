@@ -412,9 +412,3 @@ export const settingsApi = {
   get: () => api.get<any>("/settings"),
   update: (payload: any) => api.patch<any>("/settings", { body: payload }),
 };
-
-export const roadmapApi = {
-  generate: (payload: any) => api.post<any>("/roadmap/generate", { body: payload }),
-  list: () => api.get<any[]>("/roadmap"),
-  getById: (id: string | number) => api.get<any>(`/roadmap/${id}`),
-};

@@ -7,7 +7,6 @@ from app.services.gemini_service import (
     InterviewReportAI,
     LinkedInAnalysisAI,
     ProjectAnalysisAI,
-    RoadmapAI,
     _gemini_response_schema,
 )
 from app.services.subject_ingestion.models import PreparationDataset
@@ -22,7 +21,6 @@ def test_response_schemas_use_gemini_supported_fields():
         PreparationDataset,
         ProjectAnalysisAI,
         ResumeAnalysisResult,
-        RoadmapAI,
     ]
 
     for model in models:

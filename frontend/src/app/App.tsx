@@ -18,14 +18,13 @@ import {
   UserCheck, Bookmark, CheckSquare, Loader2,
 } from "lucide-react";
 
-const Rocket = Zap;
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, LineChart, Line, AreaChart, Area,
   PieChart as RePieChart, Pie,
 } from "recharts";
-import { subjectsApi, domainsApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi, roadmapApi } from "../lib/api";
+import { subjectsApi, domainsApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi } from "../lib/api";
 import type { Report, ReportSummary, DashboardMetrics } from "../lib/api";
 
 // ─── Tokens ───
@@ -81,7 +80,6 @@ const NAV = [
   { id: "subject", label: "Subject Prep", icon: BookOpen },
   { id: "domain", label: "Domain Prep", icon: GraduationCap },
   { id: "mock", label: "Mock Interview", icon: Mic },
-  { id: "roadmap", label: "Roadmap", icon: Map },
   { id: "reports", label: "Reports", icon: ClipboardList },
 ];
 const NAV2 = [
@@ -1179,7 +1177,7 @@ function DomainCard({ d, onSelect, onExplore, selected }: { d: typeof DOMAINS[0]
       <button onClick={e => { e.stopPropagation(); onExplore(); }}
         className="w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
         style={{ background: selected ? d.color : C.surface, border: `1px solid ${selected ? d.color : C.border}`, color: selected ? "#fff" : C.muted }}>
-        <Map size={11} /> Explore Roadmap
+        <Map size={11} /> View Domain Plan
       </button>
     </div>
   );
@@ -1231,7 +1229,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
 
       {/* Roadmap Timeline */}
       <Card className="p-5">
-        <SecHead icon={<Map size={16} />} title="Learning Roadmap Timeline"
+        <SecHead icon={<Map size={16} />} title="Domain Learning Path"
           sub={`Structured ${d.time.replace(" left", "")} learning path for ${d.name}`} />
         <div className="relative">
           <div className="absolute left-4 top-2 bottom-2 w-0.5" style={{ background: C.border }} />
@@ -1818,7 +1816,7 @@ function getDomainSkillResourceProgress(domainKey: string, skills: string[], ope
   }));
 }
 
-function DomainRoadmapPage({ d, onBack }: { d: typeof DOMAINS[0]; onBack: () => void }) {
+function DomainLearningPathPage({ d, onBack }: { d: typeof DOMAINS[0]; onBack: () => void }) {
   const roadmapKey = DOMAIN_ID_BY_NAME[d.name.toLowerCase()] || d.id;
   const phases = DOMAIN_ROADMAP_TOPICS[roadmapKey] ?? [{ phase: "Core Preparation", topics: d.skills.map(skill => `${skill} fundamentals and practical use`) }, { phase: "Projects and Interview Prep", topics: ["Build a small project using the core skills", "Practice explaining design choices and tradeoffs"] }];
   const { user } = useAuth();
@@ -1836,7 +1834,7 @@ function DomainRoadmapPage({ d, onBack }: { d: typeof DOMAINS[0]; onBack: () => 
         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${d.color}18`, color: d.color }}>
           {d.icon}
         </div>
-        <h1 className="text-xl font-bold text-white">{d.name} Roadmap</h1>
+        <h1 className="text-xl font-bold text-white">{d.name} Learning Path</h1>
       </div>
       <p className="text-sm mb-6 ml-[52px]" style={{ color: C.muted }}>
         Follow the phases in order, use the linked resources, and build the skills as you go. Estimated duration: {d.time}.
@@ -1936,7 +1934,7 @@ function DomainPrepPage() {
   };
 
   if (roadmapDomain) {
-    return <DomainRoadmapPage d={roadmapDomain} onBack={() => setRoadmapDomainId(null)} />;
+    return <DomainLearningPathPage d={roadmapDomain} onBack={() => setRoadmapDomainId(null)} />;
   }
 
   const handleExploreDomain = async () => {
@@ -1985,7 +1983,7 @@ function DomainPrepPage() {
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
                 style={{ background: promptDomain.color }}>
                 {exploreSaving ? <RefreshCw size={14} className="animate-spin" /> : <Map size={14} />}
-                {exploreSaving ? "Saving..." : "Explore Roadmap"}
+                {exploreSaving ? "Saving..." : "View Domain Plan"}
               </button>
             </div>
           </div>
@@ -2013,7 +2011,7 @@ function DomainPrepPage() {
             </button>
             <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
               style={{ background: C.grad }}>
-              <Map size={14} /> View My Roadmap
+              <Map size={14} /> View My Domain Plan
             </button>
           </div>
         </div>
@@ -4108,34 +4106,6 @@ const ACHIEVEMENTS_LIST = [
 ];
 const RECENT_ACTS: { icon: React.ReactNode; label: string; time: string; color: string }[] = [];
 
-const CAREER_GOALS_LIST = [
-  { id: "sde", label: "Software Engineer", icon: "SWE", color: C.purple, companies: "Google | Meta | Amazon" },
-  { id: "fe", label: "Frontend Developer", icon: "FE", color: C.cyan, companies: "Flipkart | Swiggy | Zomato" },
-  { id: "ds", label: "Data Scientist", icon: "DS", color: C.green, companies: "Microsoft | IBM | Google" },
-  { id: "devops", label: "DevOps Engineer", icon: "OPS", color: C.amber, companies: "AWS | Azure | GCP" },
-  { id: "ml", label: "ML Engineer", icon: "ML", color: C.pink, companies: "OpenAI | HuggingFace | NVIDIA" },
-];
-const ROADMAP_PHASES_LIST = [
-  { phase: 1, title: "Foundation Building", weeks: "Weeks 1–3", status: "done",
-    items: ["Big O notation mastery", "Arrays, Strings, Linked Lists", "Basic SQL queries", "Git & GitHub basics"] },
-  { phase: 2, title: "Core Data Structures", weeks: "Weeks 4–7", status: "current",
-    items: ["Trees & Graphs", "Hash Maps & Sets", "Stacks & Queues", "Binary Search patterns"] },
-  { phase: 3, title: "Advanced Algorithms", weeks: "Weeks 8–12", status: "upcoming",
-    items: ["Dynamic Programming", "Graph algorithms (BFS/DFS)", "Greedy approaches", "Divide & Conquer"] },
-  { phase: 4, title: "System Design", weeks: "Weeks 13–16", status: "upcoming",
-    items: ["Scalability principles", "Database design patterns", "API design & REST", "Caching strategies"] },
-  { phase: 5, title: "Interview Preparation", weeks: "Weeks 17–20", status: "upcoming",
-    items: ["Mock interviews (×10)", "Behavioural prep (STAR)", "Resume finalization", "Company research"] },
-];
-const SKILL_GAP_RADAR = [
-  { axis: "DSA", current: 78, target: 90 },
-  { axis: "System Design", current: 45, target: 85 },
-  { axis: "OOP", current: 88, target: 90 },
-  { axis: "SQL", current: 72, target: 80 },
-  { axis: "Behavioral", current: 65, target: 88 },
-  { axis: "Communication", current: 80, target: 92 },
-];
-
 const NOTIFICATIONS_DATA = [
   { id: 1, type: "interview", title: "Mock Interview Reminder", body: "Your scheduled Technical mock interview starts in 30 minutes.", time: "10 min ago", read: false, icon: <Mic size={14} />, color: C.purple },
   { id: 2, type: "achievement", title: "Achievement Unlocked!", body: "You earned the '7-Day Streak' badge. Keep it going!", time: "2h ago", read: false, icon: <Award size={14} />, color: C.amber },
@@ -4144,7 +4114,7 @@ const NOTIFICATIONS_DATA = [
   { id: 5, type: "resume", title: "Resume Score Updated", body: "Your resume score improved from 72 to 87 after the latest AI analysis.", time: "Yesterday", read: true, icon: <FileText size={14} />, color: C.blue },
   { id: 6, type: "interview", title: "Interview Results Ready", body: "Your Behavioral round evaluation is now available in Reports.", time: "Yesterday", read: true, icon: <ClipboardList size={14} />, color: C.purple },
   { id: 7, type: "study", title: "Study Reminder", body: "You haven't studied today yet. Your streak is at risk — 14 days!", time: "2 days ago", read: true, icon: <BookOpen size={14} />, color: C.red },
-  { id: 8, type: "ai", title: "AI Roadmap Updated", body: "Your personalized roadmap has been updated based on your latest performance.", time: "3 days ago", read: true, icon: <Map size={14} />, color: C.indigo },
+  { id: 8, type: "ai", title: "Domain Prep Updated", body: "Your domain preparation plan has new recommendations.", time: "3 days ago", read: true, icon: <GraduationCap size={14} />, color: C.indigo },
   { id: 9, type: "progress", title: "Monthly Milestone Reached", body: "You hit 75% overall progress! You're in the top 22% of all users.", time: "4 days ago", read: true, icon: <Trophy size={14} />, color: C.amber },
   { id: 10, type: "resume", title: "LinkedIn Profile Tips", body: "AI found 5 improvements to boost your LinkedIn score from 74 to 86.", time: "5 days ago", read: true, icon: <Linkedin size={14} />, color: C.cyan },
 ];
@@ -4197,7 +4167,7 @@ function ProgressDashboardPage({
             { label: "Overall progress", value: `${overallPct}%`, icon: <TrendingUp size={16} />, color: C.purple, sub: "Start studying to track progress" },
             { label: "Mock interviews", value: "0", icon: <Mic size={16} />, color: C.cyan, sub: "Take your first mock interview" },
             { label: "Study streak", value: `${user?.streak_count || 0} days`, icon: <Flame size={16} />, color: C.amber, sub: "Study daily to build a streak" },
-            { label: "Next goal", value: "Set goal", icon: <Target size={16} />, color: C.green, sub: "Visit Roadmap to set your goal" },
+            { label: "Next goal", value: "Set goal", icon: <Target size={16} />, color: C.green, sub: "Choose a target domain in Domain Prep" },
           ].map(s => (
             <Card key={s.label} className="p-4">
               <div className="flex items-center gap-2.5 mb-3">
@@ -4311,7 +4281,7 @@ function ProgressDashboardPage({
           <Card className="p-5">
             <SecHead icon={<Target size={15} />} title="Suggested first steps" sub="Get started on your journey" />
             <div className="space-y-2.5">
-              {['Complete your profile (LinkedIn, Resume, Skills)', 'Pick a career goal from the Roadmap page', 'Take your first mock interview'].map((action, index) => (
+              {['Complete your profile (LinkedIn, Resume, Skills)', 'Choose a target career domain in Domain Prep', 'Take your first mock interview'].map((action, index) => (
                 <div key={action} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${C.purple}18`, color: C.purple }}>{index + 1}</div>
                   <span className="text-xs font-medium text-white">{action}</span>
@@ -4327,461 +4297,6 @@ function ProgressDashboardPage({
 
 // ═══
 // PAGE 6: AI PERSONALIZED ROADMAP
-// ═══
-function RoadmapPage() {
-  const [goalId, setGoalId] = useState("sde");
-  const [level, setLevel] = useState(2);
-  const goal = CAREER_GOALS_LIST.find(g => g.id === goalId)!;
-
-  const readinessPct = 62;
-
-  return (
-    <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(168,85,247,.14)", color: C.purple }}><Map size={18} /></div>
-              <h1 className="text-xl font-bold text-white">AI Personalized Learning Roadmap</h1>
-            </div>
-            <p className="text-sm ml-12" style={{ color: C.muted }}>Your <Grad>AI-generated path</Grad> to your dream job — tailored to your current skills.</p>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: C.grad }}>
-            <Sparkles size={14} /> Regenerate Plan
-          </button>
-        </div>
-
-        {/* Career goal + skill level */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Goal cards */}
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<Target size={16} />} title="Career Goal Selection" sub="Choose your target role" />
-            <div className="grid grid-cols-5 gap-3">
-              {CAREER_GOALS_LIST.map(g => (
-                <button key={g.id} onClick={() => setGoalId(g.id)}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl text-center transition-all hover:scale-[1.03]"
-                  style={{ background: goalId === g.id ? `linear-gradient(135deg,${g.color}22,${g.color}10)` : C.surface, border: `1px solid ${goalId === g.id ? g.color + "55" : C.border}`, boxShadow: goalId === g.id ? `0 0 20px ${g.color}20` : "none" }}>
-                  <span className="text-2xl">{g.icon}</span>
-                  <div className="text-xs font-bold leading-tight" style={{ color: goalId === g.id ? g.color : C.text }}>{g.label}</div>
-                  <div className="text-xs leading-tight" style={{ color: C.muted, fontSize: 10 }}>{g.companies}</div>
-                  {goalId === g.id && <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ background: g.color }}><Check size={9} className="text-white" /></div>}
-                </button>
-              ))}
-            </div>
-          </Card>
-
-          {/* Skill level + readiness */}
-          <Card className="p-5">
-            <SecHead icon={<Zap size={16} />} title="Current Skill Level" sub="Self-assessed" />
-            <div className="space-y-3 mb-5">
-              {["Beginner", "Intermediate", "Advanced", "Expert"].map((l, i) => (
-                <button key={l} onClick={() => setLevel(i)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all"
-                  style={{ background: level === i ? `${goal.color}12` : C.surface, border: `1px solid ${level === i ? goal.color + "45" : C.border}` }}>
-                  <div className="flex gap-1">
-                    {[0,1,2,3].map(b => <div key={b} className="w-3 h-3 rounded-sm" style={{ background: b <= i ? goal.color : C.border }} />)}
-                  </div>
-                  <span className="text-xs font-semibold" style={{ color: level === i ? goal.color : C.muted }}>{l}</span>
-                  {level === i && <Check size={12} style={{ color: goal.color, marginLeft: "auto" }} />}
-                </button>
-              ))}
-            </div>
-            {/* Interview readiness */}
-            <div className="p-4 rounded-xl" style={{ background: "rgba(168,85,247,.08)", border: "1px solid rgba(168,85,247,.2)" }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-white">Interview Readiness</span>
-                <span className="text-sm font-black" style={{ color: C.purple }}>{readinessPct}%</span>
-              </div>
-              <div className="h-2.5 rounded-full mb-2" style={{ background: C.border }}>
-                <div className="h-full rounded-full" style={{ width: `${readinessPct}%`, background: C.grad, boxShadow: "0 0 8px rgba(168,85,247,.5)" }} />
-              </div>
-              <div className="text-xs" style={{ color: C.muted }}>~8 weeks to interview-ready</div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Skill gap radar + estimated timeline */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <Card className="md:col-span-2 p-5">
-            <SecHead icon={<Crosshair size={16} />} title="Skill Gap Analysis" sub="Current vs target proficiency" />
-            <div className="grid grid-cols-2 gap-0 items-center">
-              <ResponsiveContainer width="100%" height={220}>
-                <RadarChart id="rm-gap-radar" data={SKILL_GAP_RADAR} margin={{ top: 16, right: 28, bottom: 16, left: 28 }}>
-                  <PolarGrid stroke={C.border} />
-                  <PolarAngleAxis dataKey="axis" tick={{ fill: C.muted, fontSize: 9 }} />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                  <Radar dataKey="target" stroke={`${goal.color}50`} fill={`${goal.color}08`} strokeWidth={1.5} name="Target" strokeDasharray="4 3" />
-                  <Radar dataKey="current" stroke={goal.color} fill={goal.color} fillOpacity={0.2} strokeWidth={2} name="Current" />
-                  <Tooltip content={<ChartTip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 pl-2">
-                {SKILL_GAP_RADAR.map(d => (
-                  <div key={d.axis}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span style={{ color: C.muted }}>{d.axis}</span>
-                      <span className="font-bold text-white">{d.current}%<span style={{ color: C.muted }}>/{d.target}</span></span>
-                    </div>
-                    <div className="relative h-1.5 rounded-full" style={{ background: C.border }}>
-                      <div className="absolute h-full rounded-full opacity-30" style={{ width: `${d.target}%`, background: goal.color }} />
-                      <div className="absolute h-full rounded-full" style={{ width: `${d.current}%`, background: goal.color }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <SecHead icon={<Clock size={16} />} title="Estimated Timeline" sub={`For ${goal.label}`} />
-            <div className="space-y-3 mb-5">
-              {[
-                { label: "Preparation Duration", value: "20 weeks", color: C.purple },
-                { label: "Daily Study Time", value: "2–3 hours", color: C.cyan },
-                { label: "Weekly Mock Tests", value: "1–2 mocks", color: C.green },
-                { label: "Practice Problems", value: "150+ solved", color: C.amber },
-                { label: "Target Companies", value: "Top 10 FAANG", color: C.pink },
-              ].map(s => (
-                <div key={s.label} className="flex justify-between items-center py-2 border-b last:border-b-0" style={{ borderColor: C.border }}>
-                  <span className="text-xs" style={{ color: C.muted }}>{s.label}</span>
-                  <span className="text-xs font-bold" style={{ color: s.color }}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-            <button className="w-full py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2" style={{ background: C.grad }}>
-              <Rocket size={13} /> Start This Roadmap
-            </button>
-          </Card>
-        </div>
-
-        {/* Roadmap Timeline */}
-        <Card className="p-6">
-          <SecHead icon={<Map size={16} />} title="AI-Generated Roadmap Timeline" sub={`Structured 20-week path to ${goal.label}`} />
-          <div className="relative">
-            <div className="absolute left-5 top-2 bottom-2 w-0.5" style={{ background: `linear-gradient(to bottom,${goal.color},${goal.color}20)` }} />
-            <div className="space-y-5">
-              {ROADMAP_PHASES_LIST.map((p, i) => (
-                <div key={p.phase} className="flex items-start gap-5">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center z-10 flex-shrink-0 text-sm font-bold"
-                    style={{
-                      background: p.status === "done" ? C.green : p.status === "current" ? goal.color : C.surface,
-                      border: `2px solid ${p.status === "done" ? C.green : p.status === "current" ? goal.color : C.border}`,
-                      color: p.status !== "upcoming" ? "#fff" : C.muted,
-                      boxShadow: p.status === "current" ? `0 0 16px ${goal.color}50` : "none",
-                    }}>
-                    {p.status === "done" ? <Check size={16} /> : p.phase}
-                  </div>
-                  <div className="flex-1 pb-2">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm font-bold text-white">{p.title}</span>
-                      {p.status === "current" && <Pill label="In Progress" color={goal.color} />}
-                      {p.status === "done" && <Pill label="Completed" color={C.green} />}
-                      <span className="text-xs ml-auto" style={{ color: C.muted }}>{p.weeks}</span>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {p.items.map(item => (
-                        <div key={item} className="flex items-start gap-2 p-2.5 rounded-xl text-xs"
-                          style={{ background: p.status === "done" ? "rgba(52,211,153,.06)" : p.status === "current" ? `${goal.color}08` : C.surface, border: `1px solid ${p.status === "done" ? C.green + "25" : p.status === "current" ? goal.color + "25" : C.border}` }}>
-                          <div className="w-1.5 h-1.5 rounded-full mt-0.5 flex-shrink-0" style={{ background: p.status === "done" ? C.green : p.status === "current" ? goal.color : C.muted }} />
-                          <span style={{ color: p.status === "upcoming" ? C.muted : C.text }}>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* Resources: Topics + Courses + Certs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Recommended Topics */}
-          <Card className="p-5">
-            <SecHead icon={<BookOpen size={15} />} title="Recommended Topics" sub="Curated for your goal" />
-            <div className="space-y-2">
-              {[
-                { t: "Dynamic Programming Patterns", tag: "DSA", priority: "High", color: C.red },
-                { t: "System Design Fundamentals", tag: "Design", priority: "High", color: C.red },
-                { t: "Graph Algorithms (BFS/DFS/Dijkstra)", tag: "DSA", priority: "Med", color: C.amber },
-                { t: "Object-Oriented Design Patterns", tag: "OOP", priority: "Med", color: C.amber },
-                { t: "SQL Advanced Queries & Indexing", tag: "DB", priority: "Low", color: C.green },
-                { t: "Behavioral Interview (STAR Method)", tag: "HR", priority: "Med", color: C.amber },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <ArrowRight size={11} style={{ color: goal.color, flexShrink: 0 }} />
-                  <span className="flex-1 text-xs text-white">{item.t}</span>
-                  <Pill label={item.priority} color={item.color} />
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Recommended Courses */}
-          <Card className="p-5">
-            <SecHead icon={<GraduationCap size={15} />} title="Recommended Courses" sub="AI-curated for you" />
-            <div className="space-y-2.5">
-              {[
-                { name: "Grokking Algorithms & Patterns", platform: "Educative", rating: 4.9, free: false, color: C.purple },
-                { name: "System Design Interview Guide", platform: "Coursera", rating: 4.8, free: false, color: C.cyan },
-                { name: "CS Fundamentals — MIT 6.006", platform: "MIT OCW", rating: 5.0, free: true, color: C.green },
-                { name: "FAANG Interview Bootcamp", platform: "Udemy", rating: 4.7, free: false, color: C.amber },
-              ].map((c, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0" style={{ background: c.color }}>{c.platform[0]}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-white leading-snug">{c.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
-                      <span className="text-xs" style={{ color: C.muted }}>{c.platform}</span>
-                      {c.free && <Pill label="Free" color={C.green} />}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Certifications + Daily Plan */}
-          <div className="space-y-5">
-            <Card className="p-5">
-              <SecHead icon={<Award size={15} />} title="Certifications" sub="Industry-recognised" />
-              <div className="space-y-2">
-                {[
-                  { name: "AWS Solutions Architect", org: "Amazon", color: C.amber },
-                  { name: "Google Cloud Professional", org: "Google", color: C.blue },
-                  { name: "Meta Front-End Developer", org: "Coursera", color: C.cyan },
-                ].map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: `${c.color}08`, border: `1px solid ${c.color}25` }}>
-                    <Award size={14} style={{ color: c.color, flexShrink: 0 }} />
-                    <div className="flex-1"><div className="text-xs font-semibold text-white">{c.name}</div><div className="text-xs" style={{ color: C.muted }}>{c.org}</div></div>
-                    <ExternalLink size={11} style={{ color: C.muted }} />
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-5">
-              <SecHead icon={<Calendar size={15} />} title="Daily Study Plan" sub="Recommended schedule" />
-              <div className="space-y-2">
-                {[
-                  { time: "7:00 AM", task: "30 min — Revision notes", color: C.purple },
-                  { time: "6:00 PM", task: "1 hr — 2 LeetCode problems", color: C.cyan },
-                  { time: "8:00 PM", task: "1 hr — Course module / reading", color: C.green },
-                  { time: "9:30 PM", task: "30 min — Mock Q&A with AI", color: C.amber },
-                ].map((d, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="text-xs font-mono font-bold w-16 flex-shrink-0" style={{ color: d.color }}>{d.time}</div>
-                    <div className="flex-1 text-xs py-1.5 px-2.5 rounded-lg" style={{ background: `${d.color}10`, border: `1px solid ${d.color}25`, color: C.muted }}>{d.task}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Weekly milestones */}
-        <Card className="p-5">
-          <SecHead icon={<Zap size={16} />} title="Weekly Milestones" sub="Your week-by-week targets for the next month"
-            action={<Pill label="Month 1" color={C.purple} />} />
-          <div className="grid grid-cols-4 gap-4">
-            {[
-              { week: "Week 1", target: "Complete Arrays & Strings (30 problems)", tasks: ["Solve 30 easy problems", "Read sorting algorithms", "1 mock interview"], done: true, color: C.green },
-              { week: "Week 2", target: "Master Trees & Recursion", tasks: ["Solve 25 tree problems", "DFS/BFS practice", "System Design intro"], done: true, color: C.green },
-              { week: "Week 3", target: "Dynamic Programming Basics", tasks: ["10 DP problems", "Memoisation patterns", "2nd mock interview"], done: false, current: true, color: C.purple },
-              { week: "Week 4", target: "Graph Algorithms + Review", tasks: ["Graph traversal", "Full revision", "Mock test + evaluation"], done: false, color: C.muted },
-            ].map((w, i) => (
-              <div key={i} className="p-4 rounded-2xl"
-                style={{ background: (w as any).current ? `${w.color}10` : w.done ? "rgba(52,211,153,.06)" : C.surface, border: `1px solid ${(w as any).current ? w.color + "45" : w.done ? C.green + "30" : C.border}` }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black" style={{ color: (w as any).current ? w.color : w.done ? C.green : C.muted }}>{w.week}</span>
-                  {w.done && <CheckCircle2 size={14} style={{ color: C.green }} />}
-                  {(w as any).current && <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: w.color }} />}
-                </div>
-                <p className="text-xs font-semibold text-white leading-snug mb-3">{w.target}</p>
-                <div className="space-y-1">
-                  {w.tasks.map((t, ti) => (
-                    <div key={ti} className="flex items-start gap-1.5 text-xs" style={{ color: C.muted }}>
-                      <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: w.done ? C.green : (w as any).current ? w.color : C.border }} />
-                      {t}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Recommended Projects */}
-        <Card className="p-6">
-          <SecHead icon={<FolderOpen size={16} />} title="Recommended Projects" sub={`Build these to strengthen your ${goal.label} portfolio`}
-            action={<Pill label="AI Curated" color={goal.color} />} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {
-                name: "URL Shortener Service", difficulty: "Beginner", type: "Backend",
-                tech: ["Node.js", "Redis", "PostgreSQL"], color: C.cyan,
-                desc: "Build a scalable URL shortener with analytics, custom slugs, and rate limiting.",
-                skills: ["REST API Design", "Database Schema", "Caching with Redis"],
-                impact: "High",
-              },
-              {
-                name: "Real-time Collaborative Editor", difficulty: "Intermediate", type: "Full Stack",
-                tech: ["React", "Socket.io", "Node.js", "MongoDB"], color: C.purple,
-                desc: "Google Docs-style editor with operational transforms, live cursors, and conflict resolution.",
-                skills: ["WebSockets", "OT Algorithms", "React State Management"],
-                impact: "Very High",
-              },
-              {
-                name: "Mini E-commerce Platform", difficulty: "Intermediate", type: "Full Stack",
-                tech: ["React", "Express", "PostgreSQL", "Stripe"], color: C.green,
-                desc: "Full-stack shopping app with cart, auth, payments, and order management system.",
-                skills: ["Payment Integration", "Auth Flows", "Database Relations"],
-                impact: "High",
-              },
-              {
-                name: "System Design: News Feed", difficulty: "Advanced", type: "Architecture",
-                tech: ["System Design", "HLD", "Scalability"], color: goal.color,
-                desc: "Design and document a Twitter/Instagram news feed at 10M DAU scale. Write HLD + LLD docs.",
-                skills: ["System Design", "Scalability Patterns", "Technical Writing"],
-                impact: "Very High",
-              },
-            ].map((proj, i) => (
-              <div key={i} className="p-4 rounded-2xl"
-                style={{ background: `${proj.color}07`, border: `1px solid ${proj.color}28` }}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${proj.color}18`, color: proj.color }}>
-                        <FolderOpen size={12} />
-                      </div>
-                      <span className="text-sm font-bold text-white">{proj.name}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Pill label={proj.difficulty} color={proj.difficulty === "Advanced" ? C.red : proj.difficulty === "Intermediate" ? C.amber : C.green} />
-                    <Pill label={proj.type} color={proj.color} />
-                  </div>
-                </div>
-                <p className="text-xs leading-relaxed mb-3" style={{ color: C.muted }}>{proj.desc}</p>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {proj.tech.map(t => (
-                    <span key={t} className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: `${proj.color}10`, border: `1px solid ${proj.color}30`, color: proj.color }}>{t}</span>
-                  ))}
-                </div>
-                <div className="border-t pt-3" style={{ borderColor: `${proj.color}20` }}>
-                  <div className="text-xs font-semibold mb-1.5" style={{ color: C.muted }}>Skills you'll gain:</div>
-                  <div className="flex flex-col gap-1">
-                    {proj.skills.map(s => (
-                      <div key={s} className="flex items-center gap-1.5 text-xs" style={{ color: C.text }}>
-                        <Check size={10} style={{ color: proj.color, flexShrink: 0 }} /> {s}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-                    <TrendingUp size={11} />
-                    <span>Interview Impact: <span className="font-bold" style={{ color: proj.impact === "Very High" ? C.green : C.amber }}>{proj.impact}</span></span>
-                  </div>
-                  <button className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                    style={{ background: `${proj.color}12`, color: proj.color, border: `1px solid ${proj.color}30` }}>
-                    View Guide →
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* AI Next-Step Recommendations */}
-        <Card className="p-6"
-          style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.06))", border: "1px solid rgba(168,85,247,.3)", boxShadow: "0 8px 32px rgba(168,85,247,.12)" }}>
-          <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "rgba(168,85,247,.2)", color: C.purple }}>
-                <Brain size={18} />
-              </div>
-              <div>
-                <div className="text-base font-bold text-white">AI Next-Step Recommendations</div>
-                <div className="text-xs" style={{ color: C.muted }}>Personalised actions based on your performance data — updated daily</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: "rgba(168,85,247,.12)", border: "1px solid rgba(168,85,247,.3)" }}>
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.purple }} />
-              <span className="text-xs font-semibold" style={{ color: C.purple }}>Live AI</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-            {[
-              {
-                priority: "Do Today", icon: <Zap size={14} />, color: C.red,
-                action: "Solve 3 DP problems on LeetCode",
-                reason: "You've skipped DP for 4 days. Consistency drops sharply after 3 days of inactivity.",
-                time: "~90 min", cta: "Open LeetCode →",
-              },
-              {
-                priority: "This Week", icon: <Target size={14} />, color: C.amber,
-                action: "Complete System Design: URL Shortener module",
-                reason: "System Design is your weakest area at 45%. One module/week brings it to 65% in 6 weeks.",
-                time: "~3 hrs total", cta: "Start Module →",
-              },
-              {
-                priority: "Next Step", icon: <TrendingUp size={14} />, color: C.cyan,
-                action: "Schedule your 2nd Behavioral Mock Interview",
-                reason: "Your last behavioral round was 18 days ago. Regular practice improves scores by 22%.",
-                time: "45 min session", cta: "Book Now →",
-              },
-            ].map((rec, i) => (
-              <div key={i} className="flex flex-col gap-3 p-4 rounded-2xl"
-                style={{ background: `${rec.color}08`, border: `1px solid ${rec.color}30` }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${rec.color}18`, color: rec.color }}>{rec.icon}</div>
-                  <span className="text-xs font-black" style={{ color: rec.color }}>{rec.priority}</span>
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white mb-1 leading-snug">{rec.action}</div>
-                  <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{rec.reason}</p>
-                </div>
-                <div className="flex items-center justify-between mt-auto pt-2 border-t" style={{ borderColor: `${rec.color}20` }}>
-                  <div className="flex items-center gap-1 text-xs" style={{ color: C.muted }}>
-                    <Clock size={10} /> {rec.time}
-                  </div>
-                  <button className="text-xs font-bold" style={{ color: rec.color }}>{rec.cta}</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: "Problems to solve this week", value: "8 / 12", color: C.purple, pct: 67 },
-              { label: "Modules to complete", value: "1 / 3", color: C.cyan, pct: 33 },
-              { label: "Mocks scheduled", value: "1 / 2", color: C.green, pct: 50 },
-              { label: "Days until target date", value: "48 days", color: C.amber, pct: 68 },
-            ].map((s, i) => (
-              <div key={i} className="p-3 rounded-xl" style={{ background: "rgba(255,255,255,.03)", border: `1px solid ${s.color}20` }}>
-                <div className="flex justify-between mb-2">
-                  <span className="text-xs" style={{ color: C.muted }}>{s.label}</span>
-                </div>
-                <div className="text-base font-black mb-2" style={{ color: s.color }}>{s.value}</div>
-                <div className="h-1.5 rounded-full" style={{ background: C.border }}>
-                  <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: s.color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-// ═══
-// PAGE 7: USER PROFILE
 // ═══
 function ProfilePage() {
   const { user } = useAuth();
@@ -5647,7 +5162,6 @@ function NotFoundPage({ onHome }: { onHome: () => void }) {
             { icon: <Home size={12} />, label: "Dashboard", id: "dashboard", color: C.purple },
             { icon: <Mic size={12} />, label: "Mock Interview", id: "mock", color: C.cyan },
             { icon: <BarChart3 size={12} />, label: "Progress", id: "dashboard", color: C.green },
-            { icon: <Map size={12} />, label: "Roadmap", id: "roadmap", color: C.amber },
             { icon: <BookOpen size={12} />, label: "Subject Prep", id: "subject", color: C.pink },
             { icon: <User size={12} />, label: "Profile", id: "profile", color: C.indigo },
           ].map(s => (
@@ -5732,6 +5246,7 @@ function ResumeAnalyzerPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [analysisResult, setAnalysisResult] = useState<{
+    candidate: { name?: string | null; email?: string | null; phone?: string | null };
     overallScore: number;
     atsScore: number;
     readabilityScore: number;
@@ -5744,32 +5259,25 @@ function ResumeAnalyzerPage() {
     priorityActionPlan: Array<{ section: string; action: string; potential_gain: number; impact: string }>;
     filename: string;
   }>({
-    overallScore: 78,
-    atsScore: 72,
-    readabilityScore: 82,
-    keywordMatchScore: 74,
-    summaryFeedback: "Resume effectively demonstrates technical competencies relevant to your target role. To achieve top ATS ranking, quantify project impacts with concrete metrics and incorporate additional industry keywords.",
+    candidate: {},
+    overallScore: 0,
+    atsScore: 0,
+    readabilityScore: 0,
+    keywordMatchScore: 0,
+    summaryFeedback: "",
     sections: {},
-    detectedSkills: [],
-    foundKeywords: ["REST APIs", "Git", "React", "SQL", "TypeScript", "Agile", "FastAPI"],
-    missingKeywords: ["CI/CD Pipelines", "Unit Testing / Jest", "Cloud Deployment (AWS/GCP)", "System Architecture"],
-    priorityActionPlan: [
-      { section: "Work Experience", action: "Quantify bullet points with metric-driven outcomes (%, $, latency, scale)", potential_gain: 9, impact: "Critical" },
-      { section: "Skills & Technologies", action: "Add keywords for CI/CD and Cloud infrastructure to pass initial ATS filters", potential_gain: 7, impact: "High" },
-      { section: "Professional Summary", action: "Focus executive summary around target role business impact", potential_gain: 5, impact: "Medium" },
-    ],
-    filename: user?.full_name ? `Resume_${user.full_name.replace(/\s+/g, '_')}.pdf` : "Resume.pdf",
+    detectedSkills: [], foundKeywords: [], missingKeywords: [], priorityActionPlan: [], filename: "",
   });
 
   const validateAndSetFile = (file: File) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
-    const allowed = ["pdf", "docx", "doc", "txt", "rtf"];
+    const allowed = ["pdf", "docx"];
     if (ext && !allowed.includes(ext)) {
-      setError("Supported formats: .pdf, .docx, .doc, .txt, .rtf.");
+      setError("Supported formats: .pdf and .docx.");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      setError("File size exceeds 15MB limit.");
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size exceeds 5MB limit.");
       return;
     }
     setError(null);
@@ -5957,6 +5465,7 @@ function ResumeAnalyzerPage() {
 
       const full = data.full_analysis || {};
       setAnalysisResult({
+        candidate: full.candidate || {},
         overallScore: data.overall_score ?? full.overall_score ?? 78,
         atsScore: data.ats_score ?? full.ats_score ?? 72,
         readabilityScore: full.readability_score ?? 82,
@@ -6069,10 +5578,10 @@ function ResumeAnalyzerPage() {
                   <div className="text-sm" style={{ color: C.muted }}>
                     {selectedFile
                       ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready to evaluate`
-                      : "Drag & drop your PDF, DOCX, DOC, or TXT document here"}
+                      : "Drag & drop your PDF or DOCX resume here"}
                   </div>
                   <div className="text-xs mt-1" style={{ color: C.muted }}>
-                    Supported formats: .pdf, .docx, .doc, .txt · Maximum size: 15MB
+                    Supported formats: .pdf, .docx · Maximum size: 5MB
                   </div>
                 </div>
 
@@ -6082,7 +5591,7 @@ function ResumeAnalyzerPage() {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.docx,.doc,.txt,.rtf"
+                      accept=".pdf,.docx"
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           validateAndSetFile(e.target.files[0]);
@@ -6429,13 +5938,27 @@ function ResumeAnalyzerPage() {
                 <div className="mt-5 flex gap-2">
                   <button
                     onClick={() => {
-                      const textData = `CRACKIT RESUME EVALUATION REPORT\nRole: ${targetRole}\nOverall Score: ${analysisResult.overallScore}/100\nATS Score: ${analysisResult.atsScore}%\nFeedback: ${analysisResult.summaryFeedback}\n\nTop Missing Keywords: ${analysisResult.missingKeywords.join(", ")}`;
+                      const textData = [
+                        "CRACKIT RESUME EVALUATION REPORT", "=".repeat(36),
+                        `Candidate: ${analysisResult.candidate.name || "Not found in resume"}`,
+                        `Email: ${analysisResult.candidate.email || "Not found in resume"}`,
+                        `Phone: ${analysisResult.candidate.phone || "Not found in resume"}`,
+                        `Resume: ${analysisResult.filename}`, `Target role: ${targetRole}`,
+                        "", "SCORES", `Overall: ${analysisResult.overallScore}/100`, `ATS readiness: ${analysisResult.atsScore}/100`, `Keyword match: ${analysisResult.keywordMatchScore}%`, `Readability: ${analysisResult.readabilityScore}/100`,
+                        "", "REVIEW", analysisResult.summaryFeedback,
+                        "", "SECTION REVIEW", ...activeSections.flatMap(section => [`${section.name}: ${section.score}/100`, ...section.tips.map(tip => `  - ${tip}`)]),
+                        "", "MATCHED KEYWORDS", analysisResult.foundKeywords.join(", ") || "None found",
+                        "", "MISSING KEYWORDS", analysisResult.missingKeywords.join(", ") || "None flagged",
+                        "", "DETECTED SKILLS", analysisResult.detectedSkills.map(skill => `${skill.skill}${skill.category ? ` (${skill.category})` : ""}`).join(", ") || "None detected",
+                        "", "PRIORITY ACTION PLAN", ...analysisResult.priorityActionPlan.map((item, i) => `${i + 1}. [${item.impact}] ${item.section}: ${item.action} (estimated +${item.potential_gain} points)`),
+                      ].join("\n");
                       const blob = new Blob([textData], { type: "text/plain" });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      a.download = `Resume_Analysis_${targetRole.replace(/\s+/g, "_")}.txt`;
+                      a.download = `Resume_Analysis_${(analysisResult.candidate.name || targetRole).replace(/[^\w-]+/g, "_")}.txt`;
                       a.click();
+                      URL.revokeObjectURL(url);
                     }}
                     className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
                     style={{ background: C.grad }}>
@@ -6460,14 +5983,12 @@ function ResumeAnalyzerPage() {
 // LINKEDIN ANALYZER PAGE
 // ═══
 const LINKEDIN_SECTIONS = [
-  { name: "Profile Photo", score: 100, icon: <Camera size={14} />, color: C.green, tips: ["Great professional photo detected"] },
-  { name: "Headline", score: 65, icon: <Hash size={14} />, color: C.amber, tips: ["Add target role keywords", "Mention top skills", "Make it specific not generic"] },
-  { name: "About / Summary", score: 55, icon: <FileText size={14} />, color: C.red, tips: ["Write in first person", "Add measurable achievements", "Include a call-to-action", "Aim for 3-5 paragraphs"] },
-  { name: "Experience", score: 78, icon: <Briefcase size={14} />, color: C.cyan, tips: ["Quantify impact with numbers", "Use bullet points", "Add relevant media"] },
-  { name: "Skills & Endorsements", score: 60, icon: <Star size={14} />, color: C.amber, tips: ["Add 10+ skills", "Request endorsements from colleagues", "Pin top 3 skills"] },
-  { name: "Connections", score: 72, icon: <Globe size={14} />, color: C.blue, tips: ["Aim for 500+ connections", "Connect with industry leaders"] },
-  { name: "Recommendations", score: 40, icon: <MessageSquare size={14} />, color: C.red, tips: ["Request at least 3 recommendations", "Ask mentors and managers", "Give recommendations to receive them"] },
-  { name: "Activity & Posts", score: 30, icon: <TrendingUp size={14} />, color: C.red, tips: ["Post weekly insights", "Engage with industry content", "Share your projects"] },
+  { name: "Headline & Title", score: 0, icon: <Hash size={14} />, color: C.amber, tips: [] },
+  { name: "About / Summary", score: 0, icon: <FileText size={14} />, color: C.red, tips: [] },
+  { name: "Experience", score: 0, icon: <Briefcase size={14} />, color: C.cyan, tips: [] },
+  { name: "Skills", score: 0, icon: <Star size={14} />, color: C.amber, tips: [] },
+  { name: "Education", score: 0, icon: <GraduationCap size={14} />, color: C.blue, tips: [] },
+  { name: "Profile completeness", score: 0, icon: <CheckSquare size={14} />, color: C.green, tips: [] },
 ];
 
 function LinkedInAnalyzerPage() {
@@ -6518,62 +6039,63 @@ function LinkedInAnalyzerPage() {
   });
 
   const evaluateProfile = (profile: string, role: string, selectedSkills: string, currentUrl: string, currentLocation: string) => {
-    const text = `${profile} ${role} ${selectedSkills} ${currentUrl} ${currentLocation}`.toLowerCase();
-    const matched = ["sql", "python", "tableau", "data analysis", "business intelligence", "dashboards", "reporting", "kpi", "analytics"].filter((term) => text.includes(term));
-    const partial = ["power bi", "statistical analysis", "product analytics", "snowflake", "dbt"].filter((term) => text.includes(term));
-    const missing = ["snowflake", "dbt", "statistical analysis", "product analytics"].filter((term) => !text.includes(term));
-
-    const headlineScore = text.includes(role.toLowerCase()) ? 88 : 74;
-    const aboutScore = Math.min(92, 60 + matched.length * 5);
-    const experienceScore = Math.min(95, 62 + (matched.length > 5 ? 18 : 10));
-    const skillsScore = Math.min(92, 52 + partial.length * 7 + matched.length * 3);
-    const educationScore = 76;
-    const completenessScore = profile.length > 100 ? 74 : 64;
-    const total = Math.round(
-      headlineScore * 0.2 +
-      aboutScore * 0.15 +
-      experienceScore * 0.3 +
-      skillsScore * 0.15 +
-      educationScore * 0.1 +
-      completenessScore * 0.1
-    );
-
+    const text = `${profile} ${selectedSkills}`.toLowerCase();
+    const lines = profile.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+    const section = (name: string, next: string) => profile.match(new RegExp(`(?:^|\\n)\\s*${name}\\s*[:\\-]?([\\s\\S]*?)(?=\\n\\s*(?:${next})\\b|$)`, "i"))?.[1] || "";
+    const headline = lines.find((line) => line.length <= 220 && !/^(about|experience|education|skills|projects|certifications)\b/i.test(line)) || "";
+    const about = section("(?:about|summary|profile)", "experience|education|skills|projects|certifications");
+    const experience = section("(?:experience|employment|work history)", "education|skills|projects|certifications|about");
+    const roleTerms = role.toLowerCase().split(/[^a-z0-9+#.]+/).filter((term) => term.length > 2 && !["senior", "junior", "lead", "the", "and"].includes(term));
+    const matched = roleTerms.filter((term) => text.includes(term));
+    const missing = roleTerms.filter((term) => !text.includes(term));
+    const quantified = (experience.match(/\b\d+(?:\.\d+)?\s*(?:%|x|users|customers|hours|days|ms|seconds|revenue|projects)\b/gi) || []).length;
+    const bullets = (experience.match(/^\s*(?:[-*]|\u2022|\d+[.)])\s+/gm) || []).length;
+    const aboutWords = about.trim().split(/\s+/).filter(Boolean).length;
+    const headlineScore = headline ? Math.min(78, 38 + (roleTerms.some((term) => headline.toLowerCase().includes(term)) ? 18 : 0) + (headline.length >= 35 ? 10 : 0) + (headline.length <= 120 ? 8 : 0)) : 25;
+    const aboutScore = about ? Math.min(78, 35 + Math.min(aboutWords, 120) / 4 + (/\d+%|\b\d+\s+(users|customers|projects|years)/i.test(about) ? 12 : 0)) : 20;
+    const experienceScore = experience ? Math.min(82, 35 + Math.min(bullets, 5) * 5 + Math.min(quantified, 3) * 8 + (experience.length > 300 ? 8 : 0)) : 18;
+    const skillCount = selectedSkills.split(/[,;\n]/).map((skill) => skill.trim()).filter(Boolean).length;
+    const skillsScore = Math.min(78, skillCount ? 30 + Math.min(skillCount, 12) * 4 : 18);
+    const hasEducation = /\b(education|university|college|bachelor|master|degree|b\.tech|b\.e\.)\b/i.test(profile);
+    const completenessScore = Math.round(([!!headline, !!about, !!experience, skillCount >= 3, hasEducation, !!currentUrl, !!currentLocation].filter(Boolean).length / 7) * 100);
+    const total = Math.round(headlineScore * .18 + aboutScore * .17 + experienceScore * .28 + skillsScore * .16 + (hasEducation ? 62 : 20) * .08 + completenessScore * .13);
+    const keywordCoverage = roleTerms.length ? Math.round(matched.length / roleTerms.length * 100) : 0;
+    const recommendations = [
+      !headline && "Add a clear headline with your current role and strongest relevant skill.",
+      !about && "Add an About section explaining your focus, experience, and the value you deliver.",
+      !experience && "Add role entries with responsibilities and outcomes; no experience section was identified.",
+      experience && quantified === 0 && "Add truthful numbers to experience bullets, such as users served, time saved, or percentage change.",
+      !hasEducation && "Add education details if relevant to your background.",
+      !currentUrl && "Add your public LinkedIn profile URL for the completeness check.",
+      missing.length > 0 && `If accurate, include role terms supported by your experience: ${missing.join(", ")}.`,
+    ].filter(Boolean) as string[];
+    const recommendationsList = recommendations.length ? recommendations : ["No major gaps were detected in the fields supplied. Confirm all details are current and accurate."];
     return {
       overallScore: total,
-      recruiterScore: Math.min(95, total + 4),
-      completeness: Math.min(95, completenessScore),
-      keywordCoverage: Math.min(96, Math.round((matched.length / 7) * 100)),
+      recruiterScore: Math.round((headlineScore + skillsScore + (currentLocation ? 60 : 25) + (currentUrl ? 55 : 25) + keywordCoverage) / 5),
+      completeness: completenessScore,
+      keywordCoverage,
       sectionScores: [
-        { name: "Headline & Title", score: headlineScore, color: headlineScore >= 80 ? C.green : C.amber, tips: ["Title is aligned with the target role", "Add one more high-value keyword for stronger recruiter discovery."] },
-        { name: "About / Summary", score: aboutScore, color: aboutScore >= 80 ? C.green : C.amber, tips: ["Add measurable outcomes and stronger impact language", "Mention target-role keywords naturally and clearly."] },
-        { name: "Experience", score: experienceScore, color: experienceScore >= 80 ? C.green : C.cyan, tips: ["Strong relevance and business context", "Add a few metrics and stronger verbs if available."] },
-        { name: "Skills & Endorsements", score: skillsScore, color: skillsScore >= 80 ? C.green : C.amber, tips: ["Prioritize high-value tools and add missing keywords", "Only add skills that reflect genuine expertise."] },
-        { name: "Education & Certs", score: educationScore, color: C.cyan, tips: ["Good base; consider role-relevant credentials where available."] },
-        { name: "Profile Completeness", score: completenessScore, color: C.cyan, tips: ["Improve final profile polish details", "Complete missing sections and verify custom branding."] },
+        { name: "Headline & Title", score: headlineScore, color: headlineScore >= 70 ? C.green : C.amber, tips: [headline ? `Evaluated submitted headline: "${headline.slice(0, 100)}"` : "No headline could be identified.", "Include the target role and a specific skill if accurate."] },
+        { name: "About / Summary", score: Math.round(aboutScore), color: aboutScore >= 70 ? C.green : C.amber, tips: [about ? `About section contains about ${aboutWords} words.` : "No labeled About or Summary section was found.", "Use a concise value statement and one verifiable outcome."] },
+        { name: "Experience", score: experienceScore, color: experienceScore >= 70 ? C.green : C.cyan, tips: [experience ? `Found ${bullets} bullets and ${quantified} quantified results.` : "No labeled experience section was found.", "Describe your role, actions, and measurable outcomes."] },
+        { name: "Skills & Endorsements", score: skillsScore, color: skillsScore >= 70 ? C.green : C.amber, tips: [`${skillCount} skills were entered in the Skills field.`, "List only skills supported by your experience."] },
+        { name: "Education & Certs", score: hasEducation ? 62 : 20, color: C.cyan, tips: [hasEducation ? "Education signal found in submitted profile text." : "No education or degree signal was found."] },
+        { name: "Profile Completeness", score: completenessScore, color: C.cyan, tips: [`${[!!headline, !!about, !!experience, skillCount >= 3, hasEducation, !!currentUrl, !!currentLocation].filter(Boolean).length} of 7 checked profile signals are present.`] },
       ],
-      matchedKeywords: matched.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
-      partialKeywords: partial.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
-      missingKeywords: missing.map((term) => term.replace(/\w/g, (l) => l.toUpperCase())),
-      checklist: [
-        { title: "Headline", status: "good", text: "Headline is relevant and includes the target role signal.", reason: "This affects recruiter discovery in search results.", action: "Add one more keyword if the role requires it." },
-        { title: "About section", status: aboutScore >= 75 ? "good" : "needs-work", text: aboutScore >= 75 ? "The summary is clear and role-aware." : "The summary would benefit from stronger evidence and impact language.", reason: "The summary explains your value proposition quickly.", action: aboutScore >= 75 ? "Keep it but tighten the impact framing." : "Add measurable outputs and keyword context." },
-        { title: "Experience bullets", status: "good", text: "Experience shows real business context with reporting and analytics work.", reason: "Detailed proof points are strong recruiter signals.", action: "Quantify one or two major outcomes where possible." },
-        { title: "Skills", status: "needs-work", text: "Relevant abilities are present, but a few role-critical keywords are still missing.", reason: "Search results rely heavily on visible skill coverage.", action: "Add only technologies and tools you truly use or have used." },
-        { title: "Completeness", status: "warning", text: "The profile is mostly complete, but final polish can improve trust.", reason: "Completeness signals professionalism and readiness.", action: "Fill in the remaining profile details and verify brand consistency." },
-      ],
+      matchedKeywords: matched.map((term) => term.toUpperCase()),
+      partialKeywords: [],
+      missingKeywords: missing.map((term) => term.toUpperCase()),
+      checklist: recommendationsList.map((action, index) => ({ title: `Improvement ${index + 1}`, status: "needs-work", text: action, reason: "This recommendation comes from a missing or weak signal in the submitted profile.", action })),
       headlineOptions: [
-        `${role.replace(/\w/g, (l) => l.toUpperCase())} | SQL, Python, Tableau & BI Reporting`,
-        "Data Analyst specializing in SQL, Python, dashboards, and business insights",
-        `${role.replace(/\w/g, (l) => l.toUpperCase())} delivering actionable insight from data and stakeholder reporting`,
+        `${role || "Your target role"} | [relevant skill] | [measurable specialty]`,
+        `${role || "Professional"} with experience in [your domain] and [your strongest skill]`,
+        "[Role] helping [team/customer] achieve [verifiable outcome] through [your expertise]",
       ],
-      aboutDraft: `Data Analyst with experience translating data into business decisions across analytics and product teams. I work with SQL, Python, Tableau, and BI dashboards to turn raw operational data into KPI reporting, decision support, and clear stakeholder-ready insights. My work focuses on improving visibility into trends, supporting leadership with data-informed recommendations, and connecting analysis to business outcomes.`,
-      quickWins: [
-        { title: "Keyword gap", text: "Add a missing high-priority keyword only if it reflects real experience, such as Snowflake or dbt." },
-        { title: "Quantified outcomes", text: "Add one concrete metric to the strongest role section to improve trust and impact perception." },
-        { title: "Brand clarity", text: "A sharper headline and summary will materially improve search relevance and recruiter understanding." },
-      ],
-      beforeAfter: { before: 62, after: total, delta: Math.max(0, total - 62) },
-      simSearch: { title: true, skill: true, headline: true, experience: true, location: true, keywordCoverage: Math.min(96, Math.round((matched.length / 7) * 100)) },
+      aboutDraft: about || "No About section was detected. Add a summary based on your real experience; this analyzer does not invent credentials.",
+      quickWins: recommendationsList.slice(0, 3).map((text, index) => ({ title: ["Profile gap", "Evidence upgrade", "Role alignment"][index], text })),
+      beforeAfter: { before: total, after: Math.min(100, total + Math.min(15, recommendationsList.length * 2)), delta: Math.min(15, recommendationsList.length * 2) },
+      simSearch: { title: !!role && headline.toLowerCase().includes(role.toLowerCase()), skill: matched.length > 0, headline: !!headline, experience: !!experience, location: !!currentLocation, keywordCoverage },
     };
   };
 
@@ -6628,7 +6150,7 @@ function LinkedInAnalyzerPage() {
                 </div>
                 <div>
                   <div className="text-base font-bold text-white">Profile intelligence</div>
-                  <div className="text-xs" style={{ color: C.muted }}>Paste text, profile notes, or a public profile URL.</div>
+                  <div className="text-xs" style={{ color: C.muted }}>Paste profile text. Public profile URLs are recorded but not fetched for analysis.</div>
                 </div>
               </div>
 
@@ -6718,9 +6240,9 @@ function LinkedInAnalyzerPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Profile Strength", value: `${analysis.overallScore}/100`, color: scoreColor, sub: "Estimated readiness score", grade: analysis.overallScore >= 80 ? "A" : analysis.overallScore >= 60 ? "B" : "C" },
-                { label: "Recruiter Search", value: `${analysis.recruiterScore}/100`, color: C.cyan, sub: "Simulated visibility", grade: "B+" },
-                { label: "Completeness", value: `${analysis.completeness}/100`, color: C.green, sub: "Missing details tracked", grade: "B" },
-                { label: "Keyword Coverage", value: `${analysis.keywordCoverage}%`, color: C.amber, sub: `${analysis.matchedKeywords.length} matched`, grade: "B" },
+                { label: "Recruiter Search", value: `${analysis.recruiterScore}/100`, color: C.cyan, sub: "Estimated from supplied fields", grade: analysis.recruiterScore >= 80 ? "A" : analysis.recruiterScore >= 65 ? "B" : "C" },
+                { label: "Completeness", value: `${analysis.completeness}/100`, color: C.green, sub: "Checked profile signals", grade: analysis.completeness >= 80 ? "A" : analysis.completeness >= 60 ? "B" : "C" },
+                { label: "Keyword Coverage", value: `${analysis.keywordCoverage}%`, color: C.amber, sub: `${analysis.matchedKeywords.length} role terms matched`, grade: analysis.keywordCoverage >= 80 ? "A" : analysis.keywordCoverage >= 60 ? "B" : "C" },
               ].map((s) => (
                 <Card key={s.label} className="p-5" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.05),rgba(168,85,247,.05))", border: `1px solid ${s.color}30` }}>
                   <div className="flex items-center justify-between mb-3">
@@ -6736,11 +6258,11 @@ function LinkedInAnalyzerPage() {
             <Card className="p-5" style={{ background: "linear-gradient(135deg,rgba(34,211,238,.08),rgba(168,85,247,.05))", border: "1px solid rgba(34,211,238,.25)" }}>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles size={16} style={{ color: C.cyan }} />
-                <span className="text-sm font-bold text-white">AI profile assessment</span>
+                <span className="text-sm font-bold text-white">Profile assessment</span>
                 <span className="text-xs ml-auto" style={{ color: C.muted }}>{url}</span>
               </div>
               <p className="text-sm leading-relaxed text-gray-200">
-                “Your profile is strategically relevant and close to target-role fit. The biggest gains come from making your headline sharper, adding measurable evidence in the summary, and making your skill coverage more explicit for recruiter searchability.”
+                {"The submitted profile matched " + analysis.matchedKeywords.length + " of its target role terms and contains " + analysis.completeness + "% of the checked profile signals. Scores reflect only the text and fields supplied; they are estimates, not LinkedIn or recruiter rankings."}
               </p>
             </Card>
 
@@ -7217,12 +6739,12 @@ function Footer() {
 // ─── App ───
 type Page =
   | "dashboard" | "resume" | "linkedin" | "projects"
-  | "subject" | "domain" | "mock" | "roadmap" | "reports"
+  | "subject" | "domain" | "mock" | "reports"
   | "notifications" | "profile" | "settings" | "404";
 
 const ALL_PAGES: Page[] = [
   "dashboard", "resume", "linkedin", "projects",
-  "subject", "domain", "mock", "roadmap", "reports",
+  "subject", "domain", "mock", "reports",
   "notifications", "profile", "settings", "404",
 ];
 
@@ -7252,7 +6774,7 @@ const ONBOARDING_STEPS = [
   {
     id: "goals",
     title: "Set your career goal",
-    subtitle: "Pick a target role and we'll generate a personalised roadmap for you.",
+    subtitle: "Choose a career domain and explore its focused preparation plan.",
     icon: <Target size={28} />,
     color: C.amber,
   },
@@ -7287,9 +6809,9 @@ function OnboardingModal({ onComplete, onNavigate }: { onComplete: () => void; o
     onNavigate("linkedin");
   };
 
-  const handleGoToRoadmap = () => {
+  const handleGoToDomainPrep = () => {
     onComplete();
-    onNavigate("roadmap");
+    onNavigate("domain");
   };
 
   return (
@@ -7367,13 +6889,13 @@ function OnboardingModal({ onComplete, onNavigate }: { onComplete: () => void; o
 
         {step === 3 && (
           <div className="grid grid-cols-1 gap-3 mb-6">
-            <button onClick={handleGoToRoadmap}
+            <button onClick={handleGoToDomainPrep}
               className="flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.02]"
               style={{ background: `${C.amber}10`, border: `1px solid ${C.amber}30` }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${C.amber}20`, color: C.amber }}><Map size={18} /></div>
               <div>
-                <div className="text-sm font-bold text-white">Open AI Roadmap</div>
-                <div className="text-xs" style={{ color: C.muted }}>Select your target role and get a personalised path</div>
+                <div className="text-sm font-bold text-white">Explore Domain Prep</div>
+                <div className="text-xs" style={{ color: C.muted }}>Choose a career domain and view its focused preparation plan</div>
               </div>
               <ArrowRight size={16} style={{ color: C.amber, marginLeft: "auto" }} />
             </button>
@@ -7512,7 +7034,6 @@ export default function App() {
             setActiveReportId(reportId);
             setPage("reports");
           }} />}
-          {page === "roadmap" && <RoadmapPage />}
           {page === "reports" && <ReportsPage
             initialReportId={activeReportId}
             onRetake={() => setPage("mock")}

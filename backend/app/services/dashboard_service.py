@@ -38,17 +38,9 @@ def get_dashboard_metrics(user_id: str) -> DashboardMetrics:
     avg_interview_score = sum(r["overall_score"] for r in valid_reports if r.get("overall_score")) / interviews_count if interviews_count > 0 else 0
     latest_score = valid_reports[0]["overall_score"] if valid_reports and valid_reports[0].get("overall_score") else None
 
-    # 3. Fetch Goals/Roadmap
-    roadmaps_res = supabase.table("roadmaps").select("id").eq("user_id", user_id).execute()
+    # Goal tracking from the retired standalone roadmap module is no longer queried.
     total_goals = 0
     completed_goals = 0
-    if roadmaps_res.data:
-        roadmap_ids = [r["id"] for r in roadmaps_res.data]
-        milestones_res = supabase.table("roadmap_milestones").select("status").in_("roadmap_id", roadmap_ids).execute()
-        total_goals = len(milestones_res.data)
-        completed_goals = sum(1 for m in milestones_res.data if m["status"] == "completed")
-    
-    # If no roadmap, we can fallback to career_goals or just return 0/0 (we will set to 0/1 to avoid div by zero in UI)
 
     # 4. Fetch Subject & Domain Progress
     subj_res = supabase.table("user_subject_progress").select("completion_percentage, subjects(id, subject_name)").eq("user_id", user_id).execute()
