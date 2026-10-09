@@ -49,6 +49,42 @@ async def get_domains(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@router.post("/{domain_id}/explore")
+async def mark_domain_explored(domain_id: int, current_user: dict = Depends(get_current_user)):
+    """Persist that the current user started exploring a domain."""
+    try:
+        user_id = current_user["sub"]
+        domain_res = supabase.table("domains").select("id").eq("id", domain_id).execute()
+        if not domain_res.data:
+            raise HTTPException(status_code=404, detail="Domain not found")
+
+        existing_res = (
+            supabase.table("user_domain_progress")
+            .select("completed_questions,total_questions,completion_percentage,streak")
+            .eq("user_id", user_id)
+            .eq("domain_id", domain_id)
+            .execute()
+        )
+        existing = existing_res.data[0] if existing_res.data else {}
+        progress = max(float(existing.get("completion_percentage") or 0), 5.0)
+
+        supabase.table("user_domain_progress").upsert({
+            "user_id": user_id,
+            "domain_id": domain_id,
+            "completed_questions": int(existing.get("completed_questions") or 0),
+            "total_questions": int(existing.get("total_questions") or 0),
+            "completion_percentage": progress,
+            "streak": int(existing.get("streak") or 0),
+        }, on_conflict="user_id,domain_id").execute()
+
+        return {"domain_id": domain_id, "progress": progress}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error saving explored domain: %s", e)
+        raise HTTPException(status_code=500, detail="Could not save domain progress") from e
+
+
 @router.get("/{domain_id}", response_model=DomainDetailResponse)
 async def get_domain_detail(domain_id: int, current_user: dict = Depends(get_current_user)):
     try:
@@ -201,12 +237,23 @@ async def submit_domain_question_answer(question_id: int, payload: SubmitAnswerR
         domain_progress = supabase.table("user_domain_question_progress").select("question_id, completed").eq("user_id", user_id).in_("question_id", domain_question_ids).execute().data if domain_question_ids else []
         completed_count = sum(1 for row in domain_progress if row.get("completed"))
         total_count = len(domain_question_ids)
+        previous_progress_res = (
+            supabase.table("user_domain_progress")
+            .select("completion_percentage")
+            .eq("user_id", user_id)
+            .eq("domain_id", domain_id)
+            .execute()
+        )
+        started_floor = 5.0 if previous_progress_res.data and float(previous_progress_res.data[0].get("completion_percentage") or 0) > 0 else 0.0
         supabase.table("user_domain_progress").upsert({
             "user_id": user_id,
             "domain_id": domain_id,
             "completed_questions": completed_count,
             "total_questions": total_count,
-            "completion_percentage": round((completed_count / total_count) * 100, 2) if total_count else 0,
+            "completion_percentage": max(
+                started_floor,
+                round((completed_count / total_count) * 100, 2) if total_count else 0,
+            ),
         }, on_conflict="user_id,domain_id").execute()
             
         return SubmitAnswerResponse(

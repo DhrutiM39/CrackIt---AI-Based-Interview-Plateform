@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def log_ai_call(
     user_id: Optional[str],
     feature_name: str,
-    model_name: str = "gemini-2.0-flash",
+    model_name: str = "gemini-3.8-flash",
     processing_time_ms: Optional[int] = None,
     tokens_used: Optional[int] = None,
     status: str = "success",

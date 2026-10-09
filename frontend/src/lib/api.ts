@@ -171,6 +171,7 @@ export const subjectsApi = {
 export const domainsApi = {
   getAll: () => api.get<any[]>("/domains"),
   getDetail: (id: string | number) => api.get<any>(`/domains/${id}`),
+  markExplored: (id: string | number) => api.post<{ domain_id: number; progress: number }>(`/domains/${id}/explore`),
   getQuestions: (id: string | number) => api.get<any[]>(`/domains/${id}/questions`),
   submitAnswer: (questionId: string | number, answer: string) => 
     api.post<any>(`/domains/questions/${questionId}/answer`, { body: { answer } }),
@@ -409,4 +410,3 @@ export const roadmapApi = {
   list: () => api.get<any[]>("/roadmap"),
   getById: (id: string | number) => api.get<any>(`/roadmap/${id}`),
 };
-

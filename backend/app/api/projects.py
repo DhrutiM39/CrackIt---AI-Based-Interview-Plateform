@@ -12,6 +12,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 import tempfile
 import os
+import zipfile
 
 from app.core.security import get_current_user
 from app.database.supabase import supabase
@@ -158,20 +159,27 @@ async def analyze_project_codebase(
     
     codebase = ""
     try:
-        if file and file.filename.endswith(".zip"):
+        if file:
+            if not file.filename or not file.filename.lower().endswith(".zip"):
+                raise ValueError("Upload a ZIP archive to analyze a codebase.")
             with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp:
                 content = await file.read()
                 tmp.write(content)
                 tmp_path = tmp.name
             try:
                 codebase = parse_zip_file(tmp_path)
+            except (OSError, RuntimeError, zipfile.BadZipFile) as e:
+                raise ValueError("The uploaded file is not a valid ZIP archive.") from e
             finally:
                 os.remove(tmp_path)
         elif github_url:
             codebase = download_github_repo(github_url)
+    except ValueError as e:
+        logger.info("Codebase input was rejected: %s", e)
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"Failed to parse codebase: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to process codebase: {str(e)}")
+        logger.exception("Failed to process project codebase")
+        raise HTTPException(status_code=400, detail="Could not process the provided codebase.") from e
 
     if not codebase:
         logger.info("No valid codebase extracted, falling back to metadata analysis.")

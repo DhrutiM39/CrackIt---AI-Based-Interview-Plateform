@@ -25,7 +25,7 @@ import {
   ResponsiveContainer, Cell, LineChart, Line, AreaChart, Area,
   PieChart as RePieChart, Pie,
 } from "recharts";
-import { subjectsApi, domainsApi, aiPrepApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi, roadmapApi } from "../lib/api";
+import { subjectsApi, domainsApi, resumeApi, interviewsApi, reportsApi, dashboardApi, linkedinApi, projectsApi, notificationsApi, profileApi, settingsApi, roadmapApi } from "../lib/api";
 import type { Report, ReportSummary, DashboardMetrics } from "../lib/api";
 
 // ─── Tokens ───
@@ -284,6 +284,114 @@ const SUBJECTS = [
 
 const diffColor = (d: string) => d === "Hard" ? C.red : d === "Medium" ? C.amber : C.green;
 
+const HR_COMPANY_MODULES = [
+  {
+    company: "TCS",
+    subjects: [
+      { name: "Aptitude", playlist: "https://www.youtube.com/playlist?list=PLqM7alHXFySEgUZPe57fURJrIt6rXZisW" },
+      { name: "Logical Reasoning", playlist: "https://www.youtube.com/playlist?list=PLpyc33gOcbVC2wRtQXK8Gdt1VFjeVY4ea" },
+      { name: "Verbal Ability", playlist: "https://www.youtube.com/playlist?list=PLqM7alHXFySErksMR-z2wxFMTDV-uiDUO" },
+      { name: "Coding Questions", playlist: "https://www.youtube.com/playlist?list=PLqM7alHXFySFSlR00usGeOFRpcFUVYkMp" },
+      { name: "Technical + HR", playlist: "https://www.youtube.com/playlist?list=PLQeHvLUoYw4JohWUNsbNWZ9h2A2migmMz" },
+    ],
+  },
+  {
+    company: "Infosys",
+    subjects: [
+      { name: "Aptitude", playlist: "https://www.youtube.com/playlist?list=PL3JmT-xgOMNy5r3QBTRzv32LFUTXBmKf2" },
+      { name: "Logical Reasoning", playlist: "https://www.youtube.com/playlist?list=PLMRzSgKIPksyIOSa05lBj45y2zdX3qy_p" },
+      { name: "Verbal Ability", playlist: "https://www.youtube.com/watch?v=nEKTf8f9_Ac" },
+      { name: "Coding Practice", playlist: "https://www.youtube.com/playlist?list=PLKtofb3HgEyxHTpgE5IvKHrwWihIEzhHc" },
+      { name: "Technical + HR", playlist: "https://www.youtube.com/playlist?list=PLd5_GYDTZQDYweay7EEL5TkCINRi0Rd6d" },
+    ],
+  },
+  { company: "Accenture", playlist: "https://www.youtube.com/playlist?list=PLKtofb3HgEyyVYpMYF4mT5Ha7zR4nfRuO" },
+  {
+    company: "Cognizant",
+    subjects: [
+      { name: "All-in-one Preparation", playlist: "https://www.youtube.com/playlist?list=PLKtofb3HgEyxlO6XOag5x4zFmLv7T6LgR" },
+      { name: "Coding Practice", playlist: "https://www.youtube.com/playlist?list=PLmL3AsWWvD6ubv-WQjqkXpUmqz1dwaQyV" },
+    ],
+  },
+  {
+    company: "Capgemini",
+    subjects: [
+      { name: "All-in-one Preparation", playlist: "https://www.youtube.com/playlist?list=PLd5_GYDTZQDZAker8eTGTX72iccinhBog" },
+    ],
+  },
+  {
+    company: "Wipro",
+    subjects: [
+      { name: "All-in-one Preparation", playlist: "https://www.youtube.com/playlist?list=PLMufDeLh5x2DPgIWzaFQGkV7NOoCSqghI" },
+      { name: "Coding Practice", playlist: "https://www.youtube.com/playlist?list=PL8EHEKsT4Gn6IHsUEVm0nFsualWrTWVPB" },
+    ],
+  },
+  {
+    company: "HCLTech",
+    subjects: [
+      { name: "All-in-one Preparation", playlist: "https://www.youtube.com/playlist?list=PLCVRCLNdg3_uBD85XApqtp6SvBRvCy5Xz" },
+      { name: "HR + Technical", playlist: "https://www.youtube.com/playlist?list=PLnLMKD-oEX1zftE5ry3HkSu0mMmpxig3X" },
+    ],
+  },
+  {
+    company: "Tech Mahindra",
+    subjects: [
+      { name: "All-in-one Preparation", playlist: "https://www.youtube.com/playlist?list=PLHs2syZ2x5p57VcfuyzhsN51UjFzhwFxo" },
+      { name: "HR + Technical", playlist: "https://www.youtube.com/playlist?list=PLSw_QAAiP2dIFhybSZ6F_3c0FlVxIgw1e" },
+    ],
+  },
+];
+
+function HRCompanyPrepPage({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: "none" }}>
+      <button onClick={onBack} className="flex items-center gap-2 text-sm mb-6" style={{ color: C.muted }}>
+        <ChevronLeft size={16} /> Back to Subject Prep
+      </button>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${C.amber}18`, color: C.amber }}>
+          <Briefcase size={19} />
+        </div>
+        <h1 className="text-xl font-bold text-white">HR Interview Preparation</h1>
+      </div>
+      <p className="text-sm mb-6 ml-[52px]" style={{ color: C.muted }}>
+        Choose a company to open its HR interview questions and preparation playlist.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {HR_COMPANY_MODULES.map(({ company, playlist, subjects }) => (
+          <Card key={company} className="p-5">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${C.amber}15`, color: C.amber }}>
+              <Briefcase size={18} />
+            </div>
+            <h2 className="text-base font-bold text-white mb-1">{company}</h2>
+            <p className="text-xs mb-4" style={{ color: C.muted }}>
+              {subjects ? "Choose a preparation area" : "Company-specific HR interview preparation"}
+            </p>
+            {subjects ? (
+              <div className="grid grid-cols-1 gap-2">
+                {subjects.map(subject => (
+                  <a key={subject.name} href={subject.playlist} target="_blank" rel="noreferrer"
+                    className="w-full py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2"
+                    style={{ background: `${C.red}12`, color: C.text, border: `1px solid ${C.red}25` }}>
+                    <span className="flex items-center gap-2"><Play size={12} style={{ color: C.red }} /> {subject.name}</span>
+                    <ExternalLink size={12} style={{ color: C.muted }} />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <a href={playlist} target="_blank" rel="noreferrer"
+                className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2"
+                style={{ background: `${C.red}15`, color: C.red, border: `1px solid ${C.red}30` }}>
+                <Play size={13} /> Open Preparation Playlist <ExternalLink size={12} />
+              </a>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SubjectCard({ s, onSelect, selected, enrolled, onEnroll, onContinue }: {
   s: typeof SUBJECTS[0]; onSelect: () => void; selected: boolean;
   enrolled: boolean; onEnroll: () => void; onContinue: () => void;
@@ -345,7 +453,7 @@ function SubjectCard({ s, onSelect, selected, enrolled, onEnroll, onContinue }: 
         </div>
       ) : (
         <div className="flex items-center gap-2 text-xs" style={{ color: C.muted }}>
-          <Lock size={11} /> {s.total} topics · Not enrolled
+          <BookOpen size={11} /> Self-paced learning path
         </div>
       )}
 
@@ -372,14 +480,9 @@ function SubjectCard({ s, onSelect, selected, enrolled, onEnroll, onContinue }: 
 
 function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
   const [topics, setTopics] = useState(s.id === "hr" ? [
-    { name: "TCS HR Interview Questions", done: false, q: 15, current: true, ytLink: "https://www.youtube.com/results?search_query=TCS+HR+interview+questions+freshers+playlist" },
-    { name: "Infosys HR Interview Questions", done: false, q: 12, current: false, ytLink: "https://www.youtube.com/results?search_query=Infosys+HR+interview+questions+freshers+playlist" },
-    { name: "Accenture HR Interview Questions", done: false, q: 10, current: false, ytLink: "https://www.youtube.com/results?search_query=Accenture+HR+interview+questions+freshers+playlist" },
-    { name: "Cognizant GenC HR Interview", done: false, q: 18, current: false, ytLink: "https://www.youtube.com/results?search_query=Cognizant+GenC+HR+interview+questions+playlist" },
-    { name: "Capgemini HR Interview", done: false, q: 14, current: false, ytLink: "https://www.youtube.com/results?search_query=Capgemini+HR+interview+questions+freshers+playlist" },
-    { name: "Wipro HR Interview", done: false, q: 10, current: false, ytLink: "https://www.youtube.com/results?search_query=Wipro+HR+interview+questions+freshers+playlist" },
-    { name: "HCLTech HR Interview", done: false, q: 8, current: false, ytLink: "https://www.youtube.com/results?search_query=HCLTech+HR+interview+questions+freshers+playlist" },
-    { name: "Tech Mahindra HR Interview", done: false, q: 11, current: false, ytLink: "https://www.youtube.com/results?search_query=Tech+Mahindra+HR+interview+questions+freshers+playlist" }
+    ...HR_COMPANY_MODULES.map(({ company, playlist }, index) => ({
+      name: `${company} HR Interview Preparation`, done: false, q: 0, current: index === 0, ytLink: playlist,
+    })),
   ] : [
     { name: "Arrays & Strings", done: true, q: 24, current: false, ytLink: s.ytLink },
     { name: "Linked Lists", done: true, q: 18, current: false, ytLink: s.ytLink },
@@ -443,7 +546,11 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
 
       {/* Topic progress tracker */}
       <Card id="topic-tracker" className="p-5">
-        <SecHead icon={<Layers size={16} />} title="Topic Progress Tracker" sub={`${s.name} — chapter by chapter`} />
+        <SecHead
+          icon={<Layers size={16} />}
+          title={s.id === "hr" ? "Company Interview Modules" : "Topic Progress Tracker"}
+          sub={s.id === "hr" ? "Choose a company to open its HR interview playlist" : `${s.name} — chapter by chapter`}
+        />
         <div className="space-y-2">
           {topics.map(t => (
             <div key={t.name} 
@@ -459,7 +566,7 @@ function SubjectDetailPanel({ s }: { s: typeof SUBJECTS[0] }) {
               </span>
               {t.ytLink && <Pill label="Watch Playlist" color={C.red} />}
               {t.current && <Pill label="In Progress" color={s.color} />}
-              <span className="text-xs" style={{ color: C.muted }}>{t.q} questions</span>
+              <span className="text-xs" style={{ color: C.muted }}>{s.id === "hr" ? "Company module" : `${t.q} questions`}</span>
               {t.done && <span className="text-xs font-semibold" style={{ color: C.green }}>✓ Done</span>}
             </div>
           ))}
@@ -692,6 +799,7 @@ function SubjectPrepPage({
   subjectsList: typeof SUBJECTS; setSubjectsList: React.Dispatch<React.SetStateAction<typeof SUBJECTS>>;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [hrCourseOpen, setHrCourseOpen] = useState(false);
   const [enrollPreview, setEnrollPreview] = useState<string | null>(null); // id of subject pending enrollment confirm
 
   const enrolledSubjects = subjectsList.filter(s => enrolled.has(s.id));
@@ -712,6 +820,10 @@ function SubjectPrepPage({
   };
 
   const previewSubject = enrollPreview ? subjectsList.find(s => s.id === enrollPreview) : null;
+
+  if (hrCourseOpen && selectedSubject?.id === "hr") {
+    return <HRCompanyPrepPage onBack={() => setHrCourseOpen(false)} />;
+  }
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
@@ -735,7 +847,7 @@ function SubjectPrepPage({
               {/* Course meta */}
               <div className="grid grid-cols-3 gap-3 mt-4">
                 {[
-                  { label: "Topics", value: `${previewSubject.total}`, icon: <BookOpen size={14} /> },
+                  { label: "Learning mode", value: "Self-paced", icon: <Clock size={14} /> },
                   { label: "Difficulty", value: previewSubject.difficulty, icon: <Zap size={14} /> },
                   { label: "Free", value: "100%", icon: <Check size={14} /> },
                 ].map(m => (
@@ -802,7 +914,7 @@ function SubjectPrepPage({
                   ));
                   
                   if (selectedSubject.id === "hr") {
-                    document.getElementById("topic-tracker")?.scrollIntoView({ behavior: "smooth" });
+                    setHrCourseOpen(true);
                     return;
                   }
                   
@@ -874,9 +986,7 @@ function SubjectPrepPage({
                 
                 if (s.id === "hr") {
                   setSelected(s.id);
-                  setTimeout(() => {
-                    document.getElementById("topic-tracker")?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }, 100);
+                  setHrCourseOpen(true);
                   return;
                 }
                 
@@ -964,56 +1074,56 @@ function SubjectPrepPage({
 
 const DOMAINS = [
   {
-    id: "web", name: "Web Development", icon: "WEB", color: C.purple,
-    progress: 72, difficulty: "Intermediate", time: "8 weeks left",
-    skills: ["React", "Node.js", "TypeScript", "CSS", "REST APIs"],
+    id: "web", name: "Web Development", icon: "🌐", color: C.purple,
+    progress: 0, difficulty: "Intermediate", time: "8 week plan",
+    skills: ["HTML", "CSS", "JavaScript", "React", "TypeScript", "Node.js", "REST APIs", "Testing", "Deployment", "Performance"],
     demand: 96, salary: "₹18–35 LPA",
   },
   {
-    id: "ai", name: "AI / Machine Learning", icon: "AI", color: C.cyan,
-    progress: 38, difficulty: "Advanced", time: "14 weeks left",
-    skills: ["Python", "PyTorch", "Transformers", "MLOps"],
+    id: "ai", name: "AI / Machine Learning", icon: "🧠", color: C.cyan,
+    progress: 0, difficulty: "Advanced", time: "14 week plan",
+    skills: ["Python", "Statistics", "scikit-learn", "PyTorch", "Transformers", "MLOps", "Model Deployment"],
     demand: 99, salary: "₹25–60 LPA",
   },
   {
-    id: "ds", name: "Data Science", icon: "DATA", color: C.green,
-    progress: 51, difficulty: "Intermediate", time: "10 weeks left",
-    skills: ["Python", "SQL", "Pandas", "Statistics", "Power BI"],
+    id: "ds", name: "Data Science", icon: "📊", color: C.green,
+    progress: 0, difficulty: "Intermediate", time: "10 week plan",
+    skills: ["Python", "SQL", "Jupyter", "Pandas", "Statistics", "Machine Learning", "Power BI", "Data Visualization"],
     demand: 94, salary: "₹15–30 LPA",
   },
   {
-    id: "cloud", name: "Cloud Computing", icon: "CLOUD", color: C.blue,
-    progress: 29, difficulty: "Intermediate", time: "12 weeks left",
-    skills: ["AWS", "GCP", "Terraform", "Docker", "Kubernetes"],
+    id: "cloud", name: "Cloud Computing", icon: "☁️", color: C.blue,
+    progress: 0, difficulty: "Intermediate", time: "12 week plan",
+    skills: ["Linux", "Networking", "AWS", "Azure", "Google Cloud", "Docker", "Terraform", "Monitoring"],
     demand: 92, salary: "₹20–45 LPA",
   },
   {
-    id: "cyber", name: "Cybersecurity", icon: "SEC", color: C.red,
-    progress: 18, difficulty: "Advanced", time: "16 weeks left",
-    skills: ["Penetration Testing", "SIEM", "Cryptography", "OWASP"],
+    id: "cyber", name: "Cybersecurity", icon: "🔒", color: C.red,
+    progress: 0, difficulty: "Advanced", time: "16 week plan",
+    skills: ["Security Foundations", "SIEM", "OWASP", "Penetration Testing", "NIST Framework"],
     demand: 88, salary: "₹20–50 LPA",
   },
   {
-    id: "devops", name: "DevOps", icon: "OPS", color: C.amber,
-    progress: 44, difficulty: "Intermediate", time: "9 weeks left",
-    skills: ["CI/CD", "Docker", "Kubernetes", "Ansible", "Monitoring"],
+    id: "devops", name: "DevOps", icon: "⚙️", color: C.amber,
+    progress: 0, difficulty: "Intermediate", time: "9 week plan",
+    skills: ["Git", "Bash", "CI/CD", "Docker", "Ansible", "Kubernetes", "Monitoring"],
     demand: 91, salary: "₹18–40 LPA",
   },
   {
-    id: "mobile", name: "Mobile App Development", icon: "MOB", color: C.pink,
-    progress: 63, difficulty: "Intermediate", time: "7 weeks left",
-    skills: ["React Native", "Flutter", "Swift", "Kotlin"],
+    id: "mobile", name: "Mobile App Development", icon: "📱", color: C.pink,
+    progress: 0, difficulty: "Intermediate", time: "7 week plan",
+    skills: ["Flutter", "Kotlin", "REST APIs", "Local Storage", "Testing", "Performance", "App Publishing"],
     demand: 84, salary: "₹15–28 LPA",
   },
   {
-    id: "test", name: "Software Testing", icon: "QA", color: C.teal,
-    progress: 57, difficulty: "Beginner", time: "6 weeks left",
-    skills: ["Selenium", "Jest", "Cypress", "Postman", "JUnit"],
+    id: "test", name: "Software Testing", icon: "🧪", color: C.teal,
+    progress: 0, difficulty: "Beginner", time: "6 week plan",
+    skills: ["Testing Fundamentals", "Postman", "Cypress", "Selenium", "Playwright", "CI/CD", "Quality Practices"],
     demand: 79, salary: "₹10–22 LPA",
   },
 ];
 
-function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect: () => void; selected: boolean }) {
+function DomainCard({ d, onSelect, onExplore, selected }: { d: typeof DOMAINS[0]; onSelect: () => void; onExplore: () => void; selected: boolean }) {
   return (
     <div onClick={onSelect} className="rounded-2xl p-5 cursor-pointer transition-all hover:scale-[1.02] flex flex-col gap-4"
       style={{
@@ -1054,7 +1164,7 @@ function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect:
       {/* Progress */}
       <div>
         <div className="flex justify-between text-xs mb-1.5">
-          <span style={{ color: C.muted }}>Demand Score</span>
+          <span style={{ color: C.muted }}>Market Demand</span>
           <span className="font-bold" style={{ color: C.green }}>{d.demand}%</span>
         </div>
         <div className="flex justify-between text-xs mb-1.5">
@@ -1066,7 +1176,7 @@ function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect:
         </div>
       </div>
 
-      <button onClick={e => { e.stopPropagation(); onSelect(); }}
+      <button onClick={e => { e.stopPropagation(); onExplore(); }}
         className="w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
         style={{ background: selected ? d.color : C.surface, border: `1px solid ${selected ? d.color : C.border}`, color: selected ? "#fff" : C.muted }}>
         <Map size={11} /> Explore Roadmap
@@ -1076,19 +1186,18 @@ function DomainCard({ d, onSelect, selected }: { d: typeof DOMAINS[0]; onSelect:
 }
 
 function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
-  const roadmap = [
-    { phase: "Foundation", topics: ["Core concepts", "Setup & tooling", "First project"], done: true, weeks: "Weeks 1–2" },
-    { phase: "Core Skills", topics: ["Key frameworks", "Best practices", "Mini projects"], done: true, weeks: "Weeks 3–5" },
-    { phase: "Advanced", topics: ["Architecture patterns", "Performance", "Real-world projects"], done: false, current: true, weeks: "Weeks 6–9" },
-    { phase: "Portfolio", topics: ["Capstone project", "Deployment", "Documentation"], done: false, weeks: "Weeks 10–12" },
-    { phase: "Interview Prep", topics: ["Domain questions", "Mock interviews", "Case studies"], done: false, weeks: "Weeks 13–14" },
-  ];
+  const roadmapKey = DOMAIN_ID_BY_NAME[d.name.toLowerCase()] || d.id;
+  const { user } = useAuth();
+  const resourcesStorageKey = `crackit_domain_resources_${user?.id || "guest"}_${roadmapKey}`;
+  const [openedResources, setOpenedResources] = useState<string[]>(() => readOpenedDomainResources(resourcesStorageKey));
+  useEffect(() => setOpenedResources(readOpenedDomainResources(resourcesStorageKey)), [resourcesStorageKey]);
+  const roadmap = (DOMAIN_ROADMAP_TOPICS[roadmapKey] ?? [
+    { phase: "Core Preparation", topics: d.skills.map(skill => `${skill} fundamentals and practical use`) },
+    { phase: "Projects and Interview Prep", topics: ["Build a small project using the core skills", "Practice explaining design choices and tradeoffs"] },
+  ]).map((phase, index, phases) => ({ ...phase, done: false, current: index === 0, weeks: getRoadmapPhaseWeeks(d.time, index, phases.length) }));
+  const skillProgress = getDomainSkillResourceProgress(roadmapKey, d.skills, openedResources);
 
-  const courses = [
-    { name: "The Complete Guide to " + d.name.split(" ")[0], platform: "Udemy", rating: 4.8, students: "124K", free: false },
-    { name: d.name + " Fundamentals", platform: "Coursera", rating: 4.7, students: "89K", free: false },
-    { name: "Official " + d.skills[0] + " Documentation", platform: "Official Docs", rating: 5.0, students: "—", free: true },
-  ];
+  const courses = DOMAIN_COURSES[roadmapKey] || [];
 
   const companies = [
     { name: "Google", openings: 42, color: C.purple },
@@ -1103,13 +1212,6 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
     { level: "Senior", salary: 38 }, { level: "Lead", salary: 55 },
   ];
 
-  const skillGap = [
-    { skill: d.skills[0], current: d.progress, target: 90, color: d.color },
-    { skill: d.skills[1] || "Core Tools", current: Math.max(10, d.progress - 20), target: 85, color: C.cyan },
-    { skill: "System Design", current: 45, target: 80, color: C.amber },
-    { skill: "Interview Skills", current: 62, target: 90, color: C.green },
-  ];
-
   return (
     <div className="space-y-5">
       {/* Stats strip */}
@@ -1118,7 +1220,7 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
           { label: "Skills Covered", value: `${d.skills.length} core`, color: d.color, icon: <Code2 size={14} /> },
           { label: "Market Demand", value: `${d.demand}%`, color: C.green, icon: <TrendingUp size={14} /> },
           { label: "Avg Salary", value: d.salary, color: C.amber, icon: <Briefcase size={14} /> },
-          { label: "Time Left", value: d.time, color: C.purple, icon: <Clock size={14} /> },
+          { label: "Plan Duration", value: d.time, color: C.purple, icon: <Clock size={14} /> },
         ].map(s => (
           <div key={s.label} className="p-3 rounded-2xl" style={{ background: `${s.color}10`, border: `1px solid ${s.color}25` }}>
             <div className="flex items-center gap-1.5 mb-1" style={{ color: s.color }}>{s.icon}<span className="text-xs">{s.label}</span></div>
@@ -1134,7 +1236,9 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
         <div className="relative">
           <div className="absolute left-4 top-2 bottom-2 w-0.5" style={{ background: C.border }} />
           <div className="space-y-4">
-            {roadmap.map((r, i) => (
+            {roadmap.map((r, i) => {
+              const phaseResources = DOMAIN_ROADMAP_RESOURCES[roadmapKey]?.[r.phase] || [];
+              return (
               <div key={r.phase} className="flex items-start gap-4 relative">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 flex-shrink-0 text-xs font-bold ${r.done ? 'text-white' : ''}`}
                   style={{
@@ -1156,9 +1260,22 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                         style={{ background: C.surface, color: C.muted, border: `1px solid ${C.border}` }}>{t}</span>
                     ))}
                   </div>
+                  {phaseResources.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {phaseResources.map(resource => (
+                        <a key={resource.url} href={resource.url} target="_blank" rel="noreferrer"
+                          onClick={() => setOpenedResources(saveOpenedDomainResource(resourcesStorageKey, resource.url))}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs hover:opacity-80"
+                          style={{ background: `${d.color}12`, color: d.color, border: `1px solid ${d.color}25` }}>
+                          {resource.name} <ExternalLink size={11} />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </Card>
@@ -1167,16 +1284,16 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Required Skills */}
         <Card className="p-5">
-          <SecHead icon={<Cpu size={16} />} title="Required Skills" sub={`Core competencies for ${d.name}`} />
+          <SecHead icon={<Cpu size={16} />} title="Required Skills" sub="Progress increases as you open roadmap learning resources" />
           <div className="flex flex-wrap gap-2 mb-4">
             {d.skills.map(sk => <Pill key={sk} label={sk} color={d.color} />)}
           </div>
           <div className="space-y-2.5">
-            {d.skills.slice(0, 4).map((sk, i) => {
-              const pct = Math.max(20, d.progress - i * 8);
+            {skillProgress.map(({ skill, percent }) => {
+              const pct = percent;
               return (
-                <div key={sk}>
-                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{sk}</span><span className="font-bold" style={{ color: d.color }}>{pct}%</span></div>
+                <div key={skill}>
+                  <div className="flex justify-between text-xs mb-1"><span style={{ color: C.muted }}>{skill}</span><span className="font-bold" style={{ color: d.color }}>{pct}%</span></div>
                   <div className="h-1.5 rounded-full" style={{ background: C.border }}>
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, background: d.color }} />
                   </div>
@@ -1186,31 +1303,43 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
           </div>
         </Card>
 
-        {/* Recommended Courses */}
+        {/* Courses and Certifications */}
         <Card className="p-5">
-          <SecHead icon={<BookOpen size={16} />} title="Recommended Courses" sub="Curated by AI based on your progress" />
-          <div className="space-y-3">
-            {courses.map(c => (
-              <div key={c.name} className="flex items-start gap-3 p-3 rounded-xl"
-                style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                  style={{ background: d.color }}>{c.platform[0]}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white leading-snug truncate">{c.name}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs" style={{ color: C.amber }}>★ {c.rating}</span>
-                    <span className="text-xs" style={{ color: C.muted }}>{c.students} students</span>
-                    {c.free && <Pill label="Free" color={C.green} />}
+          <SecHead icon={<BookOpen size={16} />} title="Courses & Certifications" sub="Courses with certificates or badges" />
+          {courses.length > 0 ? (
+            <div className="space-y-3">
+              {courses.map(course => (
+                <a key={course.url} href={course.url} target="_blank" rel="noreferrer"
+                  className="block p-3 rounded-xl transition-colors hover:opacity-80"
+                  style={{ background: C.surface, border: `1px solid ${C.border}` }}>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${d.color}18`, color: d.color }}>
+                      <Award size={15} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-semibold text-white leading-snug">{course.name}</span>
+                        <ExternalLink size={12} className="flex-shrink-0" style={{ color: C.muted }} />
+                      </div>
+                      <div className="text-xs mt-1.5 leading-relaxed" style={{ color: C.muted }}>{course.description}</div>
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold"
+                        style={{ background: `${d.color}15`, color: d.color, border: `1px solid ${d.color}30` }}>
+                        <Award size={12} /> {course.award}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: C.muted }}>Course links for this domain will be added when available.</p>
+          )}
         </Card>
       </div>
 
-      {/* Hands-on Projects + Certifications */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Hands-on Projects */}
+      <div className="grid grid-cols-1 gap-5">
         <Card className="p-5">
           <SecHead icon={<Boxes size={16} />} title="Hands-on Projects" sub="Build to learn, build to impress" />
           <div className="space-y-2.5">
@@ -1232,33 +1361,6 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
                 </div>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                   style={{ background: `${diffColor(p.diff)}15`, color: diffColor(p.diff) }}>{p.diff}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <SecHead icon={<Award size={16} />} title="Certification Suggestions"
-            sub="Industry-recognized credentials" />
-          <div className="space-y-3">
-            {[
-              { name: `${d.skills[0]} Certified Developer`, org: "Official Body", priority: "High", color: C.purple },
-              { name: "Google Professional Certificate", org: "Coursera", priority: "Medium", color: C.cyan },
-              { name: "Meta Front-End Developer", org: "Meta", priority: "Medium", color: C.blue },
-            ].map(c => (
-              <div key={c.name} className="flex items-start gap-3 p-3 rounded-xl"
-                style={{ background: `${c.color}08`, border: `1px solid ${c.color}25` }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${c.color}18`, color: c.color }}>
-                  <Award size={14} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs font-semibold text-white">{c.name}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs" style={{ color: C.muted }}>{c.org}</span>
-                    <Pill label={c.priority + " Priority"} color={c.priority === "High" ? C.red : C.amber} />
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -1342,55 +1444,441 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
         </Card>
       </div>
 
-      {/* AI Skill Gap + Recommended Next Steps */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Card className="p-5">
-          <SecHead icon={<Sparkles size={16} />} title="AI Skill Gap Analysis"
-            sub="Current vs. target proficiency" />
-          <div className="space-y-4">
-            {skillGap.map(sg => (
-              <div key={sg.skill}>
-                <div className="flex justify-between text-xs mb-2">
-                  <span className="font-medium text-white">{sg.skill}</span>
-                  <span style={{ color: C.muted }}>
-                    <span style={{ color: sg.color }}>{sg.current}%</span> → <span style={{ color: C.green }}>{sg.target}%</span>
-                  </span>
-                </div>
-                <div className="relative h-2.5 rounded-full" style={{ background: C.border }}>
-                  <div className="h-full rounded-full" style={{ width: `${sg.target}%`, background: `${sg.color}30` }} />
-                  <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${sg.current}%`, background: sg.color }} />
-                </div>
-                <div className="text-xs mt-1" style={{ color: C.muted }}>
-                  Gap: {sg.target - sg.current}% to close
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+    </div>
+  );
+}
 
-        <Card className="p-5"
-          style={{ background: "linear-gradient(135deg,rgba(168,85,247,.1),rgba(34,211,238,.07))", border: "1px solid rgba(168,85,247,.3)" }}>
-          <SecHead icon={<ArrowRight size={16} />} title="Recommended Next Steps"
-            sub="Your AI-personalised action plan" />
-          <div className="space-y-3">
-            {[
-              { n: 1, action: `Complete "${d.skills[2] || "Core Tools"}" module this week`, tag: "Learning", color: d.color },
-              { n: 2, action: "Build the Hands-on Project #3: Real-time Dashboard", tag: "Project", color: C.cyan },
-              { n: 3, action: `Take Mock Test for ${d.name} fundamentals`, tag: "Assessment", color: C.green },
-              { n: 4, action: `Earn the ${d.skills[0]} certification by end of month`, tag: "Certification", color: C.amber },
-            ].map(s => (
-              <div key={s.n} className="flex items-start gap-3 p-3 rounded-xl"
-                style={{ background: "rgba(31,41,55,.6)", border: `1px solid ${C.border}` }}>
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ background: s.color }}>{s.n}</div>
-                <div className="flex-1">
-                  <div className="text-xs text-white leading-snug">{s.action}</div>
-                  <Pill label={s.tag} color={s.color} />
+const DOMAIN_ROADMAP_TOPICS: Record<string, { phase: string; topics: string[] }[]> = {
+  web: [
+    { phase: "Web Foundations", topics: ["HTML semantics and accessibility", "CSS layout and responsive design", "JavaScript fundamentals and browser APIs"] },
+    { phase: "Frontend Development", topics: ["React components, hooks, and state", "TypeScript for React applications", "Routing, forms, and data fetching"] },
+    { phase: "Backend and Data", topics: ["Node.js and REST API design", "Databases, authentication, and authorization", "Validation, errors, and API security"] },
+    { phase: "Build and Ship", topics: ["Testing frontend and backend code", "Performance and accessibility checks", "Deploy a full stack portfolio project"] },
+  ],
+  ai: [
+    { phase: "Math and Python Foundations", topics: ["Python for data and AI", "Linear algebra, probability, and statistics", "Data preparation and exploratory analysis"] },
+    { phase: "Machine Learning", topics: ["Supervised and unsupervised learning", "Model evaluation and feature engineering", "Build projects with scikit-learn"] },
+    { phase: "Deep Learning and Generative AI", topics: ["Neural networks and PyTorch", "Transformers and large language models", "Prompting, fine-tuning, and evaluation"] },
+    { phase: "Production AI", topics: ["Model serving and API integration", "MLOps, monitoring, and versioning", "Responsible AI and deployment project"] },
+  ],
+  ds: [
+    { phase: "Data Foundations", topics: ["Python, notebooks, and data types", "SQL queries, joins, and aggregations", "Data cleaning and exploratory analysis"] },
+    { phase: "Statistics and Analysis", topics: ["Descriptive statistics and probability", "Hypothesis testing and sampling", "Pandas transformations and feature creation"] },
+    { phase: "Machine Learning", topics: ["Regression and classification", "Clustering and model evaluation", "Avoiding leakage and overfitting"] },
+    { phase: "Communicate Insights", topics: ["Data visualization and dashboards", "Explain findings to stakeholders", "Complete an end-to-end analysis project"] },
+  ],
+  cloud: [
+    { phase: "Cloud Foundations", topics: ["Cloud service models and regions", "Linux, networking, and command line", "Identity, access, and cloud security basics"] },
+    { phase: "Core Cloud Services", topics: ["Compute, storage, and managed databases", "Virtual networks, DNS, and load balancing", "Choose AWS, Azure, or GCP core services"] },
+    { phase: "Infrastructure and Reliability", topics: ["Docker and container fundamentals", "Infrastructure as code with Terraform", "Monitoring, backups, and cost control"] },
+    { phase: "Cloud Projects", topics: ["Deploy a secure multi-tier application", "Automate builds and deployments", "Prepare architecture and troubleshooting examples"] },
+  ],
+  cyber: [
+    { phase: "Security Foundations", topics: ["Networking, Linux, and operating system basics", "Threats, vulnerabilities, and risk", "Cryptography and identity fundamentals"] },
+    { phase: "Defensive Security", topics: ["Log analysis and SIEM workflows", "Incident response and threat hunting", "Endpoint, network, and cloud protection"] },
+    { phase: "Application and Offensive Security", topics: ["OWASP web security risks", "Vulnerability assessment in safe labs", "Secure coding and penetration testing methodology"] },
+    { phase: "Practice and Readiness", topics: ["Build a home lab and document findings", "Security policies and compliance basics", "Incident walkthroughs and security interview practice"] },
+  ],
+  devops: [
+    { phase: "Foundations", topics: ["Linux, shell scripting, and networking", "Git workflows and collaboration", "Build and package an application"] },
+    { phase: "Automation and Containers", topics: ["CI/CD pipelines and deployment strategies", "Docker images, containers, and registries", "Infrastructure as code with Terraform or Ansible"] },
+    { phase: "Orchestration and Reliability", topics: ["Kubernetes workloads and services", "Monitoring, logs, and alerting", "Secrets, access control, and reliability practices"] },
+    { phase: "Delivery Project", topics: ["Automate test-to-deploy workflow", "Deploy and monitor a containerized service", "Practice incident response and rollback"] },
+  ],
+  mobile: [
+    { phase: "Mobile Foundations", topics: ["Dart and Flutter or Kotlin and Android basics", "Layouts, navigation, and app lifecycle", "State management and reusable components"] },
+    { phase: "App Features", topics: ["Connect to REST APIs and handle JSON", "Local storage and offline behavior", "Forms, notifications, and device permissions"] },
+    { phase: "Quality and Polish", topics: ["Unit, widget, and UI testing", "Accessibility and responsive layouts", "Performance, security, and crash handling"] },
+    { phase: "Publish a Complete App", topics: ["Build a production-ready app", "Release and store deployment basics", "Document the project and prepare a demo"] },
+  ],
+  test: [
+    { phase: "Testing Foundations", topics: ["Testing principles, test levels, and SDLC", "Test cases, scenarios, and bug reports", "Equivalence partitioning and boundary values"] },
+    { phase: "API and Automation", topics: ["HTTP and API testing with Postman", "UI automation with Selenium or Cypress", "JavaScript or Java automation fundamentals"] },
+    { phase: "Reliable Test Suites", topics: ["Fixtures, selectors, and test data", "Assertions, mocks, and debugging flaky tests", "Run tests in CI and report results"] },
+    { phase: "Quality in Practice", topics: ["Regression and exploratory testing", "Performance and accessibility test basics", "Create an automated test project and portfolio"] },
+  ],
+};
+
+function getRoadmapPhaseWeeks(planDuration: string, phaseIndex: number, phaseCount: number) {
+  const totalWeeks = Number(planDuration.match(/\d+/)?.[0] || phaseCount);
+  const baseWeeks = Math.floor(totalWeeks / phaseCount);
+  const extraWeeks = totalWeeks % phaseCount;
+  const start = phaseIndex * baseWeeks + Math.min(phaseIndex, extraWeeks) + 1;
+  const duration = baseWeeks + (phaseIndex < extraWeeks ? 1 : 0);
+  const end = start + duration - 1;
+  return start === end ? `Week ${start}` : `Weeks ${start}–${end}`;
+}
+
+const DOMAIN_ROADMAP_RESOURCES: Record<string, Record<string, { name: string; url: string }[]>> = {
+  web: {
+    "Web Foundations": [
+      { name: "MDN Web Docs (HTML, CSS, JavaScript)", url: "https://developer.mozilla.org/" },
+      { name: "W3C Web Accessibility Initiative (WCAG)", url: "https://www.w3.org/WAI/" },
+      { name: "FreeCodeCamp HTML & CSS (YouTube)", url: "https://www.youtube.com/watch?v=mU6anWqZJcc" },
+      { name: "JavaScript.info", url: "https://javascript.info/" },
+    ],
+    "Frontend Development": [
+      { name: "React Official Documentation", url: "https://react.dev/" },
+      { name: "TypeScript Documentation", url: "https://www.typescriptlang.org/docs/" },
+      { name: "React Course by CodeWithHarry", url: "https://www.youtube.com/playlist?list=PLu0W_9lII9agx66oZnT6Iyhx5BS--h64z" },
+      { name: "React Router Docs", url: "https://reactrouter.com/" },
+    ],
+    "Backend and Data": [
+      { name: "Node.js Official Docs", url: "https://nodejs.org/en/docs/" },
+      { name: "Express.js Documentation", url: "https://expressjs.com/" },
+      { name: "GeeksforGeeks Node.js Tutorial", url: "https://www.geeksforgeeks.org/nodejs/" },
+      { name: "JWT Auth & API Security Guide", url: "https://jwt.io/introduction" },
+    ],
+    "Build and Ship": [
+      { name: "Jest Testing Framework Docs", url: "https://jestjs.io/" },
+      { name: "Vercel Deployment Docs", url: "https://vercel.com/docs" },
+      { name: "Lighthouse Performance Guide", url: "https://web.dev/explore/fast" },
+    ],
+  },
+  ai: {
+    "Math and Python Foundations": [
+      { name: "Khan Academy Linear Algebra & Statistics", url: "https://www.khanacademy.org/math/linear-algebra" },
+      { name: "Python Official Tutorial", url: "https://docs.python.org/3/tutorial/" },
+      { name: "GeeksforGeeks Python Programming", url: "https://www.geeksforgeeks.org/python-programming-language/" },
+    ],
+    "Machine Learning": [
+      { name: "Scikit-Learn Official User Guide", url: "https://scikit-learn.org/stable/user_guide.html" },
+      { name: "StatQuest with Josh Starmer", url: "https://www.youtube.com/c/joshstarmer" },
+      { name: "GeeksforGeeks Machine Learning Tutorial", url: "https://www.geeksforgeeks.org/machine-learning/" },
+    ],
+    "Deep Learning and Generative AI": [
+      { name: "PyTorch Official Tutorials", url: "https://pytorch.org/tutorials/" },
+      { name: "Hugging Face Course", url: "https://huggingface.co/learn/nlp-course/" },
+      { name: "Andrej Karpathy Neural Networks", url: "https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ" },
+    ],
+    "Production AI": [
+      { name: "FastAPI Docs (Model Serving)", url: "https://fastapi.tiangolo.com/" },
+      { name: "Made With ML (MLOps Guide)", url: "https://madewithml.com/" },
+      { name: "MLflow Documentation", url: "https://mlflow.org/docs/latest/index.html" },
+    ],
+  },
+  ds: {
+    "Data Foundations": [
+      { name: "SQL Tutorial (Mode Analytics)", url: "https://mode.com/sql-tutorial/" },
+      { name: "GeeksforGeeks SQL Tutorial", url: "https://www.geeksforgeeks.org/sql-tutorial/" },
+      { name: "Jupyter Notebook Documentation", url: "https://docs.jupyter.org/" },
+    ],
+    "Statistics and Analysis": [
+      { name: "Pandas Official Documentation", url: "https://pandas.pydata.org/docs/" },
+      { name: "GeeksforGeeks Pandas Tutorial", url: "https://www.geeksforgeeks.org/pandas-tutorial/" },
+      { name: "Seeing Theory (Probability & Statistics)", url: "https://seeing-theory.brown.edu/" },
+    ],
+    "Machine Learning": [
+      { name: "Google Machine Learning Crash Course", url: "https://developers.google.com/machine-learning/crash-course" },
+      { name: "Kaggle Learn Tutorials", url: "https://www.kaggle.com/learn" },
+    ],
+    "Communicate Insights": [
+      { name: "Tableau Official Training Videos", url: "https://www.tableau.com/learn/training" },
+      { name: "Power BI Documentation", url: "https://learn.microsoft.com/en-us/power-bi/" },
+      { name: "Matplotlib & Seaborn Tutorials", url: "https://seaborn.pydata.org/tutorial.html" },
+    ],
+  },
+  cloud: {
+    "Cloud Foundations": [
+      { name: "Linux Journey", url: "https://linuxjourney.com/" },
+      { name: "NetworkChuck Linux for Beginners", url: "https://www.youtube.com/playlist?list=PLIhvCqJh23403ubIInY2TIs_r4Yj_3zUq" },
+      { name: "AWS Cloud Practitioner Essentials", url: "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/" },
+    ],
+    "Core Cloud Services": [
+      { name: "AWS Documentation", url: "https://docs.aws.amazon.com/" },
+      { name: "Microsoft Learn Azure Fundamentals", url: "https://learn.microsoft.com/en-us/training/azure/" },
+      { name: "Google Cloud Free Fundamentals", url: "https://cloud.google.com/training/free-training" },
+    ],
+    "Infrastructure and Reliability": [
+      { name: "Docker Getting Started Guide", url: "https://docs.docker.com/get-started/" },
+      { name: "Terraform Tutorials (HashiCorp)", url: "https://developer.hashicorp.com/terraform/tutorials" },
+    ],
+    "Cloud Projects": [
+      { name: "AWS Cloud Quest", url: "https://aws.amazon.com/training/digital/aws-cloud-quest/" },
+      { name: "GitHub AWS Projects Repository", url: "https://github.com/aws-samples" },
+    ],
+  },
+  cyber: {
+    "Security Foundations": [
+      { name: "Professor Messer Security+ Course", url: "https://www.youtube.com/playlist?list=PLG49S3ogoTpq4pbeY1ipI_49CjSN2Bf4X" },
+      { name: "Cybrary Free Security Fundamentals", url: "https://www.cybrary.it/" },
+    ],
+    "Defensive Security": [
+      { name: "TryHackMe Blue Teaming Rooms", url: "https://tryhackme.com/" },
+      { name: "Splunk Training & Documentation", url: "https://docs.splunk.com/" },
+    ],
+    "Application and Offensive Security": [
+      { name: "OWASP Top 10", url: "https://owasp.org/www-project-top-ten/" },
+      { name: "PortSwigger Web Security Academy", url: "https://portswigger.net/web-security" },
+      { name: "Hack The Box", url: "https://www.hackthebox.com/" },
+    ],
+    "Practice and Readiness": [
+      { name: "Cybersecurity Home Lab Guide", url: "https://github.com/clarkmaster/HomeLab-CyberSecurity" },
+      { name: "NIST Cybersecurity Framework", url: "https://www.nist.gov/cyberframework" },
+    ],
+  },
+  devops: {
+    "Foundations": [
+      { name: "Git Official Documentation & Book", url: "https://git-scm.com/doc" },
+      { name: "Bash Scripting Guide", url: "https://www.geeksforgeeks.org/bash-scripting-introduction/" },
+    ],
+    "Automation and Containers": [
+      { name: "GitHub Actions Documentation", url: "https://docs.github.com/en/actions" },
+      { name: "Docker Docs", url: "https://docs.docker.com/" },
+      { name: "Ansible Official Documentation", url: "https://docs.ansible.com/" },
+    ],
+    "Orchestration and Reliability": [
+      { name: "Kubernetes Basics Tutorial", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/" },
+      { name: "Prometheus Overview", url: "https://prometheus.io/docs/introduction/overview/" },
+    ],
+    "Delivery Project": [
+      { name: "DevOps Roadmap & Projects", url: "https://roadmap.sh/devops" },
+      { name: "Kunal Kushwaha DevOps Course", url: "https://www.youtube.com/playlist?list=PL9gnSGHSqcnqfNFIvichI8248550426pC" },
+    ],
+  },
+  mobile: {
+    "Mobile Foundations": [
+      { name: "Flutter Official Documentation", url: "https://docs.flutter.dev/" },
+      { name: "Android Basics with Kotlin", url: "https://developer.android.com/courses/android-basics-kotlin/course" },
+      { name: "Flutter Course by CodeWithHarry", url: "https://www.youtube.com/playlist?list=PLu0W_9lII9agpFUAlPxcJ--9d2kG7C3C5" },
+    ],
+    "App Features": [
+      { name: "Flutter REST API Integration", url: "https://docs.flutter.dev/cookbook/networking/fetch-data" },
+      { name: "Sqflite Local Storage Docs", url: "https://pub.dev/packages/sqflite" },
+    ],
+    "Quality and Polish": [
+      { name: "Testing Flutter Apps Guide", url: "https://docs.flutter.dev/testing/overview" },
+      { name: "Android App Performance Guide", url: "https://developer.android.com/topic/performance" },
+    ],
+    "Publish a Complete App": [
+      { name: "Google Play Console Publishing Guide", url: "https://support.google.com/googleplay/android-developer/answer/9859152" },
+      { name: "Apple App Store Publishing Guide", url: "https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" },
+    ],
+  },
+  test: {
+    "Testing Foundations": [
+      { name: "ISTQB Foundation Level Syllabus", url: "https://www.istqb.org/certifications/certified-tester-foundation-level" },
+      { name: "GeeksforGeeks Software Testing Tutorial", url: "https://www.geeksforgeeks.org/software-testing/" },
+    ],
+    "API and Automation": [
+      { name: "Postman Learning Center", url: "https://learning.postman.com/docs/getting-started/introduction/" },
+      { name: "Cypress Official Documentation", url: "https://docs.cypress.io/" },
+      { name: "Selenium Official Documentation", url: "https://www.selenium.dev/documentation/" },
+    ],
+    "Reliable Test Suites": [
+      { name: "Playwright Docs", url: "https://playwright.dev/" },
+      { name: "GitHub Actions Testing Guide", url: "https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing" },
+    ],
+    "Quality in Practice": [
+      { name: "Ministry of Testing Resources", url: "https://www.ministryoftesting.com/" },
+      { name: "Software Testing Help Tutorials", url: "https://www.softwaretestinghelp.com/" },
+    ],
+  },
+};
+
+const DOMAIN_COURSES: Record<string, { name: string; description: string; url: string; award: string }[]> = {
+  web: [
+    { name: "freeCodeCamp — Responsive Web Design Certificate", description: "HTML, CSS, responsive design, and accessibility.", url: "https://www.freecodecamp.org/learn/2022/responsive-web-design/", award: "Free certificate" },
+    { name: "University of Helsinki — Full Stack Open", description: "React, Node.js, Express, REST APIs, GraphQL, testing, and TypeScript.", url: "https://fullstackopen.com/en/", award: "Course completion" },
+    { name: "freeCodeCamp — JavaScript Algorithms and Data Structures", description: "JavaScript fundamentals, DOM, and browser APIs.", url: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures-v8/", award: "Free certificate" },
+  ],
+  ai: [
+    { name: "Kaggle Learn — Python, ML & Intro to Deep Learning", description: "Short courses covering Python, Pandas, Scikit-learn, neural networks, and feature engineering.", url: "https://www.kaggle.com/learn", award: "Free certificates" },
+    { name: "Elements of AI — University of Helsinki", description: "AI basics, linear algebra, probability, and AI ethics.", url: "https://www.elementsofai.com/", award: "Course completion" },
+    { name: "Google — Introduction to Generative AI", description: "Generative AI, large language models, and prompt engineering.", url: "https://www.cloudskillsboost.google/course_templates/5363", award: "Course completion" },
+  ],
+  ds: [
+    { name: "Cognitive Class (IBM) — Data Science Foundations", description: "Python, SQL, Pandas, and data visualization.", url: "https://cognitiveclass.ai/courses/data-science-first-step", award: "Free badge / certificate" },
+    { name: "Kaggle Learn — Data Visualization & SQL", description: "SQL queries, joins, aggregations, and Seaborn/Matplotlib visualization.", url: "https://www.kaggle.com/learn/intro-to-sql", award: "Free course certificate" },
+    { name: "Simplilearn SkillUp — Data Science with Python", description: "Data cleaning, statistics, and hypothesis testing.", url: "https://www.simplilearn.com/free-data-science-course-skillup", award: "Free certificate" },
+  ],
+  cloud: [
+    { name: "AWS Educate — Getting Started with Cloud & Compute", description: "Cloud foundations, compute, storage, and AWS core services.", url: "https://aws.amazon.com/education/awseducate/", award: "Free badge" },
+    { name: "Cisco Networking Academy — NDG Linux Unhatched & Essentials", description: "Linux command line skills used in cloud and DevOps.", url: "https://www.netacad.com/courses/os-it/ndg-linux-unhatched", award: "Free certificate" },
+    { name: "Microsoft Learn — Azure Fundamentals (AZ-900)", description: "Cloud concepts, managed databases, virtual networks, and identity and access.", url: "https://learn.microsoft.com/en-us/training/paths/azure-fundamentals-describe-cloud-concepts/", award: "Free learning modules" },
+  ],
+  cyber: [
+    { name: "Cisco Networking Academy — Introduction to Cybersecurity & Essentials", description: "Networking, risk, threats, cryptography, and defense basics.", url: "https://www.netacad.com/courses/cybersecurity/introduction-cybersecurity", award: "Free certificate" },
+    { name: "University of Helsinki — Cyber Security Base", description: "OWASP risks, web security, vulnerability assessment, and safe labs.", url: "https://cybersecuritybase.mooc.fi/", award: "Course completion" },
+    { name: "TryHackMe — Pre-Security Path", description: "Hands-on security fundamentals, Linux, and networking.", url: "https://tryhackme.com/path/outline/pre-security", award: "Path completion" },
+  ],
+  devops: [
+    { name: "GitHub Skills — GitHub Actions & Workflows", description: "Practical CI/CD pipelines and Git workflows.", url: "https://skills.github.com/", award: "Free course completion" },
+    { name: "Simplilearn SkillUp — DevOps Basics & Docker Foundations", description: "Linux, shell scripting, Docker containers, and automation.", url: "https://www.simplilearn.com/free-devops-course-skillup", award: "Free courses" },
+    { name: "KodeKloud — Free DevOps Courses", description: "Practical labs for Docker, Kubernetes, and Linux automation.", url: "https://kodekloud.com/p/free-courses", award: "Free course completion" },
+  ],
+  mobile: [
+    { name: "Google Developers — Android Basics in Kotlin", description: "Layouts, navigation, lifecycle, state management, and API connectivity.", url: "https://developer.android.com/courses/android-basics-kotlin/course", award: "Official badges" },
+    { name: "Flutter & Dart Official Free Training", description: "App architecture, UI, and local storage through hands-on tutorials.", url: "https://docs.flutter.dev/get-started/codelabs", award: "Course completion" },
+    { name: "Great Learning — Flutter for Beginners", description: "Mobile foundations and responsive layouts.", url: "https://www.mygreatlearning.com/academy/learn-for-free/courses/flutter-for-beginners", award: "Free certificate" },
+  ],
+  test: [
+    { name: "Postman API Fundamentals Student Expert", description: "HTTP, REST APIs, and API testing.", url: "https://www.postman.com/company/student-community/student-expert/", award: "Free certificate / badge" },
+    { name: "freeCodeCamp — Quality Assurance / Test Automation", description: "Chai, Mocha, API testing, and automated test suites.", url: "https://www.freecodecamp.org/learn/quality-assurance/", award: "Free certificate" },
+    { name: "Test Automation University (TAU)", description: "Selenium, Cypress, Playwright, and Python/JavaScript automation courses.", url: "https://testautomationu.applitools.com/", award: "Free course certificates" },
+  ],
+};
+
+const DOMAIN_ID_BY_NAME: Record<string, string> = {
+  "web development": "web", "frontend development": "web", "backend development": "web", "full stack development": "web",
+  "ai / machine learning": "ai", "ai & machine learning": "ai", "data science": "ds",
+  "cloud computing": "cloud", "cybersecurity": "cyber", "cyber security": "cyber",
+  "devops": "devops", "mobile app development": "mobile", "software testing": "test",
+};
+
+const DOMAIN_RESOURCE_SKILLS: Record<string, Record<string, string[]>> = {
+  web: {
+    "Web Foundations": ["HTML", "CSS", "HTML", "JavaScript"],
+    "Frontend Development": ["React", "TypeScript", "React", "React"],
+    "Backend and Data": ["Node.js", "Node.js", "Node.js", "REST APIs"],
+    "Build and Ship": ["Testing", "Deployment", "Performance"],
+  },
+  ai: {
+    "Math and Python Foundations": ["Statistics", "Python", "Python"],
+    "Machine Learning": ["scikit-learn", "scikit-learn", "scikit-learn"],
+    "Deep Learning and Generative AI": ["PyTorch", "Transformers", "Transformers"],
+    "Production AI": ["Model Deployment", "MLOps", "MLOps"],
+  },
+  ds: {
+    "Data Foundations": ["SQL", "SQL", "Jupyter"],
+    "Statistics and Analysis": ["Pandas", "Pandas", "Statistics"],
+    "Machine Learning": ["Machine Learning", "Machine Learning"],
+    "Communicate Insights": ["Data Visualization", "Power BI", "Data Visualization"],
+  },
+  cloud: {
+    "Cloud Foundations": ["Linux", "Networking", "AWS"],
+    "Core Cloud Services": ["AWS", "Azure", "Google Cloud"],
+    "Infrastructure and Reliability": ["Docker", "Terraform"],
+    "Cloud Projects": ["AWS", "Google Cloud"],
+  },
+  cyber: {
+    "Security Foundations": ["Security Foundations", "Security Foundations"],
+    "Defensive Security": ["SIEM", "SIEM"],
+    "Application and Offensive Security": ["OWASP", "Penetration Testing", "Penetration Testing"],
+    "Practice and Readiness": ["Penetration Testing", "NIST Framework"],
+  },
+  devops: {
+    "Foundations": ["Git", "Bash"],
+    "Automation and Containers": ["CI/CD", "Docker", "Ansible"],
+    "Orchestration and Reliability": ["Kubernetes", "Monitoring"],
+    "Delivery Project": ["CI/CD", "Kubernetes"],
+  },
+  mobile: {
+    "Mobile Foundations": ["Flutter", "Kotlin", "Flutter"],
+    "App Features": ["REST APIs", "Local Storage"],
+    "Quality and Polish": ["Testing", "Performance"],
+    "Publish a Complete App": ["App Publishing", "App Publishing"],
+  },
+  test: {
+    "Testing Foundations": ["Testing Fundamentals", "Testing Fundamentals"],
+    "API and Automation": ["Postman", "Cypress", "Selenium"],
+    "Reliable Test Suites": ["Playwright", "CI/CD"],
+    "Quality in Practice": ["Quality Practices", "Quality Practices"],
+  },
+};
+
+function readOpenedDomainResources(storageKey: string): string[] {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOpenedDomainResource(storageKey: string, resourceUrl: string): string[] {
+  const opened = readOpenedDomainResources(storageKey);
+  if (!opened.includes(resourceUrl)) {
+    opened.push(resourceUrl);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(opened));
+    } catch {
+      // Keep the current session usable when browser storage is unavailable.
+    }
+  }
+  return opened;
+}
+
+function getDomainSkillResourceProgress(domainKey: string, skills: string[], openedResources: string[]) {
+  const totals: Record<string, number> = {};
+  const opened: Record<string, number> = {};
+  Object.entries(DOMAIN_ROADMAP_RESOURCES[domainKey] || {}).forEach(([phase, resources]) => {
+    resources.forEach((resource, index) => {
+      const assignedSkill = DOMAIN_RESOURCE_SKILLS[domainKey]?.[phase]?.[index] || skills[index % Math.max(skills.length, 1)];
+      if (!assignedSkill || !skills.includes(assignedSkill)) return;
+      totals[assignedSkill] = (totals[assignedSkill] || 0) + 1;
+      if (openedResources.includes(resource.url)) opened[assignedSkill] = (opened[assignedSkill] || 0) + 1;
+    });
+  });
+
+  return skills.map(skill => ({
+    skill,
+    percent: totals[skill] ? Math.round(((opened[skill] || 0) / totals[skill]) * 100) : 0,
+  }));
+}
+
+function DomainRoadmapPage({ d, onBack }: { d: typeof DOMAINS[0]; onBack: () => void }) {
+  const roadmapKey = DOMAIN_ID_BY_NAME[d.name.toLowerCase()] || d.id;
+  const phases = DOMAIN_ROADMAP_TOPICS[roadmapKey] ?? [{ phase: "Core Preparation", topics: d.skills.map(skill => `${skill} fundamentals and practical use`) }, { phase: "Projects and Interview Prep", topics: ["Build a small project using the core skills", "Practice explaining design choices and tradeoffs"] }];
+  const { user } = useAuth();
+  const resourcesStorageKey = `crackit_domain_resources_${user?.id || "guest"}_${roadmapKey}`;
+  const [openedResources, setOpenedResources] = useState<string[]>(() => readOpenedDomainResources(resourcesStorageKey));
+  useEffect(() => setOpenedResources(readOpenedDomainResources(resourcesStorageKey)), [resourcesStorageKey]);
+
+  const trackResource = (url: string) => setOpenedResources(saveOpenedDomainResource(resourcesStorageKey, url));
+  return (
+    <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: "none" }}>
+      <button onClick={onBack} className="flex items-center gap-2 text-sm mb-6" style={{ color: C.muted }}>
+        <ChevronLeft size={16} /> Back to Domain Prep
+      </button>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${d.color}18`, color: d.color }}>
+          {d.icon}
+        </div>
+        <h1 className="text-xl font-bold text-white">{d.name} Roadmap</h1>
+      </div>
+      <p className="text-sm mb-6 ml-[52px]" style={{ color: C.muted }}>
+        Follow the phases in order, use the linked resources, and build the skills as you go. Estimated duration: {d.time}.
+      </p>
+      <div className="max-w-3xl space-y-4">
+        {phases.map((phase, index) => {
+          const resources = DOMAIN_ROADMAP_RESOURCES[roadmapKey]?.[phase.phase] ?? [];
+          return <Card key={phase.phase} className="p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: `${d.color}18`, color: d.color }}>
+                {index + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-sm font-bold text-white">{phase.phase}</h2>
+                <p className="text-xs mt-1" style={{ color: C.muted }}>{getRoadmapPhaseWeeks(d.time, index, phases.length)}</p>
+              </div>
+            </div>
+            <ul className="space-y-3 ml-1">
+              {phase.topics.map(topic => (
+                <li key={topic} className="flex items-start gap-2.5 text-xs leading-relaxed" style={{ color: C.muted }}>
+                  <ChevronRight size={14} className="mt-0.5 flex-shrink-0" style={{ color: d.color }} />
+                  {topic}
+                </li>
+              ))}
+            </ul>
+            {resources.length > 0 && (
+              <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${C.border}` }}>
+                <div className="text-xs font-semibold text-white mb-2">Learning Resources</div>
+                <div className="flex flex-wrap gap-2">
+                  {resources.map(resource => (
+                    <a key={resource.url} href={resource.url} target="_blank" rel="noreferrer"
+                      onClick={() => trackResource(resource.url)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors hover:opacity-80"
+                      style={{ background: `${d.color}12`, color: d.color, border: `1px solid ${d.color}25` }}>
+                      {resource.name} <ExternalLink size={11} />
+                    </a>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </Card>
+            )}
+          </Card>
+        })}
       </div>
     </div>
   );
@@ -1399,24 +1887,31 @@ function DomainDetailPanel({ d }: { d: typeof DOMAINS[0] }) {
 function DomainPrepPage() {
   const [domainsList, setDomainsList] = useState<any[]>(DOMAINS);
   const [selected, setSelected] = useState("web");
-  const [genLoading, setGenLoading] = useState(false);
-  const [genQuestions, setGenQuestions] = useState<any[]>([]);
+  const [roadmapDomainId, setRoadmapDomainId] = useState<string | null>(null);
+  const [domainPromptId, setDomainPromptId] = useState<string | null>(null);
+  const [exploreSaving, setExploreSaving] = useState(false);
+  const [exploreError, setExploreError] = useState("");
 
   useEffect(() => {
     domainsApi.getAll().then(res => {
       if (res && res.length > 0) {
-        const mapped = res.map((d: any, i: number) => ({
+        const mapped = res.map((d: any, i: number) => {
+          const name = String(d.domain_name || "");
+          const domainKey = DOMAIN_ID_BY_NAME[name.toLowerCase()];
+          const localDomain = DOMAINS.find(item => item.id === domainKey);
+          return ({
           id: String(d.id),
-          name: d.domain_name,
+          name,
           icon: d.icon || ["🌐","🤖","📊","☁️","🔒","⚙️","📱","🧪"][i % 8],
-          color: [C.purple, C.cyan, C.green, C.blue, C.red, C.amber, C.pink, C.teal][i % 8],
-          progress: d.progress,
-          difficulty: "Intermediate",
-          time: "10 weeks left",
-          skills: ["Core Skills"],
-          demand: 90,
+          color: localDomain?.color || [C.purple, C.cyan, C.green, C.blue, C.red, C.amber, C.pink, C.teal][i % 8],
+          progress: Number(d.progress) || 0,
+          difficulty: localDomain?.difficulty || "Intermediate",
+          time: localDomain?.time || "10 week plan",
+          skills: localDomain?.skills || ["Core Skills"],
+          demand: localDomain?.demand || 0,
           salary: "₹15–35 LPA",
-        }));
+          });
+        });
         setDomainsList(mapped);
         setSelected(mapped[0].id);
       }
@@ -1424,28 +1919,78 @@ function DomainPrepPage() {
   }, []);
 
   const dom = domainsList.find(d => d.id === selected) || domainsList[0];
+  const roadmapDomain = domainsList.find(d => d.id === roadmapDomainId);
+  const promptDomain = domainsList.find(d => d.id === domainPromptId);
+  const domainsStarted = domainsList.filter(d => Number(d.progress) > 0).length;
+  const skillsInProgress = domainsList
+    .filter(d => Number(d.progress) > 0)
+    .reduce((total, d) => total + (d.skills?.length || 0), 0);
+  const activeDomains = domainsList.filter(d => Number(d.progress) > 0);
+  const averageDomainProgress = activeDomains.length
+    ? Math.round(activeDomains.reduce((total, d) => total + Number(d.progress || 0), 0) / activeDomains.length)
+    : 0;
 
-  const handleGenerateQuestions = async () => {
-    if (!dom) return;
-    setGenLoading(true);
+  const askToExploreDomain = (id: string) => {
+    setSelected(id);
+    setDomainPromptId(id);
+  };
+
+  if (roadmapDomain) {
+    return <DomainRoadmapPage d={roadmapDomain} onBack={() => setRoadmapDomainId(null)} />;
+  }
+
+  const handleExploreDomain = async () => {
+    if (!promptDomain || exploreSaving) return;
+    setExploreSaving(true);
+    setExploreError("");
     try {
-      const result = await aiPrepApi.generateQuestions({
-        domain: dom.name,
-        skills: dom.skills,
-        difficulty: "Medium",
-        number_of_questions: 5,
-        category: "Technical"
-      });
-      setGenQuestions(result?.questions || []);
-    } catch(e) {
-      console.error("AI generation failed:", e);
+      const result = await domainsApi.markExplored(promptDomain.id);
+      const progress = Number(result?.progress) || 5;
+      setDomainsList(previous => previous.map(domain =>
+        domain.id === promptDomain.id ? { ...domain, progress } : domain
+      ));
+      setRoadmapDomainId(promptDomain.id);
+      setDomainPromptId(null);
+    } catch {
+      setExploreError("Could not save your domain progress. Please try again.");
     } finally {
-      setGenLoading(false);
+      setExploreSaving(false);
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+      {promptDomain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(13,23,36,0.88)", backdropFilter: "blur(10px)" }}>
+          <div className="w-full max-w-md rounded-2xl p-6"
+            style={{ background: C.card, border: `1px solid ${promptDomain.color}45`, boxShadow: "0 32px 80px rgba(0,0,0,.6)" }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4"
+              style={{ background: `${promptDomain.color}18`, color: promptDomain.color }}>
+              {promptDomain.icon}
+            </div>
+            <h2 className="text-lg font-bold text-white mb-2">Interested in {promptDomain.name}?</h2>
+            <p className="text-sm mb-6" style={{ color: C.muted }}>
+              Explore this domain to see the skills and preparation topics in its roadmap.
+            </p>
+            {exploreError && <p className="text-xs mb-4" style={{ color: C.red }}>{exploreError}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => { setDomainPromptId(null); setExploreError(""); }}
+                disabled={exploreSaving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: C.surface, border: `1px solid ${C.border}`, color: C.muted }}>
+                Maybe later
+              </button>
+              <button onClick={handleExploreDomain} disabled={exploreSaving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ background: promptDomain.color }}>
+                {exploreSaving ? <RefreshCw size={14} className="animate-spin" /> : <Map size={14} />}
+                {exploreSaving ? "Saving..." : "Explore Roadmap"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
@@ -1476,10 +2021,10 @@ function DomainPrepPage() {
         {/* Domain summary stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Domains Enrolled", value: `${domainsList.filter(d => d.progress > 0).length}/${domainsList.length}`, icon: <Boxes size={16} />, color: C.purple },
-            { label: "Skills In Progress", value: "12", icon: <Code2 size={16} />, color: C.cyan },
-            { label: "Certifications", value: "1 earned", icon: <Award size={16} />, color: C.amber },
-            { label: "AI Match Score", value: "84%", icon: <Sparkles size={16} />, color: C.green },
+            { label: "Domains Started", value: `${domainsStarted}/${domainsList.length}`, icon: <Boxes size={16} />, color: C.purple },
+            { label: "Skills In Started Domains", value: `${skillsInProgress}`, icon: <Code2 size={16} />, color: C.cyan },
+            { label: "Certifications Earned", value: "0", icon: <Award size={16} />, color: C.amber },
+            { label: "Average Domain Progress", value: `${averageDomainProgress}%`, icon: <TrendingUp size={16} />, color: C.green },
           ].map(s => (
             <Card key={s.label} className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -1495,47 +2040,13 @@ function DomainPrepPage() {
         {/* Domain cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
           {domainsList.map(d => (
-            <DomainCard key={d.id} d={d} selected={selected === d.id} onSelect={() => setSelected(d.id)} />
+            <DomainCard key={d.id} d={d} selected={selected === d.id}
+              onSelect={() => askToExploreDomain(d.id)} onExplore={() => askToExploreDomain(d.id)} />
           ))}
         </div>
 
-        {/* AI Question Generation Panel */}
-        {dom && (
-          <Card className="p-5 mb-6" style={{ background: "linear-gradient(135deg,rgba(168,85,247,.08),rgba(34,211,238,.05))", border: "1px solid rgba(168,85,247,.3)" }}>
-            <div className="flex items-start justify-between">
-              <SecHead icon={<Sparkles size={16} />} title="AI Question Generator" sub={`Generate personalized ${dom.name} interview questions`} />
-              <button
-                onClick={handleGenerateQuestions}
-                disabled={genLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: C.grad }}>
-                {genLoading ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
-                {genLoading ? "Generating..." : "Generate Questions"}
-              </button>
-            </div>
-            {genQuestions.length > 0 && (
-              <div className="space-y-2.5 mt-4">
-                {genQuestions.map((q: any, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: C.surface, border: `1px solid ${C.border}` }}>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                      style={{ background: C.grad }}>Q{i + 1}</div>
-                    <div className="flex-1">
-                      <div className="text-xs text-white leading-relaxed">{q.question}</div>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <Pill label={q.category} color={C.purple} />
-                        <Pill label={q.difficulty} color={q.difficulty === "Hard" ? C.red : q.difficulty === "Medium" ? C.amber : C.green} />
-                        <span className="text-xs" style={{ color: C.muted }}>{q.topic}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        )}
-
         {/* Selected domain header */}
-        {dom && (
+        {dom && Number(dom.progress) > 0 && (
           <>
             <div className="flex items-center gap-3 mb-5 p-4 rounded-2xl"
               style={{ background: `${dom.color}10`, border: `1px solid ${dom.color}35` }}>

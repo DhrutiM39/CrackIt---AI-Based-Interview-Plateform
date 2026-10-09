@@ -3,6 +3,7 @@ import zipfile
 import tempfile
 import requests
 import mimetypes
+from urllib.parse import urlparse
 
 IGNORED_DIRS = {".git", "node_modules", "venv", ".venv", "__pycache__", "dist", "build", ".next", "out"}
 IGNORED_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".pdf", ".zip", ".tar", ".gz", ".mp4", ".mp3", ".wav", ".lock", ".pyc", ".whl"}
@@ -47,15 +48,37 @@ def parse_zip_file(zip_path: str) -> str:
     return "\n".join(combined_code)
 
 def download_github_repo(github_url: str) -> str:
-    url_parts = github_url.rstrip('/').split('/')
-    if len(url_parts) < 2:
-        raise Exception("Invalid GitHub URL")
-    repo_name = f"{url_parts[-2]}/{url_parts[-1]}"
+    parsed_url = urlparse(github_url if "://" in github_url else f"https://{github_url}")
+    if parsed_url.scheme not in {"http", "https"} or parsed_url.hostname not in {"github.com", "www.github.com"}:
+        raise ValueError("Enter a valid GitHub repository URL.")
+
+    path_parts = [part for part in parsed_url.path.strip("/").split("/") if part]
+    if len(path_parts) < 2:
+        raise ValueError("Enter a GitHub URL that includes an owner and repository.")
+
+    owner, repository = path_parts[:2]
+    repository = repository.removesuffix(".git")
+    if not owner or not repository:
+        raise ValueError("Enter a GitHub URL that includes an owner and repository.")
+
+    repo_name = f"{owner}/{repository}"
     zip_url = f"https://api.github.com/repos/{repo_name}/zipball"
-    
-    response = requests.get(zip_url, headers={"User-Agent": "AI-Code-Analyzer"})
+
+    try:
+        response = requests.get(
+            zip_url,
+            headers={"User-Agent": "AI-Code-Analyzer"},
+            timeout=30,
+        )
+    except requests.RequestException as exc:
+        raise ValueError("Could not reach GitHub. Check your connection and try again.") from exc
+
+    if response.status_code == 404:
+        raise ValueError("GitHub repository was not found or is private.")
+    if response.status_code == 403:
+        raise ValueError("GitHub rate limit reached. Please try again later.")
     if response.status_code != 200:
-        raise Exception(f"Failed to download repository: HTTP {response.status_code}")
+        raise ValueError(f"GitHub could not download this repository (HTTP {response.status_code}).")
         
     with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp:
         tmp.write(response.content)

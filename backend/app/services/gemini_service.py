@@ -93,6 +93,68 @@ class RoadmapAI(BaseModel):
 logger = logging.getLogger(__name__)
 
 
+def _gemini_response_schema(model: type[BaseModel]) -> dict[str, Any]:
+    """Convert a Pydantic JSON schema to the subset supported by Gemini."""
+    json_schema = model.model_json_schema()
+    definitions = json_schema.get("$defs", {})
+    type_names = {
+        "array": "ARRAY",
+        "boolean": "BOOLEAN",
+        "integer": "INTEGER",
+        "number": "NUMBER",
+        "object": "OBJECT",
+        "string": "STRING",
+    }
+
+    def convert(node: dict[str, Any]) -> dict[str, Any]:
+        reference = node.get("$ref")
+        if reference:
+            definition_name = reference.rsplit("/", 1)[-1]
+            if definition_name not in definitions:
+                raise ValueError(f"Unsupported Gemini schema reference: {reference}")
+            resolved = convert(definitions[definition_name])
+            node = {**resolved, **{key: value for key, value in node.items() if key != "$ref"}}
+
+        alternatives = node.get("anyOf") or node.get("oneOf")
+        nullable = False
+        if alternatives:
+            non_null_alternatives = [
+                alternative for alternative in alternatives
+                if alternative.get("type") != "null"
+            ]
+            if len(non_null_alternatives) != 1:
+                raise ValueError("Gemini response schemas must not contain multi-type unions.")
+            node = {**non_null_alternatives[0], **{
+                key: value for key, value in node.items() if key not in {"anyOf", "oneOf"}
+            }}
+            nullable = True
+
+        result: dict[str, Any] = {}
+        schema_type = node.get("type")
+        if schema_type in type_names:
+            result["type_"] = type_names[schema_type]
+        if nullable:
+            result["nullable"] = True
+
+        for key in ("description", "format", "enum", "required"):
+            if key in node:
+                result[key] = node[key]
+        if "properties" in node:
+            result["properties"] = {
+                name: convert(property_schema)
+                for name, property_schema in node["properties"].items()
+            }
+        if "items" in node:
+            result["items"] = convert(node["items"])
+        if "maxItems" in node:
+            result["max_items"] = node["maxItems"]
+        if "minItems" in node:
+            result["min_items"] = node["minItems"]
+        return result
+
+    return convert(json_schema)
+
+
 class GeminiService:
     def __init__(self):
         if not GEMINI_API_KEY:
@@ -100,7 +162,7 @@ class GeminiService:
         else:
             genai.configure(api_key=GEMINI_API_KEY)
 
-        self.model_name = GEMINI_MODEL or "gemini-2.0-flash"
+        self.model_name = GEMINI_MODEL or "gemini-3.8-flash"
 
     def _check_api_key(self):
         if not GEMINI_API_KEY:
@@ -119,7 +181,7 @@ class GeminiService:
                 prompt,
                 generation_config=genai.types.GenerationConfig(
                     response_mime_type="application/json",
-                    response_schema=schema,
+                    response_schema=_gemini_response_schema(schema),
                     temperature=temperature,
                 ),
             )

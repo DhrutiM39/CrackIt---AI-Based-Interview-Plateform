@@ -112,7 +112,7 @@ ENVIRONMENT=development
 FRONTEND_URL=http://localhost:5173
 
 GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.8-flash
 ```
 
 Never commit `backend/.env` or expose the Supabase service-role key in the frontend.

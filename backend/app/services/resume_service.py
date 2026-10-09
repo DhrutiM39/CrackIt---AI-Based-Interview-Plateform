@@ -518,7 +518,7 @@ def analyze_with_gemini(
             import google.generativeai as genai
 
             genai.configure(api_key=GEMINI_API_KEY.strip())
-            model = genai.GenerativeModel(GEMINI_MODEL or "gemini-2.0-flash")
+            model = genai.GenerativeModel(GEMINI_MODEL or "gemini-3.8-flash")
 
             truncated_text = resume_text[:20000]
             prompt = ANALYSIS_PROMPT.format(target_role=role or "No target role supplied; use general resume quality analysis.", resume_text=truncated_text)

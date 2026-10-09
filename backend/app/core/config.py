@@ -25,4 +25,8 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # AI
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
+if GEMINI_MODEL.startswith("models/"):
+	GEMINI_MODEL = GEMINI_MODEL.removeprefix("models/")
+if GEMINI_MODEL == "gemini-2.0-flash":
+	GEMINI_MODEL = "gemini-3.8-flash"

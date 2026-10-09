@@ -16,7 +16,7 @@ const PORT = process.env.ATS_PORT || process.env.PORT || 8001;
 
 // Load .env if present
 let GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 try {
   const envPath = path.join(__dirname, '.env');
@@ -35,6 +35,10 @@ try {
 } catch (e) {
   console.warn('Could not read .env file:', e.message);
 }
+
+// Keep stale deployment configuration from selecting the retired Gemini model.
+GEMINI_MODEL = GEMINI_MODEL.trim().replace(/^models\//, '');
+if (GEMINI_MODEL === 'gemini-2.0-flash') GEMINI_MODEL = 'gemini-3.8-flash';
 
 // Helper: Extract text from DOCX buffer (zip archive containing word/document.xml)
 function extractDocxText(buffer) {
