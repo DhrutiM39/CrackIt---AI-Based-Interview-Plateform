@@ -38,6 +38,9 @@ def start_interview(
         target_role=body.target_role,
         difficulty=body.difficulty,
         number_of_questions=body.number_of_questions,
+        experience_level=body.experience_level or "2-4 years",
+        duration=body.duration or "30 min",
+        language=body.language or "English",
     )
 
 

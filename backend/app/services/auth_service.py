@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from fastapi import HTTPException, status
 
-from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ENVIRONMENT
 from app.core.security import create_access_token
 from app.database.supabase import supabase
 from app.schemas.auth import LoginRequest, SignupRequest
@@ -89,6 +89,41 @@ class AuthService:
             )
         except Exception as e:
             error_msg = getattr(e, "message", "Invalid email or password")
+            if "email not confirmed" in str(error_msg).lower():
+                if ENVIRONMENT == "development":
+                    # In development, the password was verified by Supabase Auth,
+                    # but the verification email was not clicked. Issue JWT token.
+                    res = (
+                        supabase.table("users")
+                        .select("id, full_name, email")
+                        .eq("email", user.email)
+                        .maybe_single()
+                        .execute()
+                    )
+                    if res and res.data:
+                        u = res.data
+                        full_name = u.get("full_name") or ""
+                        access_token = create_access_token(
+                            data={
+                                "sub": str(u["id"]),
+                                "email": u["email"],
+                                "full_name": full_name,
+                            },
+                            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+                        )
+                        return {
+                            "access_token": access_token,
+                            "token_type": "bearer",
+                            "user": {
+                                "id": str(u["id"]),
+                                "full_name": full_name,
+                                "email": u["email"],
+                            },
+                        }
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email not confirmed. Please check your inbox (or spam) for the confirmation link.",
+                )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=error_msg,

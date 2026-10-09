@@ -52,10 +52,13 @@ class SaveQuestionAnswerRequest(BaseModel):
 
 
 class InterviewStartRequest(BaseModel):
-    interview_type: InterviewType = InterviewType.TECHNICAL
-    target_role: str = Field(..., min_length=2, max_length=100)
-    difficulty: InterviewDifficulty = InterviewDifficulty.MEDIUM
+    interview_type: str = "Technical"
+    target_role: str = Field("Software Engineer", min_length=2, max_length=100)
+    difficulty: str = "Medium"
     number_of_questions: int = Field(5, ge=1, le=15)
+    experience_level: Optional[str] = "2-4 years"
+    duration: Optional[str] = "30 min"
+    language: Optional[str] = "English"
 
 
 class InterviewAnswerRequest(BaseModel):

@@ -56,8 +56,8 @@ async function request<T>(
     }
   }
 
-  // 401 → clear auth and redirect to login
-  if (res.status === 401) {
+  // 401 on protected routes → clear auth and redirect to login
+  if (res.status === 401 && !path.startsWith("/auth/")) {
     clearAuth();
     window.location.href = "/";
     throw new Error("Unauthorized — please log in again");
@@ -241,7 +241,8 @@ export interface InterviewStartResponse {
     ended_at?: string | null;
   };
   total_questions: number;
-  question?: { id: number; sequence_no: number; question_text: string } | null;
+  question?: { id: number; sequence_no: number; question_text: string; category?: string } | null;
+  questions?: { id: number; sequence_no: number; question_text: string; category?: string }[];
 }
 
 export interface InterviewFinishResponse {
@@ -254,8 +255,15 @@ export interface InterviewFinishResponse {
 }
 
 export const interviewsApi = {
-  start: (payload: { interview_type: string; target_role: string; difficulty: string; number_of_questions?: number }) =>
-    api.post<InterviewStartResponse>("/interview/start", { body: payload }),
+  start: (payload: {
+    interview_type: string;
+    target_role: string;
+    difficulty: string;
+    number_of_questions?: number;
+    experience_level?: string;
+    duration?: string;
+    language?: string;
+  }) => api.post<InterviewStartResponse>("/interview/start", { body: payload }),
   answer: (payload: { session_id: number; question_id: number; answer_text: string }) =>
     api.post<InterviewAnswerResponse>("/interview/answer", { body: payload }),
   get: (sessionId: number) => api.get<any>(`/interview/${sessionId}`),

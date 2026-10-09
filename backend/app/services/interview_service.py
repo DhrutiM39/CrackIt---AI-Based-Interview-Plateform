@@ -52,6 +52,9 @@ def start_ai_session(
     target_role: str,
     difficulty: str,
     number_of_questions: int,
+    experience_level: str = "2-4 years",
+    duration: str = "30 min",
+    language: str = "English",
 ) -> Dict[str, Any]:
     """Create a session and persist its Gemini-generated question set."""
     session = create_session(user_id, interview_type, target_role, difficulty)
@@ -61,6 +64,9 @@ def start_ai_session(
             difficulty=difficulty,
             number_of_questions=number_of_questions,
             category=interview_type,
+            experience_level=experience_level,
+            duration=duration,
+            language=language,
         )
         questions = []
         for sequence_no, generated_question in enumerate(generated.questions, 1):
@@ -78,6 +84,7 @@ def start_ai_session(
             "session": session,
             "total_questions": len(questions),
             "question": questions[0],
+            "questions": questions,
         }
     except HTTPException:
         try:
