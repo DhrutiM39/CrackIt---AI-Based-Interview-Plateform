@@ -182,6 +182,30 @@ def build_resume_analysis(
         role_note = "No target role or job description provided. Keyword and role-fit analysis is limited to general resume quality."
 
     normalized = cleaned_text.lower()
+    # Reject arbitrary documents before scoring them. A resume must contain enough
+    # text and several recognizable resume signals; file extension alone is not proof.
+    word_count = len(cleaned_text.split())
+    resume_signals = {
+        "contact": bool(re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b(?:phone|email|linkedin|github)\b", cleaned_text, re.I)),
+        "education": bool(re.search(r"\b(education|bachelor|master|b\.?\s?tech|degree|university|college|gpa|cgpa)\b", cleaned_text, re.I)),
+        "experience": bool(re.search(r"\b(experience|employment|work history|internship|professional experience)\b", cleaned_text, re.I)),
+        "skills": bool(re.search(r"\b(skills|technical skills|technologies|proficiencies)\b", cleaned_text, re.I)),
+        "projects": bool(re.search(r"\b(projects|selected projects|portfolio)\b", cleaned_text, re.I)),
+    }
+    if word_count < 45 or sum(resume_signals.values()) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This document does not look like a resume. Upload a resume with contact details and sections such as education, experience, skills, or projects.",
+        )
+
+    email_match = re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", cleaned_text, re.I)
+    phone_match = re.search(r"(?:\+?\d[\d\s().-]{7,}\d)", cleaned_text)
+    candidate_name = None
+    for line in cleaned_text.splitlines()[:8]:
+        candidate_line = re.sub(r"[^A-Za-z .'-]", " ", line).strip()
+        if 2 <= len(candidate_line.split()) <= 4 and not re.search(r"resume|curriculum|vitae|profile|email|phone|linkedin|github", candidate_line, re.I):
+            candidate_name = candidate_line
+            break
     contact_pattern = re.compile(r"(email|e-mail|phone|linkedin|github|portfolio|@\w+\.\w+|\+\d{1,3})", re.IGNORECASE)
     summary_pattern = re.compile(r"(summary|profile|objective|about me|about)", re.IGNORECASE)
     experience_pattern = re.compile(r"(experience|work history|internship|engineered|developed|built|implemented)", re.IGNORECASE)
@@ -365,7 +389,7 @@ def build_resume_analysis(
     )))
 
     keyword_match_score = min(100, max(0, int((len(matched_terms) / max(len(role_keywords), 1)) * 100)))
-    readability_score = min(100, max(40, 85 if len(cleaned_text.split()) > 200 else 74))
+    readability_score = min(96, max(35, 55 + min(word_count, 350) // 18 + (8 if has_contact else 0)))
     overall_score = min(100, max(0, int((ats_score * 0.45) + (keyword_match_score * 0.35) + (readability_score * 0.20))))
 
     summary_feedback = (
@@ -415,6 +439,11 @@ def build_resume_analysis(
     ]
 
     payload = {
+        "candidate": {
+            "name": candidate_name,
+            "email": email_match.group(0) if email_match else None,
+            "phone": phone_match.group(0).strip() if phone_match else None,
+        },
         "target": {
             "role": role,
             "role_source": role_source,
@@ -512,6 +541,9 @@ def analyze_with_gemini(
     seamlessly falls back to the high-precision internal ATS engine if not configured or on API failure.
     """
     role = target_role or ("Software Engineer / Tech Professional" if not job_description else None)
+    # Run the deterministic evidence check first. Besides rejecting non-resumes,
+    # it provides score ceilings so a generic AI response cannot inflate scores.
+    evidence_analysis = evaluate_resume_locally(resume_text, target_role=target_role, filename=filename, job_description=job_description)
 
     if GEMINI_API_KEY and not GEMINI_API_KEY.startswith("your-") and len(GEMINI_API_KEY.strip()) > 10:
         try:
@@ -527,13 +559,18 @@ def analyze_with_gemini(
             if response and response.text:
                 data = _parse_gemini_json(response.text)
                 if isinstance(data, dict) and data.get("ats_score"):
+                    for field, evidence_field in (("overall_score", "overall_score"), ("ats_score", "ats_readiness"), ("readability_score", "readability"), ("keyword_match_score", "keyword_match")):
+                        evidence_score = evidence_analysis.get("scores", {}).get(evidence_field)
+                        if evidence_score is not None:
+                            data[field] = min(float(data.get(field, evidence_score)), float(evidence_score))
+                    data["candidate"] = evidence_analysis.get("candidate", {})
                     data.setdefault("target", {"role": target_role, "role_source": "supplied" if target_role else "not_provided", "job_description_provided": bool(job_description)})
                     return data
         except Exception as exc:
             logger.warning(f"Gemini API call failed ({exc}); falling back to local ATS engine.")
 
     logger.info("Evaluating resume using high-precision internal ATS evaluation engine.")
-    return evaluate_resume_locally(resume_text, target_role=target_role, filename=filename, job_description=job_description)
+    return evidence_analysis
 
 
 def upload_to_supabase_storage(file_bytes: bytes, filename: str, user_id: str) -> Optional[str]:

@@ -74,22 +74,6 @@ class AnswerEvaluationAI(BaseModel):
     feedback_summary: str
 
 
-class RoadmapPhaseAI(BaseModel):
-    phase_number: int
-    title: str
-    description: str
-    duration_weeks: int
-    topics: List[str]
-    resources: List[str]
-
-
-class RoadmapAI(BaseModel):
-    roadmap_title: str
-    summary: str
-    total_duration_weeks: int
-    phases: List[RoadmapPhaseAI]
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -458,55 +442,7 @@ class GeminiService:
                 detail="AI answer evaluation failed. Please retry shortly.",
             ) from e
 
-    # ── Roadmap Generation ─────────────────────────────────────────────────────
 
-    def generate_roadmap(
-        self,
-        target_role: str,
-        current_skills: List[str] = None,
-        skill_gaps: List[str] = None,
-        experience_level: str = "Student",
-        duration_months: int = 6,
-    ) -> RoadmapAI:
-        """Generate a personalized learning roadmap using Gemini."""
-        skills_str = ", ".join(current_skills) if current_skills else "basic programming"
-        gaps_str = ", ".join(skill_gaps) if skill_gaps else "to be determined"
-
-        prompt = f"""
-        You are an expert career coach and technical mentor specializing in tech career development.
-        Generate a detailed, personalized learning roadmap for the following candidate.
-
-        Target Role: {target_role}
-        Experience Level: {experience_level}
-        Current Skills: {skills_str}
-        Skill Gaps: {gaps_str}
-        Available Time: {duration_months} months
-
-        Create a phased roadmap with 4-6 phases covering:
-        - Programming Fundamentals (if needed)
-        - Data Structures & Algorithms
-        - Core CS concepts
-        - Role-specific skills for {target_role}
-        - Projects and portfolio building
-        - Interview preparation
-
-        For each phase provide:
-        - phase_number: sequential number
-        - title: phase name
-        - description: what the candidate will learn and why
-        - duration_weeks: realistic time estimate
-        - topics: 4-8 specific topics to study
-        - resources: 3-5 specific resources (courses, books, websites)
-
-        Also provide:
-        - roadmap_title: a descriptive title for this roadmap
-        - summary: 2-3 sentence overview
-        - total_duration_weeks: total estimated duration
-
-        Be realistic and actionable. Tailor to the candidate's current level.
-        """
-        result = self._call_gemini(prompt, RoadmapAI, temperature=0.4)
-        return RoadmapAI(**result["data"])
 
 
 # Singleton instance
